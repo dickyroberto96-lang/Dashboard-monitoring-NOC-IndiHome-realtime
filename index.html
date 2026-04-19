@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard  Tiket Gangguan Indihome RIDAR</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- TAMBAHKAN CHART.JS HANYA UNTUK GRAFIK HARIAN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     /* Custom Scrollbar for Light Theme */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -26,7 +28,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div class="relative z-10">
-                <span class="font-black text-xl tracking-tight text-slate-800 block leading-tight">NOC TEAM</span>
+                <span class="font-black text-xl tracking-tight text-slate-800 block leading-tight">Service Assurance Dashboard</span>
                 <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Dashboard System</span>
             </div>
         </div>
@@ -93,7 +95,7 @@
             </div>
 
             <!-- KPI DASHBOARD (6 MAIN CARDS) -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
+            <div id="kpiMainView" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
                 <!-- Open KPI -->
                 <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <div class="absolute -right-4 -top-4 bg-slate-50 w-24 h-24 rounded-full group-hover:bg-blue-50 transition-colors z-0"></div>
@@ -156,7 +158,7 @@
                 </div>
 
                 <!-- Total Saldo KPI -->
-                <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:-translate-y-1 hover:border-amber-300 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                <div id="kpiCardSaldo" onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:-translate-y-1 hover:border-amber-300 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
                     <div class="absolute -right-4 -top-4 bg-amber-50 w-24 h-24 rounded-full group-hover:bg-amber-100 transition-colors z-0"></div>
                     <div class="relative z-10 flex justify-between items-start mb-2">
                         <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-amber-600 transition-colors">Total Saldo</div>
@@ -168,86 +170,92 @@
                 </div>
             </div>
 
-            <!-- RINCIAN HARIAN (H-1 & H0) -->
-            <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
-                <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
-                Rincian Performa Harian
-            </h3>
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+            <!-- Bagian ini akan disembunyikan saat mode Monitoring -->
+            <div id="rincianHarianView">
+                <!-- RINCIAN HARIAN (H-1 & H0) -->
+                <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
+                    <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
+                    Rincian Performa Harian
+                </h3>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+                    
+                    <!-- Rincian H-1 -->
+                    <div class="relative overflow-hidden bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl shadow-sm border border-rose-200 group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-sm text-rose-800 font-extrabold uppercase tracking-widest">H-1 (KEMARIN & SEBELUMNYA)</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div onclick="filterKPI('H1_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
+                                <div id="kpiH1_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                            </div>
+                            <div onclick="filterKPI('H1_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
+                                <div id="kpiH1_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                            </div>
+                            <div onclick="filterKPI('OPEN_H1')" class="bg-rose-500 rounded-xl p-3 shadow-md border border-rose-600 cursor-pointer hover:bg-rose-600 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
+                                <div id="kpiH1_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rincian H0 (HI) -->
+                    <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-200 group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="text-sm text-blue-800 font-extrabold uppercase tracking-widest">H-0 (HARI INI)</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div onclick="filterKPI('H0_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
+                                <div id="kpiH0_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                            </div>
+                            <div onclick="filterKPI('H0_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
+                                <div id="kpiH0_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                            </div>
+                            <div onclick="filterKPI('OPEN_H0')" class="bg-blue-600 rounded-xl p-3 shadow-md border border-blue-700 cursor-pointer hover:bg-blue-700 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                                <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
+                                <div id="kpiH0_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian ini akan disembunyikan saat mode Monitoring -->
+            <div id="distribusiView">
+                <!-- DISTRIBUSI KATEGORI TIKET (DYNAMIC) -->
+                <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
+                    <span class="p-1.5 bg-purple-50 text-purple-600 rounded-lg border border-purple-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>
+                    <span id="distTitleText">Distribusi Kategori Tiket</span>
+                </h3>
                 
-                <!-- Rincian H-1 -->
-                <div class="relative overflow-hidden bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl shadow-sm border border-rose-200 group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-sm text-rose-800 font-extrabold uppercase tracking-widest">H-1 (KEMARIN & SEBELUMNYA)</div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div onclick="filterKPI('H1_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
-                            <div id="kpiH1_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
-                        </div>
-                        <div onclick="filterKPI('H1_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
-                            <div id="kpiH1_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
-                        </div>
-                        <div onclick="filterKPI('OPEN_H1')" class="bg-rose-500 rounded-xl p-3 shadow-md border border-rose-600 cursor-pointer hover:bg-rose-600 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
-                            <div id="kpiH1_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rincian H0 (HI) -->
-                <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-200 group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-sm text-blue-800 font-extrabold uppercase tracking-widest">H-0 (HARI INI)</div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div onclick="filterKPI('H0_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
-                            <div id="kpiH0_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
-                        </div>
-                        <div onclick="filterKPI('H0_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
-                            <div id="kpiH0_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
-                        </div>
-                        <div onclick="filterKPI('OPEN_H0')" class="bg-blue-600 rounded-xl p-3 shadow-md border border-blue-700 cursor-pointer hover:bg-blue-700 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                            <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
-                            <div id="kpiH0_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
-                        </div>
-                    </div>
+                <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <!-- Cards Injected via JS based on Ticket Type Mode -->
                 </div>
             </div>
 
-            <!-- DISTRIBUSI KATEGORI TIKET (DYNAMIC) -->
-            <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
-                <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>
-                <span id="distTitleText">Distribusi Kategori Tiket</span>
-            </h3>
-            
-            <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                <!-- Cards Injected via JS based on Ticket Type Mode -->
-            </div>
-
-            <!-- AI INSIGHTS & RANKING -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- AI INSIGHTS & RANKING (DIKEMBALIKAN KE FORMAT PODIUM / DAFTAR TAPI SELALU MUNCUL) -->
+            <div id="aiInsightsView" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <!-- KOLOM KIRI: TOP PERFORMERS (TEKNISI 1 & 2) -->
                 <div class="lg:col-span-2 flex flex-col gap-6">
                     <!-- TOP 3 TEKNISI 1 -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col">
                         <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
                             <span class="p-1.5 bg-yellow-50 text-yellow-600 rounded-lg border border-yellow-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></span>
-                            Top 3 Teknisi Utama
+                            Top 3 Teknisi Utama (SLA Teratas)
                         </h3>
-                        <div id="insightTek1" class="flex-1 w-full flex items-center justify-center">Menghitung peringkat...</div>
+                        <div id="insightTek1" class="flex-1 w-full flex items-center justify-center relative min-h-[160px]"></div>
                     </div>
 
                     <!-- TOP 3 TEKNISI 2 -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col">
                         <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
                             <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>
-                            Top 3 Teknisi Pendamping
+                            Top 3 Teknisi Pendamping (SLA Teratas)
                         </h3>
-                        <div id="insightTek2" class="flex-1 w-full flex items-center justify-center">Menghitung peringkat...</div>
+                        <div id="insightTek2" class="flex-1 w-full flex items-center justify-center relative min-h-[160px]"></div>
                     </div>
                 </div>
 
@@ -257,12 +265,61 @@
                         <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></span>
                         Top Risk (Worst SLA)
                     </h3>
-                    <div id="rank" class="space-y-3 text-sm flex-1 overflow-y-auto pr-2 max-h-[30rem]">Loading ranking...</div>
+                    <div id="rank" class="space-y-3 text-sm flex-1 overflow-y-auto pr-2 max-h-[380px]"></div>
                 </div>
             </div>
 
-            <!-- MAIN GRID (STO / SEKTOR) -->
-            <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12"></div>
+            <!-- WRAPPER UNTUK TAMPILAN STANDAR (CHART HARIAN & GRID) -->
+            <div id="standardView">
+                <!-- CHART DISTRIBUSI HARIAN PER AREA -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 mb-8 flex flex-col">
+                    <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
+                        <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></span>
+                        Grafik Breakdown Harian per Area
+                    </h3>
+                    <div class="w-full h-72 relative">
+                        <canvas id="chartDailyArea"></canvas>
+                    </div>
+                </div>
+
+                <!-- MAIN GRID (STO / SEKTOR) -->
+                <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12"></div>
+            </div>
+
+            <!-- MONITORING VIEW (Tabel Pergerakan Teknisi) -->
+            <div id="monitoringView" class="hidden mb-12">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                    <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></span>
+                        Timeline Pergerakan Teknisi (Berdasarkan Jam Close)
+                    </h3>
+                    <div class="overflow-x-auto pb-4">
+                        <table class="w-full text-sm text-left border-collapse border border-slate-200">
+                            <thead class="text-[10px] text-slate-600 font-extrabold uppercase tracking-widest bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3 border-r border-slate-200 min-w-[140px]">Sektor</th>
+                                    <th class="px-4 py-3 border-r border-slate-200 min-w-[200px]">Teknisi Utama & Pendamping</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">00:00 - 02:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">02:00 - 04:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">04:00 - 06:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">06:00 - 08:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">08:00 - 10:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">10:00 - 12:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">12:00 - 14:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">14:00 - 16:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">16:00 - 18:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">18:00 - 20:00</th>
+                                    <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">20:00 - 22:00</th>
+                                    <th class="px-2 py-3 text-center min-w-[100px]">22:00 - 24:00</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monitoringTableBody" class="divide-y divide-slate-200 bg-white">
+                                <!-- Data Injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
         </div>
     </main>
@@ -276,7 +333,7 @@
         <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-white/90 backdrop-blur-md sticky top-0 z-20 shadow-sm">
             <h3 id="modalTitle" class="font-black text-xl md:text-2xl text-slate-800 flex items-center gap-3">
                 <span class="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 </span>
                 <span>Detail Tiket</span>
             </h3>
@@ -328,6 +385,10 @@ let rawData = [];
 let mode = "STO"; 
 let ticketTypeMode = "ALL_TIKET"; 
 let activeModal = null; 
+let expandedSektors = new Set(); // State untuk Accordion Sektor
+
+// ===== Chart Instances =====
+let chartDailyAreaInst = null;
 
 // ===== LISTS =====
 const STO_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
@@ -368,27 +429,26 @@ const distClassMap = {
 function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "").replace(/-/g, ""); }
 function mapSTO(val) { let normalized = norm(val); if(normalized.includes("PBRC")) return "PBR"; return (val || "").toString().toUpperCase(); }
 function mapSEKTOR(val) { let normalized = norm(val); if(normalized.includes("ARENGKA")) return ["ARK-1", "ARK-2"]; return [(val || "").toString().toUpperCase()]; }
+function extractName(fullName) {
+    if (!fullName) return 'N/A';
+    const str = fullName.toString();
+    const idx = str.indexOf('-');
+    return idx !== -1 ? str.substring(idx + 1).trim() : str.trim();
+}
 
-// ===== HVC / TICKET CATEGORY CLASSIFICATION (NEW LOGIC) =====
-
-// 1. Fungsi Cerdas Untuk Memecah Bucket Reguler & HVC
+// ===== HVC / TICKET CATEGORY CLASSIFICATION =====
 function getTicketBucket(r) {
     const custAssign = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
-    
-    // Pisahkan SQM, Z_Permintaan, dll menjadi bucket mandiri
     if (custAssign.includes("SQM")) return "SQM";
     if (custAssign.includes("Z_PERMINTAAN") || custAssign.includes("Z PERMINTAAN")) return "Z_PERMINTAAN";
     if (custAssign.includes("UNDERSPEC")) return "UNDERSPEC";
     if (custAssign.includes("MONITORING ORDER") || custAssign.includes("MONITORING")) return "MONITORING_ORDER";
     
-    // Jika tidak ada keterangan khusus di atas, berarti ini TIKET REGULER. 
-    // Mari kita pecah berdasarkan HVC-nya (Platinum, Diamond, Gold, Reguler)
     const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
     if(v.includes("PLATINUM")) return "HVC PLATINUM";
     if(v.includes("DIAMOND")) return "HVC DIAMOND";
     if(v.includes("GOLD")) return "HVC GOLD";
-    
-    return "REGULER"; // Tiket Reguler biasa
+    return "REGULER"; 
 }
 
 // ===== HELPER: DETEKSI TIKET SALDO (OPEN) =====
@@ -445,7 +505,6 @@ function getDurasi(r) {
     }
 }
 
-// ===== HELPER BARU: MENGUBAH DURASI MENJADI DETIK UNTUK PENGURUTAN =====
 function getDurasiSeconds(r) {
     const isOpen = isTicketOpen(r);
     if (!isOpen && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") {
@@ -467,8 +526,8 @@ function getBaseData() {
     return rawData.filter(r => {
         const custAssign = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
         
-        if (ticketTypeMode === 'ALL_TIKET') {
-            return true; // Tampilkan seluruh tiket secara global tanpa pengecualian
+        if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER') {
+            return true; 
         } else if (ticketTypeMode === 'REGULER') {
             return !custAssign.includes("SQM") && !custAssign.includes("Z_PERMINTAAN") && !custAssign.includes("UNDERSPEC") && !custAssign.includes("MONITORING ORDER");
         } else if (ticketTypeMode === 'SQM') {
@@ -477,8 +536,6 @@ function getBaseData() {
             return custAssign.includes("Z_PERMINTAAN");
         } else if (ticketTypeMode === 'UNDERSPEC') {
             return custAssign.includes("UNDERSPEC");
-        } else if (ticketTypeMode === 'MONITORING_ORDER') {
-            return custAssign.includes("MONITORING ORDER");
         }
         return true;
     });
@@ -504,7 +561,6 @@ function renderSidebar() {
     const nav = document.getElementById('sidebarNav');
     nav.innerHTML = menuItems.map(item => {
         const isActive = item.id === ticketTypeMode;
-        // CLASS LIGHT THEME UNTUK MENU
         const activeClass = "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10";
         const inactiveClass = "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
         
@@ -529,8 +585,19 @@ function setTicketType(newType, titleLabel) {
     if (titleLabel) document.getElementById('mainDashboardTitle').innerText = titleLabel;
 
     renderSidebar(); 
-    renderKPI(); renderAI(); renderRank(); renderGrid();
+    updateDashboard();
 }
+
+// ===== ACCORDION SEKTOR FUNCTION =====
+function toggleSektor(sektor) {
+    if (expandedSektors.has(sektor)) {
+        expandedSektors.delete(sektor);
+    } else {
+        expandedSektors.add(sektor);
+    }
+    renderMonitoringView();
+}
+window.toggleSektor = toggleSektor;
 
 // ===== MODE SWITCHER AREA =====
 function setMode(newMode) {
@@ -540,9 +607,36 @@ function setMode(newMode) {
     else if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
     else if (mode.startsWith('SA_')) modeText = mode.replace('SA_', 'SA ').replace(/_/g, ' ');
 
-    renderKPI(); renderAI(); renderRank(); renderGrid();
+    updateDashboard();
 }
 
+// ===== CENTRAL DASHBOARD UPDATER =====
+function updateDashboard() {
+    renderKPI(); 
+    renderAI(); // Podium Ranking (Selalu di-update dan ditampilkan)
+    renderRank(); // List Ranking (Selalu di-update dan ditampilkan)
+
+    if (ticketTypeMode === 'MONITORING_ORDER') {
+        document.getElementById('standardView').classList.add('hidden');
+        document.getElementById('monitoringView').classList.remove('hidden');
+        
+        if(document.getElementById('kpiMainView')) document.getElementById('kpiMainView').classList.add('hidden');
+        if(document.getElementById('rincianHarianView')) document.getElementById('rincianHarianView').classList.add('hidden');
+        if(document.getElementById('distribusiView')) document.getElementById('distribusiView').classList.add('hidden');
+
+        if (typeof renderMonitoringView === 'function') renderMonitoringView();
+    } else {
+        document.getElementById('standardView').classList.remove('hidden');
+        document.getElementById('monitoringView').classList.add('hidden');
+
+        if(document.getElementById('kpiMainView')) document.getElementById('kpiMainView').classList.remove('hidden');
+        if(document.getElementById('rincianHarianView')) document.getElementById('rincianHarianView').classList.remove('hidden');
+        if(document.getElementById('distribusiView')) document.getElementById('distribusiView').classList.remove('hidden');
+
+        if (typeof renderCharts === 'function') renderCharts();
+        renderGrid();
+    }
+}
 
 // ===== DATA LOADING & REAL-TIME AUTO SYNC =====
 async function load() {
@@ -556,12 +650,14 @@ async function load() {
         
         rawData = Array.isArray(jsonRes) ? jsonRes : []; 
         
-        renderSidebar(); renderKPI(); renderAI(); renderRank(); renderGrid(); 
+        renderSidebar(); 
+        updateDashboard();
         
         if (activeModal) {
             if (activeModal.type === 'LOCATION') openLocation(activeModal.locName, activeModal.specificFilter, activeModal.bucketCat);
             else if (activeModal.type === 'DISTRIBUTION_MODAL') openDistribution(activeModal.filter, activeModal.cat);
             else if (activeModal.type === 'KPI') filterKPI(activeModal.f);
+            else if (activeModal.type === 'TEKNISI') openTeknisi(activeModal.tekName);
         }
 
         const now = new Date();
@@ -572,20 +668,22 @@ async function load() {
         console.warn("Fetch failed, using mock data for preview.", e);
         
         let mockData = [
-            { "NOTIKET": "INC001", "STATUS TIKET": "OPEN", "SLA": "-", "FLAG HVC": "HVC PLATINUM", "NOMOR INET": "111512345", "DATEK": "ODP-ARK-FA/01", "CUST ASSIGN": "TTR 12 JG", "STO": "ARK", "SEKTOR": "ARK-1", "TEKNISI 1": "BUDI", "TEKNISI 2": "ANTO", "REPORT DATE": new Date(Date.now() - 86400000).toISOString() },
-            { "NOTIKET": "INC002", "STATUS TIKET": "CLOSE", "SLA": "COMPLY", "FLAG HVC": "HVC GOLD", "NOMOR INET": "111512346", "DATEK": "ODP-PBR-FB/02", "CUST ASSIGN": "TTR 12 JG", "STO": "PBR", "SEKTOR": "PBRC 1", "TEKNISI 1": "ANDI", "TEKNISI 2": "", "REPORT DATE": new Date(Date.now() - 86400000).toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "01:30:00", "KETERANGAN": "Selesai" },
-            { "NOTIKET": "INC003", "STATUS TIKET": "CLOSE", "SLA": "NOT COMPLY", "FLAG HVC": "REGULER", "NOMOR INET": "111512347", "DATEK": "ODP-BKR-FC/03", "CUST ASSIGN": "TTR 12 JG", "STO": "BKR", "SEKTOR": "BUKIT RAYA", "TEKNISI 1": "BUDI", "TEKNISI 2": "", "REPORT DATE": new Date(Date.now() - 172800000).toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "04:30:00", "KETERANGAN": "GAMAS" },
-            { "NOTIKET": "INC004", "STATUS TIKET": "OPEN", "SLA": "-", "FLAG HVC": "HVC DIAMOND", "NOMOR INET": "111512348", "DATEK": "ODP-DUM-FD/04", "CUST ASSIGN": "SQM", "STO": "DUM", "SEKTOR": "DUMAI", "TEKNISI 1": "CITRA", "TEKNISI 2": "DANI", "REPORT DATE": new Date().toISOString() },
-            { "NOTIKET": "INC005", "STATUS TIKET": "CLOSE", "SLA": "COMPLY", "FLAG HVC": "HVC GOLD", "NOMOR INET": "111512349", "DATEK": "ODP-ARK-FE/05", "CUST ASSIGN": "Z_PERMINTAAN", "STO": "ARK", "SEKTOR": "ARK-2", "TEKNISI 1": "ANDI", "TEKNISI 2": "ANTO", "REPORT DATE": new Date().toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "02:15:00" }
+            { "NOTIKET": "INC001", "STATUS TIKET": "OPEN", "SLA": "-", "FLAG HVC": "HVC PLATINUM", "NOMOR INET": "111512345", "DATEK": "ODP-ARK-FA/01", "CUST ASSIGN": "TTR 12 JG", "STO": "ARK", "SEKTOR": "ARK-1", "TEKNISI 1": "16953497 -RENDY VONDIKA", "TEKNISI 2": "ANTO", "REPORT DATE": new Date(Date.now() - 86400000).toISOString() },
+            { "NOTIKET": "INC002", "STATUS TIKET": "CLOSE", "SLA": "COMPLY", "FLAG HVC": "HVC GOLD", "NOMOR INET": "111512346", "DATEK": "ODP-PBR-FB/02", "CUST ASSIGN": "TTR 12 JG", "STO": "PBR", "SEKTOR": "PBRC 1", "TEKNISI 1": "16004301 -TAUFIK SYAEFULLAH", "TEKNISI 2": "", "REPORT DATE": new Date(Date.now() - 86400000).toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "01:30:00", "KETERANGAN": "Selesai" },
+            { "NOTIKET": "INC003", "STATUS TIKET": "CLOSE", "SLA": "NOT COMPLY", "FLAG HVC": "REGULER", "NOMOR INET": "111512347", "DATEK": "ODP-BKR-FC/03", "CUST ASSIGN": "TTR 12 JG", "STO": "BKR", "SEKTOR": "BUKIT RAYA", "TEKNISI 1": "16963737 -HERI KURNIAWAN", "TEKNISI 2": "", "REPORT DATE": new Date(Date.now() - 172800000).toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "04:30:00", "KETERANGAN": "GAMAS" },
+            { "NOTIKET": "INC004", "STATUS TIKET": "OPEN", "SLA": "-", "FLAG HVC": "HVC DIAMOND", "NOMOR INET": "111512348", "DATEK": "ODP-DUM-FD/04", "CUST ASSIGN": "SQM", "STO": "DUM", "SEKTOR": "DUMAI", "TEKNISI 1": "CITRA", "TEKNISI 2": "16032051- HUSAIN", "REPORT DATE": new Date().toISOString() },
+            { "NOTIKET": "INC005", "STATUS TIKET": "CLOSE", "SLA": "COMPLY", "FLAG HVC": "HVC GOLD", "NOMOR INET": "111512349", "DATEK": "ODP-ARK-FE/05", "CUST ASSIGN": "Z_PERMINTAAN", "STO": "ARK", "SEKTOR": "ARK-2", "TEKNISI 1": "16860421 - RIKI BUDIMAN", "TEKNISI 2": "16984072 - ANTON WAHYUDI", "REPORT DATE": new Date().toISOString(), "JAM TECH CLOSED": new Date().toISOString(), "DURASI CLOSE": "02:15:00" }
         ];
 
         rawData = mockData;
-        renderSidebar(); renderKPI(); renderAI(); renderRank(); renderGrid(); 
+        renderSidebar(); 
+        updateDashboard();
         
         if (activeModal) {
             if (activeModal.type === 'LOCATION') openLocation(activeModal.locName, activeModal.specificFilter, activeModal.bucketCat);
             else if (activeModal.type === 'DISTRIBUTION_MODAL') openDistribution(activeModal.filter, activeModal.cat);
             else if (activeModal.type === 'KPI') filterKPI(activeModal.f);
+            else if (activeModal.type === 'TEKNISI') openTeknisi(activeModal.tekName);
         }
         
         syncUI.innerHTML = `⚠️ Mode Offline`;
@@ -630,7 +728,6 @@ function renderGrid() {
         const complyCount = locData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "COMPLY").length;
         const notComplyCount = locData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY").length;
 
-        // Rincian Saldo (OPEN) per Kategori spesifik di Card
         const platOpen = locData.filter(r => getTicketBucket(r) === 'HVC PLATINUM' && isTicketOpen(r)).length;
         const diamOpen = locData.filter(r => getTicketBucket(r) === 'HVC DIAMOND' && isTicketOpen(r)).length;
         const goldOpen = locData.filter(r => getTicketBucket(r) === 'HVC GOLD' && isTicketOpen(r)).length;
@@ -767,7 +864,6 @@ function renderDistribution() {
     let stats = {};
     let distTitle = document.getElementById('distTitleText');
 
-    // Logika Pintar: Tentukan Kotak Kategori mana yang akan ditampilkan
     if (ticketTypeMode === 'ALL_TIKET') {
         categories = ['HVC PLATINUM', 'HVC DIAMOND', 'HVC GOLD', 'REGULER', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
         distTitle.innerText = "Distribusi Seluruh Kategori Tiket";
@@ -848,27 +944,26 @@ function renderKPI() {
     const not = currentData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY").length;
     const totalSLA = comply + not;
 
-    document.getElementById('kpiOpen').innerText = open;
-    document.getElementById('kpiClose').innerText = close;
-    document.getElementById('kpiComply').innerText = comply;
-    document.getElementById('kpiNot').innerText = not;
-    document.getElementById('kpiSaldo').innerText = open; 
-    document.getElementById('kpiSLA').innerText = totalSLA > 0 ? ((comply / totalSLA) * 100).toFixed(1) + "%" : "0%";
+    if (document.getElementById('kpiOpen')) document.getElementById('kpiOpen').innerText = open;
+    if (document.getElementById('kpiClose')) document.getElementById('kpiClose').innerText = close;
+    if (document.getElementById('kpiComply')) document.getElementById('kpiComply').innerText = comply;
+    if (document.getElementById('kpiNot')) document.getElementById('kpiNot').innerText = not;
+    if (document.getElementById('kpiSaldo')) document.getElementById('kpiSaldo').innerText = open; 
+    if (document.getElementById('kpiSLA')) document.getElementById('kpiSLA').innerText = totalSLA > 0 ? ((comply / totalSLA) * 100).toFixed(1) + "%" : "0%";
 
-    document.getElementById('kpiH1_Open').innerText = h1_open;
-    document.getElementById('kpiH1_Close').innerText = h1_close;
-    document.getElementById('kpiH1_Saldo').innerText = h1_saldo;
+    if (document.getElementById('kpiH1_Open')) document.getElementById('kpiH1_Open').innerText = h1_open;
+    if (document.getElementById('kpiH1_Close')) document.getElementById('kpiH1_Close').innerText = h1_close;
+    if (document.getElementById('kpiH1_Saldo')) document.getElementById('kpiH1_Saldo').innerText = h1_saldo;
 
-    document.getElementById('kpiH0_Open').innerText = h0_open;
-    document.getElementById('kpiH0_Close').innerText = h0_close;
-    document.getElementById('kpiH0_Saldo').innerText = h0_saldo;
+    if (document.getElementById('kpiH0_Open')) document.getElementById('kpiH0_Open').innerText = h0_open;
+    if (document.getElementById('kpiH0_Close')) document.getElementById('kpiH0_Close').innerText = h0_close;
+    if (document.getElementById('kpiH0_Saldo')) document.getElementById('kpiH0_Saldo').innerText = h0_saldo;
 
-    // Render Distribusi Cards dynamically
     renderDistribution();
 }
 
 
-// ===== KPI CLICK HANDLER (MEMUNCULKAN POPUP BERDASARKAN BUCKET PINTAR) =====
+// ===== KPI CLICK HANDLER =====
 function filterKPI(f) {
     activeModal = { type: 'KPI', f };
     document.getElementById('modal').classList.remove("hidden");
@@ -901,7 +996,6 @@ function filterKPI(f) {
 
     const map = {};
     data.forEach(r => {
-        // Logika Pintar: Otomatis memisah Reguler mnjd (Platinum/Gold/Diamond/Reguler), & membiarkan SQM / Permintaan mandiri
         const bucket = getTicketBucket(r);
         map[bucket] = (map[bucket] || 0) + 1;
     });
@@ -931,7 +1025,6 @@ function filterKPI(f) {
 function openDistribution(filter, cat) {
     activeModal = { type: 'DISTRIBUTION_MODAL', filter, cat };
     
-    // FIX: Memunculkan modal yang sebelumnya tersembunyi
     document.getElementById('modal').classList.remove('hidden');
     
     let modalFilterName = filter;
@@ -941,7 +1034,7 @@ function openDistribution(filter, cat) {
     if (filter === "H0_ALL") modalFilterName = "TOTAL TIKET (H-0 / HARI INI)";
     if (filter === "H0_CLOSE") modalFilterName = "CLOSE (H-0 / HARI INI)";
     if (filter === "OPEN_H0") modalFilterName = "SISA SALDO (H-0 / HARI INI)";
-    if (filter === "OPEN") modalFilterName = "SALDO (OPEN)"; // Diubah agar lebih pas konteksnya
+    if (filter === "OPEN") modalFilterName = "SALDO (OPEN)"; 
     if (filter === "ALL") modalFilterName = "SEMUA STATUS";
 
     document.getElementById('modalTitle').innerHTML = `Filter: ${modalFilterName} ➔ <span class="text-blue-600">${cat.replace('_', ' ')}</span>`;
@@ -950,7 +1043,6 @@ function openDistribution(filter, cat) {
 
     let data = getActiveData();
     
-    // 1. Filter by Status (OPEN, CLOSE, etc.)
     if (filter !== "ALL") {
         if (filter === "OPEN") data = data.filter(r => isTicketOpen(r));
         else if (filter === "H1_ALL") data = data.filter(r => getTicketAge(r) === "H-1");
@@ -963,10 +1055,331 @@ function openDistribution(filter, cat) {
         else data = data.filter(r => (r.SLA || "").toString().toUpperCase().trim() === filter);
     }
     
-    // 2. Filter by Category / Bucket yang baru saja di-klik
     data = data.filter(r => getTicketBucket(r) === cat);
     
     renderTable(data);
+}
+
+// ===== RENDER MONITORING VIEW (TABEL TIMELINE) =====
+function renderMonitoringView() {
+    const currentData = getActiveData();
+    const tbody = document.getElementById('monitoringTableBody');
+    const grouped = {};
+
+    currentData.forEach(r => {
+        let tek1 = (r["TEKNISI 1"] || "").toString().trim();
+        let tek2 = (r["TEKNISI 2"] || "").toString().trim();
+
+        if (!tek1 && !tek2) return;
+
+        const sektor = (r["SEKTOR"] || r["STO"] || "UNKNOWN").toString().toUpperCase();
+        let tekKey = tek1 + "|||" + tek2; 
+
+        if (!grouped[sektor]) grouped[sektor] = {};
+        if (!grouped[sektor][tekKey]) grouped[sektor][tekKey] = { closed: [], openCount: 0, openTickets: [] };
+
+        if (isTicketOpen(r)) {
+            grouped[sektor][tekKey].openCount++;
+            grouped[sektor][tekKey].openTickets.push(r.NOTIKET);
+        } else {
+            const rawTime = r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
+            if (rawTime) {
+                const date = new Date(rawTime);
+                if (!isNaN(date.getTime())) {
+                    const hour = date.getHours(); 
+                    grouped[sektor][tekKey].closed.push({ inc: r.NOTIKET, hour: hour, hvc: getTicketBucket(r) });
+                }
+            }
+        }
+    });
+
+    let html = '';
+    const sektorKeys = Object.keys(grouped).sort();
+
+    if(sektorKeys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" class="text-center py-10 text-slate-400 font-medium">Tidak ada pergerakan teknisi pada area ini.</td></tr>`;
+        return;
+    }
+
+    sektorKeys.forEach(sektor => {
+        const tekKeys = Object.keys(grouped[sektor]).sort();
+        const isExpanded = expandedSektors.has(sektor); // FIX: Membaca status array klik Sektor yang benar
+
+        html += `
+            <tr class="group cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors border-b border-slate-200" onclick="toggleSektor('${sektor.replace(/'/g, "\\'")}')">
+                <td class="px-4 py-3 border-r border-slate-200 font-black text-blue-700 bg-blue-50/50 group-hover:bg-blue-100/50 transition-colors relative">
+                    <div class="flex items-center justify-between gap-2">
+                        <span>${sektor}</span>
+                        <svg class="w-4 h-4 text-blue-600 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </td>
+                <td colspan="13" class="px-4 py-3 text-xs font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
+                    ${tekKeys.length} Tim Teknisi &mdash; <span class="font-medium italic">${isExpanded ? 'Klik untuk menyembunyikan detail' : 'Klik untuk melihat detail pergerakan'}</span>
+                </td>
+            </tr>
+        `;
+
+        if (isExpanded) {
+            tekKeys.forEach((tekKey) => {
+                const tInfo = grouped[sektor][tekKey];
+                const tickets = tInfo.closed;
+                
+                const parts = tekKey.split("|||");
+                const t1 = parts[0] || "<span class='text-rose-400 italic'>UNASSIGNED</span>";
+                const t2 = parts[1];
+                
+                let tekHtml = `<div class="flex flex-col gap-1">
+                    <span class="font-bold text-slate-700 break-words" title="${t1}">${extractName(t1)}</span>
+                    ${t2 ? `<span class="text-[10px] font-medium text-slate-500 flex items-start gap-1" title="${t2}"><svg class="w-3 h-3 mt-0.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg><span class="break-words">${extractName(t2)}</span></span>` : ''}
+                    ${tInfo.openCount > 0 ? `<span class="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 w-fit mt-1 shadow-sm cursor-help" title="Tiket yang dikerjakan: ${tInfo.openTickets.join(', ')}">${tInfo.openCount} Tiket Aktif (Open)</span>` : ''}
+                </div>`;
+                
+                const getTicketsForBlock = (startHour, endHour) => {
+                    const blockTickets = tickets.filter(t => t.hour >= startHour && t.hour <= endHour);
+                    if(blockTickets.length === 0) return '';
+                    return blockTickets.map(t => {
+                        let badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                        if(t.hvc.includes("PLATINUM")) badgeColor = "bg-purple-50 text-purple-700 border-purple-200";
+                        else if(t.hvc.includes("DIAMOND")) badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
+                        else if(t.hvc.includes("GOLD")) badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+                        else if(t.hvc.includes("SQM")) badgeColor = "bg-rose-50 text-rose-700 border-rose-200";
+                        else if(t.hvc.includes("PERMINTAAN")) badgeColor = "bg-indigo-50 text-indigo-700 border-indigo-200";
+                        else if(t.hvc.includes("UNDERSPEC")) badgeColor = "bg-slate-100 text-slate-700 border-slate-300";
+                        
+                        return `<div class="text-[9px] font-mono font-bold px-1.5 py-1 rounded border mb-1.5 whitespace-nowrap shadow-sm cursor-help hover:scale-105 transition-transform ${badgeColor}" title="Tiket: ${t.inc} (${t.hvc})">${t.inc}</div>`;
+                    }).join('');
+                };
+
+                html += `
+                    <tr class="hover:bg-blue-50/30 transition-colors border-b border-slate-100">
+                        <td class="px-4 py-4 border-r border-slate-200 bg-slate-50/30 shadow-[inset_-4px_0_6px_-4px_rgba(0,0,0,0.05)]"></td>
+                        <td class="px-4 py-3 border-r border-slate-200 text-xs align-top w-64">${tekHtml}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(0, 1)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top">${getTicketsForBlock(2, 3)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(4, 5)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top">${getTicketsForBlock(6, 7)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(8, 9)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top">${getTicketsForBlock(10, 11)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(12, 13)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top">${getTicketsForBlock(14, 15)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(16, 17)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top">${getTicketsForBlock(18, 19)}</td>
+                        <td class="px-2 py-3 border-r border-slate-200 align-top bg-slate-50/20">${getTicketsForBlock(20, 21)}</td>
+                        <td class="px-2 py-3 align-top">${getTicketsForBlock(22, 23)}</td>
+                    </tr>
+                `;
+            });
+        }
+    });
+
+    tbody.innerHTML = html;
+}
+
+// ===== RENDER CHART HARIAN =====
+function renderCharts() {
+    const currentData = getActiveData();
+
+    // DATA CHART DISTRIBUSI HARIAN PER AREA (H-1 & H-0)
+    let list = STO_LIST;
+    let isSektorRender = false;
+    if (mode === 'SEKTOR') { list = SEKTOR_LIST; isSektorRender = true; }
+    else if (mode === 'PEKANBARU') list = PEKANBARU_LIST;
+    else if (mode === 'DUMAI') list = DUMAI_LIST;
+    else if (mode === 'SA_ARENGKA') list = SA_ARENGKA_LIST;
+    else if (mode === 'SA_PBR_BARAT') { list = SA_PBR_BARAT_LIST; isSektorRender = true; }
+    else if (mode === 'SA_PBR_TIMUR') { list = SA_PBR_TIMUR_LIST; isSektorRender = true; }
+    else if (mode === 'SA_BUKIT_RAYA') list = SA_BUKIT_RAYA_LIST;
+    else if (mode === 'SA_DUMAI') list = SA_DUMAI_LIST;
+    else if (mode === 'SA_PANGKALAN_KERINCI') list = SA_PANGKALAN_KERINCI_LIST;
+    else if (mode === 'SA_RENGAT') list = SA_RENGAT_LIST;
+
+    let labelsArea = [];
+    let h1SaldoData = []; let h1CloseData = [];
+    let h0SaldoData = []; let h0CloseData = [];
+
+    list.forEach(item => {
+        const locData = currentData.filter(r => {
+            const val = (isSektorRender ? r.SEKTOR : r.STO) || r.LOKASI;
+            if (!val) return false;
+            return isSektorRender ? mapSEKTOR(val).includes(item) : mapSTO(val) === item;
+        });
+
+        if (locData.length === 0 && mode === 'SEKTOR') return; 
+
+        labelsArea.push(item);
+        let s1 = 0, c1 = 0, s0 = 0, c0 = 0;
+        
+        locData.forEach(r => {
+            const age = getTicketAge(r);
+            const isOpen = isTicketOpen(r);
+            if (age === "H-1") { if (isOpen) s1++; else c1++; }
+            else if (age === "H0") { if (isOpen) s0++; else c0++; }
+        });
+        
+        h1SaldoData.push(s1); h1CloseData.push(c1);
+        h0SaldoData.push(s0); h0CloseData.push(c0);
+    });
+
+    Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+    Chart.defaults.color = '#64748b'; 
+
+    // Chart Area Daily Breakdown (Bar)
+    if (window.chartDailyAreaInst) window.chartDailyAreaInst.destroy();
+    if (document.getElementById('chartDailyArea')) {
+        window.chartDailyAreaInst = new Chart(document.getElementById('chartDailyArea'), {
+            type: 'bar',
+            data: {
+                labels: labelsArea,
+                datasets: [
+                    { label: 'H-1 Saldo', data: h1SaldoData, backgroundColor: '#f43f5e', borderRadius: 4, maxBarThickness: 32 }, 
+                    { label: 'H-1 Close', data: h1CloseData, backgroundColor: '#10b981', borderRadius: 4, maxBarThickness: 32 }, 
+                    { label: 'H-0 Saldo', data: h0SaldoData, backgroundColor: '#3b82f6', borderRadius: 4, maxBarThickness: 32 }, 
+                    { label: 'H-0 Close', data: h0CloseData, backgroundColor: '#0ea5e9', borderRadius: 4, maxBarThickness: 32 }  
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+                scales: { x: { grid: { display: false } }, y: { border: { dash: [4, 4] }, grid: { color: '#e2e8f0' } } }
+            }
+        });
+    }
+}
+
+// ===== HELPER KLIK TEKNISI =====
+// FIX: Fungsi baru untuk memunculkan detail tiket saat podium Teknisi di klik
+function openTeknisi(tekName) {
+    activeModal = { type: 'TEKNISI', tekName };
+    document.getElementById('modal').classList.remove('hidden');
+    
+    document.getElementById('modalTitle').innerHTML = `Detail Tiket Teknisi: <span class="text-blue-600">${extractName(tekName)}</span>`;
+    document.getElementById('hvcView').classList.add('hidden');
+    document.getElementById('tableView').classList.remove('hidden');
+
+    let data = getActiveData();
+    
+    // Filter tiket yang dipegang oleh teknisi 1 atau teknisi 2 yang sesuai dengan nama yang diklik
+    data = data.filter(r => {
+        const t1 = (r["TEKNISI 1"] || "").toString().trim();
+        const t2 = (r["TEKNISI 2"] || "").toString().trim();
+        return t1 === tekName || t2 === tekName;
+    });
+    
+    renderTable(data);
+}
+window.openTeknisi = openTeknisi;
+
+// ===== HELPER: RENDER KOTAK PODIUM (MEMUNCULKAN KEMBALI DESAIN LAMA) =====
+function getTopPerformersHTML(mapData) {
+    const list = Object.entries(mapData)
+        .map(([n, v]) => ({ n, sla: v.t > 0 ? ((v.t - v.not) / v.t) * 100 : 0, total: v.t }))
+        .filter(r => r.total >= 3) 
+        .sort((a, b) => b.sla - a.sla || b.total - a.total); 
+
+    if(list.length === 0) {
+        return "<div class='text-slate-400 font-medium italic p-4 text-center w-full'>Data teknisi belum mencukupi (Min 3 tiket).</div>";
+    }
+
+    const topPerformers = list.slice(0, 3); 
+    const medals = ["🥇", "🥈", "🥉"];
+    const styles = [
+        "from-amber-100 to-yellow-200 border-yellow-300 text-yellow-900 shadow-yellow-200/50 hover:ring-amber-400",
+        "from-slate-100 to-slate-200 border-slate-300 text-slate-800 shadow-slate-200/50 hover:ring-slate-400",
+        "from-orange-50 to-orange-100 border-orange-200 text-orange-900 shadow-orange-200/50 hover:ring-orange-400" 
+    ];
+
+    return `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full h-full">
+            ${topPerformers.map((t, i) => `
+                <div onclick="openTeknisi('${t.n.replace(/'/g, "\\'")}')" class="cursor-pointer bg-gradient-to-br ${styles[i] || styles[2]} p-4 rounded-xl border shadow-sm ring-1 ring-transparent hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center text-center relative overflow-hidden group">
+                    <div class="absolute -right-5 -bottom-5 opacity-10 text-7xl group-hover:scale-110 transition-transform">${medals[i] || "🏅"}</div>
+                    <span class="text-3xl mb-1 drop-shadow-sm">${medals[i] || "🏅"}</span>
+                    <span class="font-black text-[12px] uppercase tracking-wide mb-3 z-10 px-1 break-words w-full text-slate-800" title="${t.n}">${extractName(t.n)}</span>
+                    <div class="flex gap-1.5 z-10 mt-auto w-full justify-center">
+                        <span class="bg-white/80 px-2 py-1 rounded-md font-black text-[10px] shadow-sm ring-1 ring-black/5 whitespace-nowrap hover:bg-white transition-colors">${t.sla.toFixed(1)}% SLA</span>
+                        <span class="bg-white/80 px-2 py-1 rounded-md font-black text-[10px] shadow-sm ring-1 ring-blue-500/30 text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">${t.total} Tiket</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// ===== RENDER RANK LIST TEKNISI & AI INSIGHTS PODIUM =====
+function renderAI() {
+    const mapTek1 = {};
+    const mapTek2 = {};
+
+    getActiveData().forEach(r => {
+        if (isTicketOpen(r)) return;
+
+        const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
+
+        const t1 = r["TEKNISI 1"];
+        if (t1 && t1.trim() !== "") {
+            if (!mapTek1[t1]) mapTek1[t1] = { t: 0, not: 0 };
+            mapTek1[t1].t++; if (isNotComply) mapTek1[t1].not++;
+        }
+
+        const t2 = r["TEKNISI 2"];
+        if (t2 && t2.trim() !== "") {
+            if (!mapTek2[t2]) mapTek2[t2] = { t: 0, not: 0 };
+            mapTek2[t2].t++; if (isNotComply) mapTek2[t2].not++;
+        }
+    });
+
+    if(document.getElementById('insightTek1')) document.getElementById('insightTek1').innerHTML = getTopPerformersHTML(mapTek1);
+    if(document.getElementById('insightTek2')) document.getElementById('insightTek2').innerHTML = getTopPerformersHTML(mapTek2);
+}
+
+function renderRank() {
+    const map = {};
+
+    getActiveData().forEach(r => {
+        if (isTicketOpen(r)) return;
+
+        const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
+        [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => {
+            if (!t || t.trim() === "") return;
+            if (!map[t]) map[t] = { t: 0, not: 0 };
+            map[t].t++; if (isNotComply) map[t].not++;
+        });
+    });
+
+    const list = Object.entries(map)
+        .map(([n, v]) => ({ n, sla: v.t > 0 ? ((v.t - v.not) / v.t) * 100 : 0, total: v.t }))
+        .filter(r => r.total >= 3) 
+        .sort((a, b) => a.sla - b.sla)
+        .slice(0, 10);
+
+    const rankEl = document.getElementById('rank');
+    if(!rankEl) return;
+    
+    if(list.length > 0) {
+        rankEl.innerHTML = list.map((r, i) => {
+            let color = "text-emerald-700 bg-emerald-50 border-emerald-100 ring-emerald-500/20";
+            let icon = "🌟";
+            let indexColor = "text-emerald-600";
+            
+            if (r.sla < 95) { color = "text-amber-700 bg-amber-50 border-amber-100 ring-amber-500/20"; icon = "⚠️"; indexColor = "text-amber-600"; }
+            if (r.sla < 90) { color = "text-rose-700 bg-rose-50 border-rose-100 ring-rose-500/20"; icon = "🔥"; indexColor = "text-rose-600"; }
+            
+            return `
+                <div onclick="openTeknisi('${r.n.replace(/'/g, "\\'")}')" class="flex justify-between items-center p-3 rounded-xl border ring-1 ring-inset ${color} mb-2 shadow-sm transition-transform hover:scale-[1.02] cursor-pointer bg-white">
+                    <div class="flex items-center gap-3 w-[70%]">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white shadow-sm text-xs font-black ${indexColor} border border-slate-100 flex-shrink-0">#${i+1}</span>
+                        <span class="truncate font-bold text-slate-800 text-xs" title="${r.n}">${extractName(r.n)}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-sm">${r.sla.toFixed(1)}%</span>
+                        <span class="text-sm">${icon}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    } else {
+         rankEl.innerHTML = "<div class='text-slate-400 font-medium italic p-4 text-center'>Belum ada data ranking yang valid pada Area Aktif (min 3 tiket).</div>";
+    }
 }
 
 // ===== RENDER TABLE =====
@@ -1044,121 +1457,6 @@ function renderTable(data) {
 function closeModal() {
     activeModal = null; 
     document.getElementById('modal').classList.add('hidden');
-}
-
-// ===== HELPER: RENDER KOTAK PODIUM =====
-function getTopPerformersHTML(mapData) {
-    const list = Object.entries(mapData)
-        .map(([n, v]) => ({ n, sla: v.total > 0 ? ((v.total - v.not) / v.total) * 100 : 0, total: v.total }))
-        .filter(r => r.total >= 3) 
-        .sort((a, b) => b.sla - a.sla || b.total - a.total); 
-
-    if(list.length === 0) {
-        return "<div class='text-slate-400 font-medium italic p-4 text-center w-full'>Data teknisi belum mencukupi (Min 3 tiket).</div>";
-    }
-
-    const topPerformers = list.slice(0, 3); 
-    const medals = ["🥇", "🥈", "🥉"];
-    const styles = [
-        "from-amber-100 to-yellow-200 border-yellow-300 text-yellow-900 shadow-yellow-200/50",
-        "from-slate-100 to-slate-200 border-slate-300 text-slate-800 shadow-slate-200/50",
-        "from-orange-50 to-orange-100 border-orange-200 text-orange-900 shadow-orange-200/50" 
-    ];
-
-    return `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full h-full">
-            ${topPerformers.map((t, i) => `
-                <div class="bg-gradient-to-br ${styles[i] || styles[2]} p-4 rounded-xl border shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-                    <div class="absolute -right-5 -bottom-5 opacity-10 text-7xl group-hover:scale-110 transition-transform">${medals[i] || "🏅"}</div>
-                    <span class="text-3xl mb-1 drop-shadow-sm">${medals[i] || "🏅"}</span>
-                    <span class="font-black text-[12px] uppercase tracking-wide mb-3 z-10 px-1 break-words w-full text-slate-800">${t.n}</span>
-                    <div class="flex gap-1.5 z-10 mt-auto w-full justify-center">
-                        <span class="bg-white/80 px-2 py-1 rounded-md font-black text-[10px] shadow-sm ring-1 ring-black/5 whitespace-nowrap">${t.sla.toFixed(1)}% SLA</span>
-                        <span class="bg-white/80 px-2 py-1 rounded-md font-black text-[10px] shadow-sm ring-1 ring-black/5 whitespace-nowrap">${t.total} Tiket</span>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-// ===== AI INSIGHTS (SPLIT TEKNISI 1 & 2) =====
-function renderAI() {
-    const mapTek1 = {};
-    const mapTek2 = {};
-
-    getActiveData().forEach(r => {
-        if (isTicketOpen(r)) return;
-
-        const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
-
-        const t1 = r["TEKNISI 1"];
-        if (t1 && t1.trim() !== "") {
-            if (!mapTek1[t1]) mapTek1[t1] = { total: 0, not: 0 };
-            mapTek1[t1].total++;
-            if (isNotComply) mapTek1[t1].not++;
-        }
-
-        const t2 = r["TEKNISI 2"];
-        if (t2 && t2.trim() !== "") {
-            if (!mapTek2[t2]) mapTek2[t2] = { total: 0, not: 0 };
-            mapTek2[t2].total++;
-            if (isNotComply) mapTek2[t2].not++;
-        }
-    });
-
-    document.getElementById('insightTek1').innerHTML = getTopPerformersHTML(mapTek1);
-    document.getElementById('insightTek2').innerHTML = getTopPerformersHTML(mapTek2);
-}
-
-// ===== TECHNICIAN RANKING (WORST PERFORMERS FIRST) =====
-function renderRank() {
-    const map = {};
-
-    getActiveData().forEach(r => {
-        if (isTicketOpen(r)) return;
-
-        const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
-        [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => {
-            if (!t || t.trim() === "") return;
-            if (!map[t]) map[t] = { total: 0, not: 0 };
-            map[t].total++;
-            if (isNotComply) map[t].not++;
-        });
-    });
-
-    const list = Object.entries(map)
-        .map(([n, v]) => ({ n, sla: v.total > 0 ? ((v.total - v.not) / v.total) * 100 : 0, total: v.total }))
-        .filter(r => r.total >= 3) 
-        .sort((a, b) => a.sla - b.sla)
-        .slice(0, 10);
-
-    const rankEl = document.getElementById('rank');
-    if(list.length > 0) {
-        rankEl.innerHTML = list.map((r, i) => {
-            let color = "text-emerald-700 bg-emerald-50 border-emerald-100 ring-emerald-500/20";
-            let icon = "🌟";
-            let indexColor = "text-emerald-600";
-            
-            if (r.sla < 95) { color = "text-amber-700 bg-amber-50 border-amber-100 ring-amber-500/20"; icon = "⚠️"; indexColor = "text-amber-600"; }
-            if (r.sla < 90) { color = "text-rose-700 bg-rose-50 border-rose-100 ring-rose-500/20"; icon = "🔥"; indexColor = "text-rose-600"; }
-            
-            return `
-                <div class="flex justify-between items-center p-3 rounded-xl border ring-1 ring-inset ${color} mb-2 shadow-sm transition-transform hover:scale-[1.02] cursor-default bg-white">
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center justify-center w-7 h-7 rounded-full bg-white shadow-sm text-xs font-black ${indexColor} border border-slate-100">#${i+1}</span>
-                        <span class="truncate font-bold text-slate-800">${r.n}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-black text-lg">${r.sla.toFixed(1)}%</span>
-                        <span class="text-base">${icon}</span>
-                    </div>
-                </div>
-            `;
-        }).join("");
-    } else {
-         rankEl.innerHTML = "<div class='text-slate-400 font-medium italic p-4 text-center'>Belum ada data ranking yang valid pada Area Aktif (min 3 tiket).</div>";
-    }
 }
 
 // ===== REALTIME DURATION UPDATER =====
