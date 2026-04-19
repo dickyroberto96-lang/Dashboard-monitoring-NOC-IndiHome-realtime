@@ -37,97 +37,163 @@
         </div>
     </div>
 
-    <!-- MODE SWITCHER -->
-    <div class="mb-6 flex flex-wrap items-center gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-xl shadow-sm border border-slate-200/60 ring-1 ring-slate-900/5">
-        <button onclick="setMode('STO')" id="btnSTO" class="px-6 py-2.5 rounded-lg font-extrabold transition-all duration-300 bg-slate-800 text-white shadow-md transform scale-105">SEMUA STO</button>
-        <button onclick="setMode('SEKTOR')" id="btnSEKTOR" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">SEKTOR</button>
-        <div class="w-px h-6 bg-slate-300 mx-1 hidden sm:block"></div> <!-- Divider -->
-        <button onclick="setMode('PEKANBARU')" id="btnPEKANBARU" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">BRANCH PEKANBARU</button>
-        <button onclick="setMode('DUMAI')" id="btnDUMAI" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">BRANCH DUMAI</button>
-        <span id="modeLabel" class="ml-auto mr-4 font-black text-slate-400 hidden lg:inline-block text-xs uppercase tracking-widest"></span>
+    <!-- MODE SWITCHER (DROPDOWN MENU) -->
+    <div class="mb-6 flex flex-wrap items-center gap-4 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-sm border border-slate-200/60 ring-1 ring-slate-900/5">
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <label for="areaFilter" class="font-bold text-slate-600 text-sm whitespace-nowrap">Filter Area:</label>
+            <div class="relative w-full md:w-64">
+                <select id="areaFilter" onchange="setMode(this.value)" class="w-full appearance-none bg-slate-800 text-white border-none py-2.5 px-4 pr-8 rounded-lg font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer transition-all">
+                    <optgroup label="Tampilan Utama" class="bg-white text-slate-800">
+                        <option value="STO" selected>Semua STO</option>
+                        <option value="SEKTOR">Semua Sektor</option>
+                    </optgroup>
+                    <optgroup label="Branch" class="bg-white text-slate-800">
+                        <option value="PEKANBARU">Branch Pekanbaru</option>
+                        <option value="DUMAI">Branch Dumai</option>
+                    </optgroup>
+                    <optgroup label="Service Area (SA)" class="bg-white text-slate-800">
+                        <option value="SA_ARENGKA">SA Arengka</option>
+                        <option value="SA_PBR_BARAT">SA PBR Barat</option>
+                        <option value="SA_PBR_TIMUR">SA PBR Timur</option>
+                        <option value="SA_BUKIT_RAYA">SA Bukit Raya</option>
+                        <option value="SA_DUMAI">SA Dumai</option>
+                        <option value="SA_PANGKALAN_KERINCI">SA Pangkalan Kerinci</option>
+                        <option value="SA_RENGAT">SA Rengat</option>
+                    </optgroup>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-white">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+            </div>
+        </div>
+        <span id="modeLabel" class="ml-auto font-black text-slate-400 hidden lg:inline-block text-xs uppercase tracking-widest">Area: STO</span>
     </div>
 
     <!-- KPI DASHBOARD -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-6">
         <!-- Open KPI -->
-        <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5">
+        <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-slate-50 w-24 h-24 rounded-full group-hover:bg-blue-50 transition-colors z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-blue-600 transition-colors">Open</div>
-                    <div class="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 text-slate-400 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-blue-600 transition-colors">Open</div>
+                <div class="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 text-slate-400 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path></svg>
                 </div>
-                <b id="kpiOpen" class="text-4xl font-black text-slate-800">0</b>
             </div>
+            <b id="kpiOpen" class="relative z-10 text-4xl font-black text-slate-800">0</b>
         </div>
+
         <!-- Close KPI -->
-        <div onclick="filterKPI('CLOSE')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5">
+        <div onclick="filterKPI('CLOSE')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-slate-50 w-24 h-24 rounded-full group-hover:bg-blue-50 transition-colors z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-blue-600 transition-colors">Close</div>
-                    <div class="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 text-slate-400 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-blue-600 transition-colors">Close</div>
+                <div class="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-100 group-hover:text-blue-600 text-slate-400 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <b id="kpiClose" class="text-4xl font-black text-slate-800">0</b>
             </div>
+            <b id="kpiClose" class="relative z-10 text-4xl font-black text-slate-800">0</b>
         </div>
+
         <!-- Comply KPI -->
-        <div onclick="filterKPI('COMPLY')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5">
+        <div onclick="filterKPI('COMPLY')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-emerald-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-emerald-50 w-24 h-24 rounded-full group-hover:bg-emerald-100 transition-colors z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Comply</div>
-                    <div class="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 text-emerald-500 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Comply</div>
+                <div class="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 text-emerald-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                 </div>
-                <b id="kpiComply" class="text-4xl font-black text-emerald-600">0</b>
             </div>
+            <b id="kpiComply" class="relative z-10 text-4xl font-black text-emerald-600">0</b>
         </div>
+
         <!-- Not Comply KPI -->
-        <div onclick="filterKPI('NOT COMPLY')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-rose-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5">
+        <div onclick="filterKPI('NOT COMPLY')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-rose-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-rose-50 w-24 h-24 rounded-full group-hover:bg-rose-100 transition-colors z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-rose-600 transition-colors">Not Comply</div>
-                    <div class="p-2 bg-rose-50 rounded-lg group-hover:bg-rose-100 text-rose-500 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-rose-600 transition-colors">Not Comply</div>
+                <div class="p-2 bg-rose-50 rounded-lg group-hover:bg-rose-100 text-rose-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <b id="kpiNot" class="text-4xl font-black text-rose-600">0</b>
             </div>
+            <b id="kpiNot" class="relative z-10 text-4xl font-black text-rose-600">0</b>
         </div>
+
         <!-- SLA % KPI -->
-        <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg shadow-blue-500/20 border border-blue-500">
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg shadow-blue-500/20 border border-blue-500 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-white/10 w-32 h-32 rounded-full z-0"></div>
             <div class="absolute -bottom-4 -left-4 bg-black/10 w-24 h-24 rounded-full z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-blue-100 font-extrabold uppercase tracking-wider">SLA %</div>
-                    <div class="p-2 bg-white/20 rounded-lg text-white">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-blue-100 font-extrabold uppercase tracking-wider">SLA %</div>
+                <div class="p-2 bg-white/20 rounded-lg text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
-                <b id="kpiSLA" class="text-4xl font-black text-white">0%</b>
             </div>
+            <b id="kpiSLA" class="relative z-10 text-4xl font-black text-white">0%</b>
         </div>
-        <!-- Saldo KPI -->
-        <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-amber-300 hover:-translate-y-1 transition-all duration-300 group lg:col-span-1 md:col-span-3 col-span-2 ring-1 ring-slate-900/5">
+
+        <!-- Total Saldo KPI -->
+        <div onclick="filterKPI('OPEN')" class="relative overflow-hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 cursor-pointer hover:shadow-xl hover:border-amber-300 hover:-translate-y-1 transition-all duration-300 group ring-1 ring-slate-900/5 flex flex-col justify-between">
             <div class="absolute -right-4 -top-4 bg-amber-50 w-24 h-24 rounded-full group-hover:bg-amber-100 transition-colors z-0"></div>
-            <div class="relative z-10 flex flex-col h-full justify-between">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-amber-600 transition-colors">Total Saldo</div>
-                    <div class="p-2 bg-amber-50 rounded-lg group-hover:bg-amber-100 text-amber-500 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
+            <div class="relative z-10 flex justify-between items-start mb-2">
+                <div class="text-sm text-slate-500 font-extrabold uppercase tracking-wider group-hover:text-amber-600 transition-colors">Total Saldo</div>
+                <div class="p-2 bg-amber-50 rounded-lg group-hover:bg-amber-100 text-amber-500 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
-                <b id="kpiSaldo" class="text-4xl font-black text-amber-600">0</b>
+            </div>
+            <b id="kpiSaldo" class="relative z-10 text-4xl font-black text-amber-600">0</b>
+        </div>
+    </div>
+
+    <!-- NEW SECTION: RINCIAN HARIAN (H-1 & H0) WITH COMPLETE METRICS -->
+    <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
+        <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
+        Rincian Performa Harian
+    </h3>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+        
+        <!-- Rincian H-1 -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl shadow-sm border border-rose-200 group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="text-base text-rose-800 font-extrabold uppercase tracking-wider">H-1 (KEMARIN & SEBELUMNYA)</div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div onclick="filterKPI('H1_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
+                    <div id="kpiH1_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                </div>
+                <div onclick="filterKPI('H1_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
+                    <div id="kpiH1_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                </div>
+                <div onclick="filterKPI('OPEN_H1')" class="bg-rose-500 rounded-xl p-3 shadow-md border border-rose-600 cursor-pointer hover:bg-rose-600 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
+                    <div id="kpiH1_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                </div>
             </div>
         </div>
+
+        <!-- Rincian H0 (HI) -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-200 group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="text-base text-blue-800 font-extrabold uppercase tracking-wider">H-0 (HARI INI)</div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+                <div onclick="filterKPI('H0_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
+                    <div id="kpiH0_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                </div>
+                <div onclick="filterKPI('H0_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
+                    <div id="kpiH0_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                </div>
+                <div onclick="filterKPI('OPEN_H0')" class="bg-blue-600 rounded-xl p-3 shadow-md border border-blue-700 cursor-pointer hover:bg-blue-700 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
+                    <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
+                    <div id="kpiH0_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- KATEGORI HVC DASHBOARD WITH BREAKDOWN -->
@@ -259,9 +325,12 @@
                                 <th class="px-6 py-4">Status</th>
                                 <th class="px-6 py-4">SLA</th>
                                 <th class="px-6 py-4">HVC</th>
+                                <th class="px-6 py-4">Nomor Inet</th>
+                                <th class="px-6 py-4">Datek</th>
                                 <th class="px-6 py-4">Teknisi 1</th>
                                 <th class="px-6 py-4">Teknisi 2</th>
                                 <th class="px-6 py-4">Durasi</th>
+                                <th class="px-6 py-4">Keterangan</th>
                             </tr>
                         </thead>
                         <tbody id="table" class="divide-y divide-slate-100 bg-white"></tbody>
@@ -285,6 +354,14 @@ const SEKTOR_LIST = ["ARK-1","ARK-2","BUKIT RAYA","DUMAI","DURI","OUTER 1","OUTE
 // DAFTAR BRANCH
 const PEKANBARU_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH"];
 const DUMAI_LIST = ["BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
+// DAFTAR SERVICE AREA (SA)
+const SA_ARENGKA_LIST = ["ARK"];
+const SA_PBR_BARAT_LIST = ["PBRC 1", "PBRC 2"];
+const SA_PBR_TIMUR_LIST = ["PBRC 3", "PBRC 4"];
+const SA_BUKIT_RAYA_LIST = ["BKR", "SAK", "SEA", "BKN", "UBT", "PPN", "SGP"];
+const SA_DUMAI_LIST = ["SLJ", "DUM", "BAG", "BAS", "DRI", "BGU"];
+const SA_PANGKALAN_KERINCI_LIST = ["RBI", "PKR", "PWG", "SOK", "MIS"];
+const SA_RENGAT_LIST = ["AMK", "KLE", "PMB", "RGT", "TBH", "TAK"];
 
 // ===== NORMALIZATION & MAPPING =====
 function norm(v) {
@@ -318,6 +395,31 @@ function getHVC(r) {
 function isTicketOpen(r) {
     const s = (r["STATUS TIKET"] || "").toString().toUpperCase().trim();
     return s !== "CLOSE" && s !== "CLOSED"; 
+}
+
+// ===== HELPER BARU: DETEKSI TIKET H-1 (Kemarin) dan H0 (Hari Ini) =====
+// Catatan: Ini akan mengklasifikasikan tiket berdasarkan tanggal lapornya.
+function getTicketAge(r) {
+    const reportDateStr = r["REPORT DATE"] || r["DATEK"];
+    if (!reportDateStr) return "UNKNOWN";
+
+    try {
+        const reportDate = new Date(reportDateStr);
+        if (isNaN(reportDate.getTime())) return "UNKNOWN";
+
+        const today = new Date();
+        const reportDay = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate());
+        const currentDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        if (reportDay.getTime() === currentDay.getTime()) {
+            return "H0";
+        } else if (reportDay.getTime() < currentDay.getTime()) {
+            return "H-1";
+        }
+        return "UNKNOWN";
+    } catch {
+        return "UNKNOWN";
+    }
 }
 
 // ===== DURATION CALCULATOR (Safe for Realtime) =====
@@ -359,18 +461,54 @@ function getDurasi(r) {
     }
 }
 
+// ===== HELPER BARU: MENGUBAH DURASI MENJADI DETIK UNTUK PENGURUTAN =====
+function getDurasiSeconds(r) {
+    const isOpen = isTicketOpen(r);
+    
+    // Konversi string "HH:MM:SS" dari DURASI CLOSE menjadi detik
+    if (!isOpen && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") {
+        const parts = r["DURASI CLOSE"].split(':');
+        if (parts.length === 3) {
+            return (parseInt(parts[0]) * 3600) + (parseInt(parts[1]) * 60) + parseInt(parts[2]);
+        }
+    }
+
+    const startStr = r["REPORT DATE"] || r["DATEK"];
+    if (!startStr) return 0;
+
+    try {
+        const start = new Date(startStr);
+        if (isNaN(start.getTime())) return 0;
+
+        const endStr = !isOpen ? (r["JAM TECH CLOSED"] || r["AM TECH CLOSE"]) : null;
+        const end = endStr ? new Date(endStr) : new Date();
+        
+        return Math.max(0, (end - start) / 1000);
+    } catch {
+        return 0;
+    }
+}
+
 // ===== NEW HELPER: FILTER DATA BERDASARKAN MODE SAAT INI =====
 function getActiveData() {
     if (mode === 'PEKANBARU') {
-        return rawData.filter(r => {
-            const val = r.STO || r.LOKASI;
-            return val ? PEKANBARU_LIST.includes(mapSTO(val)) : false;
-        });
+        return rawData.filter(r => r.STO || r.LOKASI ? PEKANBARU_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
     } else if (mode === 'DUMAI') {
-        return rawData.filter(r => {
-            const val = r.STO || r.LOKASI;
-            return val ? DUMAI_LIST.includes(mapSTO(val)) : false;
-        });
+        return rawData.filter(r => r.STO || r.LOKASI ? DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    } else if (mode === 'SA_ARENGKA') {
+        return rawData.filter(r => r.STO || r.LOKASI ? SA_ARENGKA_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    } else if (mode === 'SA_PBR_BARAT') {
+        return rawData.filter(r => r.SEKTOR || r.LOKASI ? mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_BARAT_LIST.includes(s)) : false);
+    } else if (mode === 'SA_PBR_TIMUR') {
+        return rawData.filter(r => r.SEKTOR || r.LOKASI ? mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_TIMUR_LIST.includes(s)) : false);
+    } else if (mode === 'SA_BUKIT_RAYA') {
+        return rawData.filter(r => r.STO || r.LOKASI ? SA_BUKIT_RAYA_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    } else if (mode === 'SA_DUMAI') {
+        return rawData.filter(r => r.STO || r.LOKASI ? SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    } else if (mode === 'SA_PANGKALAN_KERINCI') {
+        return rawData.filter(r => r.STO || r.LOKASI ? SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    } else if (mode === 'SA_RENGAT') {
+        return rawData.filter(r => r.STO || r.LOKASI ? SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
     }
     return rawData; // 'STO' dan 'SEKTOR' menampilkan semua data secara global
 }
@@ -413,27 +551,18 @@ async function load() {
     }
 }
 
-// ===== MODE SWITCHER (STO vs SEKTOR vs BRANCH) =====
+// ===== MODE SWITCHER (DROPDOWN) =====
 function setMode(newMode) {
     mode = newMode;
     
     let modeText = mode;
     if (mode === 'PEKANBARU') modeText = 'BRANCH PEKANBARU';
-    if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    else if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    else if (mode.startsWith('SA_')) modeText = mode.replace('SA_', 'SA ').replace(/_/g, ' ');
+
     document.getElementById('modeLabel').innerText = `Area: ${modeText}`;
-    
-    const buttons = ['STO', 'SEKTOR', 'PEKANBARU', 'DUMAI'];
-    const activeClass = "px-6 py-2.5 rounded-lg font-extrabold transition-all duration-300 bg-slate-800 text-white shadow-md transform scale-105";
-    const inactiveClass = "px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800";
 
-    buttons.forEach(btn => {
-        const el = document.getElementById(`btn${btn}`);
-        if (el) {
-            el.className = (mode === btn) ? activeClass : inactiveClass;
-        }
-    });
-
-    // Render ulang seluruh isi Dashboard agar menyesuaikan branch yang aktif
+    // Render ulang seluruh isi Dashboard agar menyesuaikan branch/SA yang aktif
     renderKPI();
     renderAI();
     renderRank();
@@ -443,20 +572,33 @@ function setMode(newMode) {
 // ===== RENDER GRID =====
 function renderGrid() {
     let list = STO_LIST;
-    if (mode === 'SEKTOR') list = SEKTOR_LIST;
+    let isSektorRender = false;
+
+    if (mode === 'SEKTOR') { list = SEKTOR_LIST; isSektorRender = true; }
     else if (mode === 'PEKANBARU') list = PEKANBARU_LIST;
     else if (mode === 'DUMAI') list = DUMAI_LIST;
+    else if (mode === 'SA_ARENGKA') list = SA_ARENGKA_LIST;
+    else if (mode === 'SA_PBR_BARAT') { list = SA_PBR_BARAT_LIST; isSektorRender = true; }
+    else if (mode === 'SA_PBR_TIMUR') { list = SA_PBR_TIMUR_LIST; isSektorRender = true; }
+    else if (mode === 'SA_BUKIT_RAYA') list = SA_BUKIT_RAYA_LIST;
+    else if (mode === 'SA_DUMAI') list = SA_DUMAI_LIST;
+    else if (mode === 'SA_PANGKALAN_KERINCI') list = SA_PANGKALAN_KERINCI_LIST;
+    else if (mode === 'SA_RENGAT') list = SA_RENGAT_LIST;
 
     const gridEl = document.getElementById('grid');
 
     gridEl.innerHTML = list.map(item => {
         // Grid cards tetap menggunakan rawData lalu di-filter spesifik per kotaknya
         const locData = rawData.filter(r => {
-            const val = (mode === 'SEKTOR') ? (r.SEKTOR || r.LOKASI) : (r.STO || r.LOKASI); 
-            if (!val) return false;
-            
-            if (mode === 'SEKTOR') return mapSEKTOR(val).includes(item);
-            return mapSTO(val) === item; // Digunakan untuk STO, PEKANBARU, dan DUMAI
+            if (isSektorRender) {
+                const val = r.SEKTOR || r.LOKASI;
+                if (!val) return false;
+                return mapSEKTOR(val).includes(item);
+            } else {
+                const val = r.STO || r.LOKASI;
+                if (!val) return false;
+                return mapSTO(val) === item;
+            }
         });
 
         const openCount = locData.filter(r => isTicketOpen(r)).length;
@@ -514,7 +656,8 @@ function openLocation(locName, specificFilter = 'ALL') {
     
     let modeText = mode;
     if (mode === 'PEKANBARU') modeText = 'BRANCH PEKANBARU';
-    if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    else if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    else if (mode.startsWith('SA_')) modeText = mode.replace('SA_', 'SA ').replace(/_/g, ' ');
 
     let titleText = `Detail Area: <span class="text-blue-600">${locName}</span> (${modeText})`;
     if (specificFilter !== 'ALL') {
@@ -532,11 +675,18 @@ function openLocation(locName, specificFilter = 'ALL') {
     document.getElementById('tableView').classList.remove('hidden');
 
     // Menampilkan berdasarkan klik Grid Location tetap difilter dari Data keseluruhan secara spesifik
+    const isSektorRender = ['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode);
+
     let filteredData = rawData.filter(r => {
-        const val = (mode === 'SEKTOR') ? (r.SEKTOR || r.LOKASI) : (r.STO || r.LOKASI);
-        if (!val) return false;
-        
-        return mode === 'SEKTOR' ? mapSEKTOR(val).includes(locName) : mapSTO(val) === locName;
+        if (isSektorRender) {
+            const val = r.SEKTOR || r.LOKASI;
+            if (!val) return false;
+            return mapSEKTOR(val).includes(locName);
+        } else {
+            const val = r.STO || r.LOKASI;
+            if (!val) return false;
+            return mapSTO(val) === locName;
+        }
     });
 
     if (specificFilter === 'OPEN') filteredData = filteredData.filter(r => isTicketOpen(r));
@@ -552,6 +702,24 @@ function renderKPI() {
     // HANYA MENGGUNAKAN DATA SESUAI BRANCH YANG AKTIF!
     const currentData = getActiveData();
 
+    // Hitung Rincian H-1 dan H0
+    let h1_open = 0; let h1_close = 0; let h1_saldo = 0;
+    let h0_open = 0; let h0_close = 0; let h0_saldo = 0;
+
+    currentData.forEach(r => {
+        const age = getTicketAge(r);
+        const isOpen = isTicketOpen(r);
+
+        if (age === "H-1") {
+            h1_open++;
+            if (isOpen) h1_saldo++; else h1_close++;
+        } else if (age === "H0") {
+            h0_open++;
+            if (isOpen) h0_saldo++; else h0_close++;
+        }
+    });
+
+    // Menghitung KPI Atas
     const open = currentData.filter(r => isTicketOpen(r)).length;
     const close = currentData.filter(r => !isTicketOpen(r)).length;
     const comply = currentData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "COMPLY").length;
@@ -565,6 +733,16 @@ function renderKPI() {
     document.getElementById('kpiSaldo').innerText = open; 
     document.getElementById('kpiSLA').innerText = totalSLA > 0 ? ((comply / totalSLA) * 100).toFixed(1) + "%" : "0%";
 
+    // Menghitung Rincian Harian H-1 dan H-0 (Baru)
+    document.getElementById('kpiH1_Open').innerText = h1_open;
+    document.getElementById('kpiH1_Close').innerText = h1_close;
+    document.getElementById('kpiH1_Saldo').innerText = h1_saldo;
+
+    document.getElementById('kpiH0_Open').innerText = h0_open;
+    document.getElementById('kpiH0_Close').innerText = h0_close;
+    document.getElementById('kpiH0_Saldo').innerText = h0_saldo;
+
+    // Menghitung Distribusi HVC
     const stats = {
         "HVC PLATINUM": { t: 0, o: 0, c: 0, comp: 0, not: 0 },
         "HVC DIAMOND": { t: 0, o: 0, c: 0, comp: 0, not: 0 },
@@ -633,7 +811,17 @@ function filterByHVC(hvcType, specificFilter = 'ALL') {
 function filterKPI(f) {
     activeModal = { type: 'KPI', f };
     document.getElementById('modal').classList.remove("hidden");
-    document.getElementById('modalTitle').innerHTML = `Filter: <span class="text-blue-600">${f}</span> (Pilih Kategori HVC)`;
+    
+    let modalFilterName = f;
+    if (f === "H1_ALL") modalFilterName = "TOTAL TIKET MASUK (H-1)";
+    if (f === "H1_CLOSE") modalFilterName = "CLOSE (H-1)";
+    if (f === "OPEN_H1") modalFilterName = "SISA SALDO (H-1)";
+    if (f === "H0_ALL") modalFilterName = "TOTAL TIKET MASUK (H0 / HARI INI)";
+    if (f === "H0_CLOSE") modalFilterName = "CLOSE (H0 / HARI INI)";
+    if (f === "OPEN_H0") modalFilterName = "SISA SALDO (H0 / HARI INI)";
+    if (f === "OPEN") modalFilterName = "OPEN / SISA SALDO GLOBAL";
+
+    document.getElementById('modalTitle').innerHTML = `Filter: <span class="text-blue-600">${modalFilterName}</span> (Pilih Kategori HVC)`;
     document.getElementById('hvcView').classList.remove('hidden');
     document.getElementById('tableView').classList.add('hidden');
 
@@ -641,6 +829,12 @@ function filterKPI(f) {
     let data = getActiveData();
     if (f !== "ALL") {
         if (f === "OPEN") data = data.filter(r => isTicketOpen(r));
+        else if (f === "H1_ALL") data = data.filter(r => getTicketAge(r) === "H-1");
+        else if (f === "H1_CLOSE") data = data.filter(r => getTicketAge(r) === "H-1" && !isTicketOpen(r));
+        else if (f === "OPEN_H1") data = data.filter(r => getTicketAge(r) === "H-1" && isTicketOpen(r));
+        else if (f === "H0_ALL") data = data.filter(r => getTicketAge(r) === "H0");
+        else if (f === "H0_CLOSE") data = data.filter(r => getTicketAge(r) === "H0" && !isTicketOpen(r));
+        else if (f === "OPEN_H0") data = data.filter(r => getTicketAge(r) === "H0" && isTicketOpen(r));
         else if (f === "CLOSE") data = data.filter(r => !isTicketOpen(r));
         else data = data.filter(r => (r.SLA || "").toString().toUpperCase().trim() === f);
     }
@@ -666,7 +860,7 @@ function filterKPI(f) {
 
     hvcView.innerHTML = Object.entries(map).map(([k, v]) => {
         const colorClass = bgColors[k] || bgColors["REGULER"];
-        const labelText = f === "ALL" ? "TIKET KESELURUHAN" : `TIKET ${f}`; 
+        const labelText = f === "ALL" ? "TIKET KESELURUHAN" : `TIKET ${f.replace(/_/g, ' ')}`; 
         
         return `
             <div onclick="openHVC('${f}', '${k}')" class="cursor-pointer rounded-2xl p-6 border shadow-sm ring-1 ring-transparent transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col items-center justify-center text-center ${colorClass}">
@@ -681,7 +875,17 @@ function filterKPI(f) {
 // ===== HVC DETAIL CLICK HANDLER =====
 function openHVC(filter, hvc) {
     activeModal = { type: 'HVC_MODAL', filter, hvc };
-    document.getElementById('modalTitle').innerHTML = `Filter: ${filter} ➔ <span class="text-blue-600">${hvc}</span>`;
+    
+    let modalFilterName = filter;
+    if (filter === "H1_ALL") modalFilterName = "TOTAL TIKET (H-1)";
+    if (filter === "H1_CLOSE") modalFilterName = "CLOSE (H-1)";
+    if (filter === "OPEN_H1") modalFilterName = "SISA SALDO (H-1)";
+    if (filter === "H0_ALL") modalFilterName = "TOTAL TIKET (H-0 / HARI INI)";
+    if (filter === "H0_CLOSE") modalFilterName = "CLOSE (H-0 / HARI INI)";
+    if (filter === "OPEN_H0") modalFilterName = "SISA SALDO (H-0 / HARI INI)";
+    if (filter === "OPEN") modalFilterName = "SISA SALDO GLOBAL";
+
+    document.getElementById('modalTitle').innerHTML = `Filter: ${modalFilterName} ➔ <span class="text-blue-600">${hvc}</span>`;
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
 
@@ -689,6 +893,12 @@ function openHVC(filter, hvc) {
     let data = getActiveData();
     if (filter !== "ALL") {
         if (filter === "OPEN") data = data.filter(r => isTicketOpen(r));
+        else if (filter === "H1_ALL") data = data.filter(r => getTicketAge(r) === "H-1");
+        else if (filter === "H1_CLOSE") data = data.filter(r => getTicketAge(r) === "H-1" && !isTicketOpen(r));
+        else if (filter === "OPEN_H1") data = data.filter(r => getTicketAge(r) === "H-1" && isTicketOpen(r));
+        else if (filter === "H0_ALL") data = data.filter(r => getTicketAge(r) === "H0");
+        else if (filter === "H0_CLOSE") data = data.filter(r => getTicketAge(r) === "H0" && !isTicketOpen(r));
+        else if (filter === "OPEN_H0") data = data.filter(r => getTicketAge(r) === "H0" && isTicketOpen(r));
         else if (filter === "CLOSE") data = data.filter(r => !isTicketOpen(r));
         else data = data.filter(r => (r.SLA || "").toString().toUpperCase().trim() === filter);
     }
@@ -701,9 +911,13 @@ function renderTable(data) {
     const tableEl = document.getElementById('table');
     
     if(data.length === 0) {
-         tableEl.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400 font-medium">Tidak ada tiket ditemukan.</td></tr>`;
+         tableEl.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 font-medium">Tidak ada tiket ditemukan.</td></tr>`;
          return;
     }
+
+    // FIX: Mengurutkan data berdasarkan durasi (Dari Terbaru / Terkecil hingga Terlama / Terbesar)
+    // Jika ingin dibalik (Terlama di atas), cukup ubah menjadi: getDurasiSeconds(b) - getDurasiSeconds(a)
+    data.sort((a, b) => getDurasiSeconds(a) - getDurasiSeconds(b));
 
     tableEl.innerHTML = data.map(r => {
         const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === 'NOT COMPLY';
@@ -715,6 +929,17 @@ function renderTable(data) {
         else if(hvcType.includes("DIAMOND")) hvcBadge = "bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/10";
         else if(hvcType.includes("GOLD")) hvcBadge = "bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/10";
         
+        // Smart Badge untuk Keterangan
+        let ketText = (r["KETERANGAN"] || "").trim();
+        let ketBadge = "-";
+        if (ketText !== "") {
+            let ketClass = "bg-slate-100 text-slate-600 border-slate-200";
+            if (ketText.toUpperCase().includes("GAMAS")) ketClass = "bg-rose-50 text-rose-700 border-rose-200 ring-rose-500/10";
+            else if (ketText.toUpperCase().includes("PENDING")) ketClass = "bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/10";
+            
+            ketBadge = `<span class="px-2.5 py-1.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ring-1 ring-inset shadow-sm inline-block truncate max-w-[200px] ${ketClass}" title="${ketText}">${ketText}</span>`;
+        }
+
         return `
         <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors ${isNotComply ? 'bg-red-50/30 hover:bg-red-50/60' : ''}">
             <td class="px-6 py-4 font-bold text-slate-800 whitespace-nowrap">${r.NOTIKET || '-'}</td>
@@ -730,6 +955,8 @@ function renderTable(data) {
             <td class="px-6 py-4">
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider border ring-1 ring-inset shadow-sm whitespace-nowrap ${hvcBadge}">${hvcType}</span>
             </td>
+            <td class="px-6 py-4 font-mono text-slate-700 font-medium whitespace-nowrap">${r["NOMOR INET"] || "-"}</td>
+            <td class="px-6 py-4 text-slate-600 text-xs whitespace-nowrap">${r["DATEK"] || "-"}</td>
             <td class="px-6 py-4 text-slate-600 font-medium whitespace-nowrap">${r["TEKNISI 1"] || "-"}</td>
             <td class="px-6 py-4 text-slate-600 font-medium whitespace-nowrap">${r["TEKNISI 2"] || "-"}</td>
             <td class="px-6 py-4 font-mono text-sm font-semibold text-slate-700 durasi-cell" 
@@ -740,6 +967,9 @@ function renderTable(data) {
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span class="durasi-text">${getDurasi(r)}</span>
                 </div>
+            </td>
+            <td class="px-6 py-4">
+                ${ketBadge}
             </td>
         </tr>
     `}).join("");
