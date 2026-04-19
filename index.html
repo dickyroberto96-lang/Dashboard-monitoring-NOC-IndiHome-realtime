@@ -524,7 +524,13 @@ async function load() {
         const res = await fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB");
         const jsonRes = await res.json();
         
-        rawData = Array.isArray(jsonRes) ? jsonRes : [];
+        let allData = Array.isArray(jsonRes) ? jsonRes : [];
+        
+        // FIX: FILTER GLOBAL - Hilangkan kategori SQM dan Z_PERMINTAAN dari perhitungan
+        rawData = allData.filter(r => {
+            const custAssign = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
+            return custAssign !== "SQM" && custAssign !== "Z_PERMINTAAN";
+        });
         
         renderKPI();
         renderAI();
