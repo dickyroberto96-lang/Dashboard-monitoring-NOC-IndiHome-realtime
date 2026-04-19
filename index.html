@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOC GOD MODE FINAL</title>
+<title>Dashboard IndiHome RIDAR</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     /* Custom Scrollbar for a cleaner NOC look */
@@ -38,10 +38,13 @@
     </div>
 
     <!-- MODE SWITCHER -->
-    <div class="mb-6 flex items-center bg-white/80 backdrop-blur-md p-1.5 rounded-xl shadow-sm border border-slate-200/60 inline-flex ring-1 ring-slate-900/5">
-        <button onclick="setMode('STO')" id="btnSTO" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300">STO</button>
-        <button onclick="setMode('SEKTOR')" id="btnSEKTOR" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300">SEKTOR</button>
-        <span id="modeLabel" class="ml-4 mr-2 font-black text-slate-400 hidden md:inline-block text-xs uppercase tracking-widest"></span>
+    <div class="mb-6 flex flex-wrap items-center gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-xl shadow-sm border border-slate-200/60 ring-1 ring-slate-900/5">
+        <button onclick="setMode('STO')" id="btnSTO" class="px-6 py-2.5 rounded-lg font-extrabold transition-all duration-300 bg-slate-800 text-white shadow-md transform scale-105">SEMUA STO</button>
+        <button onclick="setMode('SEKTOR')" id="btnSEKTOR" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">SEKTOR</button>
+        <div class="w-px h-6 bg-slate-300 mx-1 hidden sm:block"></div> <!-- Divider -->
+        <button onclick="setMode('PEKANBARU')" id="btnPEKANBARU" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">BRANCH PEKANBARU</button>
+        <button onclick="setMode('DUMAI')" id="btnDUMAI" class="px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800">BRANCH DUMAI</button>
+        <span id="modeLabel" class="ml-auto mr-4 font-black text-slate-400 hidden lg:inline-block text-xs uppercase tracking-widest"></span>
     </div>
 
     <!-- KPI DASHBOARD -->
@@ -127,7 +130,7 @@
         </div>
     </div>
 
-    <!-- NEW: KATEGORI HVC DASHBOARD WITH BREAKDOWN -->
+    <!-- KATEGORI HVC DASHBOARD WITH BREAKDOWN -->
     <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
         <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>
         Distribusi Kategori Tiket (HVC)
@@ -279,6 +282,9 @@ let activeModal = null; // Menyimpan state modal yang sedang terbuka untuk auto-
 // ===== LISTS =====
 const STO_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
 const SEKTOR_LIST = ["ARK-1","ARK-2","BUKIT RAYA","DUMAI","DURI","OUTER 1","OUTER 2","PBRC 1","PBRC 2","PBRC 3","PBRC 4","RENGAT"];
+// DAFTAR BRANCH
+const PEKANBARU_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH"];
+const DUMAI_LIST = ["BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
 
 // ===== NORMALIZATION & MAPPING =====
 function norm(v) {
@@ -353,6 +359,22 @@ function getDurasi(r) {
     }
 }
 
+// ===== NEW HELPER: FILTER DATA BERDASARKAN MODE SAAT INI =====
+function getActiveData() {
+    if (mode === 'PEKANBARU') {
+        return rawData.filter(r => {
+            const val = r.STO || r.LOKASI;
+            return val ? PEKANBARU_LIST.includes(mapSTO(val)) : false;
+        });
+    } else if (mode === 'DUMAI') {
+        return rawData.filter(r => {
+            const val = r.STO || r.LOKASI;
+            return val ? DUMAI_LIST.includes(mapSTO(val)) : false;
+        });
+    }
+    return rawData; // 'STO' dan 'SEKTOR' menampilkan semua data secara global
+}
+
 // ===== DATA LOADING & REAL-TIME AUTO SYNC =====
 async function load() {
     const syncUI = document.getElementById('syncStatus');
@@ -391,39 +413,50 @@ async function load() {
     }
 }
 
-// ===== MODE SWITCHER (STO vs SEKTOR) =====
+// ===== MODE SWITCHER (STO vs SEKTOR vs BRANCH) =====
 function setMode(newMode) {
     mode = newMode;
-    document.getElementById('modeLabel').innerText = `Area: ${mode}`;
     
-    const btnSTO = document.getElementById('btnSTO');
-    const btnSEKTOR = document.getElementById('btnSEKTOR');
+    let modeText = mode;
+    if (mode === 'PEKANBARU') modeText = 'BRANCH PEKANBARU';
+    if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    document.getElementById('modeLabel').innerText = `Area: ${modeText}`;
     
+    const buttons = ['STO', 'SEKTOR', 'PEKANBARU', 'DUMAI'];
     const activeClass = "px-6 py-2.5 rounded-lg font-extrabold transition-all duration-300 bg-slate-800 text-white shadow-md transform scale-105";
     const inactiveClass = "px-6 py-2.5 rounded-lg font-bold transition-all duration-300 text-slate-500 hover:bg-slate-100 hover:text-slate-800";
 
-    if (mode === 'STO') {
-        btnSTO.className = activeClass;
-        btnSEKTOR.className = inactiveClass;
-    } else {
-        btnSEKTOR.className = activeClass;
-        btnSTO.className = inactiveClass;
-    }
+    buttons.forEach(btn => {
+        const el = document.getElementById(`btn${btn}`);
+        if (el) {
+            el.className = (mode === btn) ? activeClass : inactiveClass;
+        }
+    });
 
+    // Render ulang seluruh isi Dashboard agar menyesuaikan branch yang aktif
+    renderKPI();
+    renderAI();
+    renderRank();
     renderGrid();
 }
 
 // ===== RENDER GRID =====
 function renderGrid() {
-    const list = mode === 'STO' ? STO_LIST : SEKTOR_LIST;
+    let list = STO_LIST;
+    if (mode === 'SEKTOR') list = SEKTOR_LIST;
+    else if (mode === 'PEKANBARU') list = PEKANBARU_LIST;
+    else if (mode === 'DUMAI') list = DUMAI_LIST;
+
     const gridEl = document.getElementById('grid');
 
     gridEl.innerHTML = list.map(item => {
+        // Grid cards tetap menggunakan rawData lalu di-filter spesifik per kotaknya
         const locData = rawData.filter(r => {
-            const val = mode === 'STO' ? (r.STO || r.LOKASI) : (r.SEKTOR || r.LOKASI); 
+            const val = (mode === 'SEKTOR') ? (r.SEKTOR || r.LOKASI) : (r.STO || r.LOKASI); 
             if (!val) return false;
-            if (mode === 'STO') return mapSTO(val) === item;
-            return mapSEKTOR(val).includes(item);
+            
+            if (mode === 'SEKTOR') return mapSEKTOR(val).includes(item);
+            return mapSTO(val) === item; // Digunakan untuk STO, PEKANBARU, dan DUMAI
         });
 
         const openCount = locData.filter(r => isTicketOpen(r)).length;
@@ -479,7 +512,11 @@ function openLocation(locName, specificFilter = 'ALL') {
     activeModal = { type: 'LOCATION', locName, specificFilter };
     document.getElementById('modal').classList.remove('hidden');
     
-    let titleText = `Detail Area: <span class="text-blue-600">${locName}</span> (${mode})`;
+    let modeText = mode;
+    if (mode === 'PEKANBARU') modeText = 'BRANCH PEKANBARU';
+    if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+
+    let titleText = `Detail Area: <span class="text-blue-600">${locName}</span> (${modeText})`;
     if (specificFilter !== 'ALL') {
         let badgeColor = specificFilter.includes('NOT') || specificFilter === 'OPEN' ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded' : 'text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded';
         if (specificFilter === 'COMPLY') badgeColor = 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded';
@@ -494,10 +531,12 @@ function openLocation(locName, specificFilter = 'ALL') {
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
 
+    // Menampilkan berdasarkan klik Grid Location tetap difilter dari Data keseluruhan secara spesifik
     let filteredData = rawData.filter(r => {
-        const val = mode === 'STO' ? (r.STO || r.LOKASI) : (r.SEKTOR || r.LOKASI);
+        const val = (mode === 'SEKTOR') ? (r.SEKTOR || r.LOKASI) : (r.STO || r.LOKASI);
         if (!val) return false;
-        return mode === 'STO' ? mapSTO(val) === locName : mapSEKTOR(val).includes(locName);
+        
+        return mode === 'SEKTOR' ? mapSEKTOR(val).includes(locName) : mapSTO(val) === locName;
     });
 
     if (specificFilter === 'OPEN') filteredData = filteredData.filter(r => isTicketOpen(r));
@@ -510,10 +549,13 @@ function openLocation(locName, specificFilter = 'ALL') {
 
 // ===== KPI UPDATES =====
 function renderKPI() {
-    const open = rawData.filter(r => isTicketOpen(r)).length;
-    const close = rawData.filter(r => !isTicketOpen(r)).length;
-    const comply = rawData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "COMPLY").length;
-    const not = rawData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY").length;
+    // HANYA MENGGUNAKAN DATA SESUAI BRANCH YANG AKTIF!
+    const currentData = getActiveData();
+
+    const open = currentData.filter(r => isTicketOpen(r)).length;
+    const close = currentData.filter(r => !isTicketOpen(r)).length;
+    const comply = currentData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "COMPLY").length;
+    const not = currentData.filter(r => (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY").length;
     const totalSLA = comply + not;
 
     document.getElementById('kpiOpen').innerText = open;
@@ -530,7 +572,7 @@ function renderKPI() {
         "REGULER": { t: 0, o: 0, c: 0, comp: 0, not: 0 }
     };
 
-    rawData.forEach(r => {
+    currentData.forEach(r => {
         const hvc = getHVC(r);
         const isOpen = isTicketOpen(r);
         const sla = (r.SLA || "").toString().toUpperCase().trim();
@@ -576,7 +618,8 @@ function filterByHVC(hvcType, specificFilter = 'ALL') {
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
 
-    let filteredData = rawData.filter(r => getHVC(r) === hvcType);
+    // Filter dari Branch yang sedang aktif (bukan semua raw data)
+    let filteredData = getActiveData().filter(r => getHVC(r) === hvcType);
 
     if (specificFilter === 'OPEN') filteredData = filteredData.filter(r => isTicketOpen(r));
     else if (specificFilter === 'CLOSE') filteredData = filteredData.filter(r => !isTicketOpen(r));
@@ -594,7 +637,8 @@ function filterKPI(f) {
     document.getElementById('hvcView').classList.remove('hidden');
     document.getElementById('tableView').classList.add('hidden');
 
-    let data = rawData;
+    // Filter dari Branch yang sedang aktif (bukan semua raw data)
+    let data = getActiveData();
     if (f !== "ALL") {
         if (f === "OPEN") data = data.filter(r => isTicketOpen(r));
         else if (f === "CLOSE") data = data.filter(r => !isTicketOpen(r));
@@ -609,7 +653,7 @@ function filterKPI(f) {
 
     const hvcView = document.getElementById('hvcView');
     if (Object.keys(map).length === 0) {
-         hvcView.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-bold text-lg">Tidak ada data untuk filter ini.</div>`;
+         hvcView.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-bold text-lg">Tidak ada data untuk filter ini pada Branch Aktif.</div>`;
          return;
     }
 
@@ -641,7 +685,8 @@ function openHVC(filter, hvc) {
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
 
-    let data = rawData;
+    // Filter dari Branch yang sedang aktif
+    let data = getActiveData();
     if (filter !== "ALL") {
         if (filter === "OPEN") data = data.filter(r => isTicketOpen(r));
         else if (filter === "CLOSE") data = data.filter(r => !isTicketOpen(r));
@@ -746,7 +791,8 @@ function renderAI() {
     const mapTek1 = {};
     const mapTek2 = {};
 
-    rawData.forEach(r => {
+    // Filter performa teknisi sesuai Branch yang aktif
+    getActiveData().forEach(r => {
         const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
 
         const t1 = r["TEKNISI 1"];
@@ -772,7 +818,8 @@ function renderAI() {
 function renderRank() {
     const map = {};
 
-    rawData.forEach(r => {
+    // Filter dari Branch yang aktif saja
+    getActiveData().forEach(r => {
         const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
         [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => {
             if (!t || t.trim() === "") return;
@@ -812,7 +859,7 @@ function renderRank() {
             `;
         }).join("");
     } else {
-         rankEl.innerHTML = "<div class='text-slate-400 font-medium italic p-4 text-center'>Belum ada data ranking yang valid (min 3 tiket).</div>";
+         rankEl.innerHTML = "<div class='text-slate-400 font-medium italic p-4 text-center'>Belum ada data ranking yang valid pada Branch Aktif (min 3 tiket).</div>";
     }
 }
 
