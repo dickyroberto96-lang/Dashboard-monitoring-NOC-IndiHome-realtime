@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard IndiHome RIDAR</title>
+<title>Dashboard Tiket Gangguan Indihome RIDAR</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     /* Custom Scrollbar for a cleaner NOC look */
@@ -793,6 +793,9 @@ function renderAI() {
 
     // Filter performa teknisi sesuai Branch yang aktif
     getActiveData().forEach(r => {
+        // FIX: Hanya hitung performa untuk tiket yang SUDAH CLOSE. Abaikan jika masih OPEN.
+        if (isTicketOpen(r)) return;
+
         const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
 
         const t1 = r["TEKNISI 1"];
@@ -820,6 +823,9 @@ function renderRank() {
 
     // Filter dari Branch yang aktif saja
     getActiveData().forEach(r => {
+        // FIX: Hanya hitung performa untuk tiket yang SUDAH CLOSE. Abaikan jika masih OPEN.
+        if (isTicketOpen(r)) return;
+
         const isNotComply = (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
         [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => {
             if (!t || t.trim() === "") return;
