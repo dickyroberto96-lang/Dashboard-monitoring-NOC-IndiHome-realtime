@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard  Tiket Gangguan Indihome RIDAR</title>
+<title>Dashboard Tiket Gangguan Indihome RIDAR</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- TAMBAHKAN CHART.JS HANYA UNTUK GRAFIK HARIAN -->
+<!-- TAMBAHKAN CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     /* Custom Scrollbar for Light Theme */
@@ -28,8 +28,8 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div class="relative z-10">
-                <span class="font-black text-xl tracking-tight text-slate-800 block leading-tight">Service Assurance Dashboard</span>
-                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Dashboard Monitoring</span>
+                <span class="font-black text-xl tracking-tight text-slate-800 block leading-tight">Service Assurance</span>
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Dashboard System</span>
             </div>
         </div>
 
@@ -286,8 +286,39 @@
                 <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12"></div>
             </div>
 
-            <!-- MONITORING VIEW (Tabel Pergerakan Teknisi) -->
+            <!-- MONITORING VIEW (Tabel Pergerakan Teknisi & Bar Chart Sektor) -->
             <div id="monitoringView" class="hidden mb-12">
+                
+                <!-- NEW: CHART PERGERAKAN CLOSE SEKTOR VERSI BAR + SA FILTER -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 mb-6 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+                        <h3 class="font-black text-slate-800 flex items-center gap-2">
+                            <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></span>
+                            Grafik Pergerakan Close Sektor per Sesi
+                        </h3>
+                        
+                        <!-- DROP DOWN SA UNTUK MONITORING -->
+                        <div class="relative w-full sm:w-64">
+                            <select id="monitoringSAFilter" onchange="renderMonitoringView()" class="w-full appearance-none bg-slate-50 text-slate-700 border border-slate-300 py-2.5 px-4 pr-8 rounded-lg font-bold text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                                <option value="ALL" selected>Semua Area Aktif</option>
+                                <option value="SA_ARENGKA">SA Arengka</option>
+                                <option value="SA_PBR_BARAT">SA PBR Barat</option>
+                                <option value="SA_PBR_TIMUR">SA PBR Timur</option>
+                                <option value="SA_BUKIT_RAYA">SA Bukit Raya</option>
+                                <option value="SA_DUMAI">SA Dumai</option>
+                                <option value="SA_PANGKALAN_KERINCI">SA Pangkalan Kerinci</option>
+                                <option value="SA_RENGAT">SA Rengat</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full h-72 relative">
+                        <canvas id="chartMonitoringTrend"></canvas>
+                    </div>
+                </div>
+
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
                     <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
                         <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></span>
@@ -297,7 +328,7 @@
                         <table class="w-full text-sm text-left border-collapse border border-slate-200">
                             <thead class="text-[10px] text-slate-600 font-extrabold uppercase tracking-widest bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th class="px-4 py-3 border-r border-slate-200 min-w-[140px]">Sektor</th>
+                                    <th class="px-4 py-3 border-r border-slate-200 min-w-[140px]">Area / Sektor</th>
                                     <th class="px-4 py-3 border-r border-slate-200 min-w-[200px]">Teknisi Utama & Pendamping</th>
                                     <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">00:00 - 02:00</th>
                                     <th class="px-2 py-3 text-center border-r border-slate-200 min-w-[100px]">02:00 - 04:00</th>
@@ -389,6 +420,7 @@ let expandedSektors = new Set(); // State untuk Accordion Sektor
 
 // ===== Chart Instances =====
 let chartDailyAreaInst = null;
+let chartMonitoringInst = null;
 
 // ===== LISTS =====
 const STO_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
@@ -410,7 +442,7 @@ const menuItems = [
     { id: 'SQM', label: '3. Tiket SQM', shortLabel: 'Tiket SQM', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>' },
     { id: 'UNDERSPEC', label: '4. Tiket Underspec', shortLabel: 'Tiket Underspec', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' },
     { id: 'Z_PERMINTAAN', label: '5. Tiket Permintaan', shortLabel: 'Tiket Permintaan', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>' },
-    { id: 'MONITORING_ORDER', label: '6. Monitoring Teknisi', shortLabel: 'Monitoring Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' }
+    { id: 'MONITORING_ORDER', label: '6. Monitoring Teknisi', shortLabel: 'Monitoring Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' }
 ];
 
 // ===== KATEGORI CLASS MAP (COLORS) =====
@@ -613,14 +645,13 @@ function setMode(newMode) {
 // ===== CENTRAL DASHBOARD UPDATER =====
 function updateDashboard() {
     renderKPI(); 
-    renderAI(); // Podium Ranking (Selalu di-update dan ditampilkan)
-    renderRank(); // List Ranking (Selalu di-update dan ditampilkan)
+    renderAI(); 
+    renderRank(); 
 
     if (ticketTypeMode === 'MONITORING_ORDER') {
         document.getElementById('standardView').classList.add('hidden');
         document.getElementById('monitoringView').classList.remove('hidden');
         
-        if(document.getElementById('kpiMainView')) document.getElementById('kpiMainView').classList.add('hidden');
         if(document.getElementById('rincianHarianView')) document.getElementById('rincianHarianView').classList.add('hidden');
         if(document.getElementById('distribusiView')) document.getElementById('distribusiView').classList.add('hidden');
 
@@ -629,7 +660,6 @@ function updateDashboard() {
         document.getElementById('standardView').classList.remove('hidden');
         document.getElementById('monitoringView').classList.add('hidden');
 
-        if(document.getElementById('kpiMainView')) document.getElementById('kpiMainView').classList.remove('hidden');
         if(document.getElementById('rincianHarianView')) document.getElementById('rincianHarianView').classList.remove('hidden');
         if(document.getElementById('distribusiView')) document.getElementById('distribusiView').classList.remove('hidden');
 
@@ -643,6 +673,10 @@ async function load() {
     const syncUI = document.getElementById('syncStatus');
     syncUI.innerHTML = `<svg class="animate-spin h-4 w-4 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...`;
     
+    // Set default Chart configuration globally
+    Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+    Chart.defaults.color = '#64748b'; 
+
     try {
         const res = await fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB");
         if (!res.ok) throw new Error("Network response was not ok");
@@ -1060,11 +1094,25 @@ function openDistribution(filter, cat) {
     renderTable(data);
 }
 
-// ===== RENDER MONITORING VIEW (TABEL TIMELINE) =====
+// ===== RENDER MONITORING VIEW (TABEL TIMELINE & CHART SEKTOR) =====
 function renderMonitoringView() {
-    const currentData = getActiveData();
+    let currentData = getActiveData();
+    const saFilter = document.getElementById('monitoringSAFilter') ? document.getElementById('monitoringSAFilter').value : 'ALL';
+    
+    // 1. FILTER BERDASARKAN DROPDOWN SA
+    if (saFilter !== 'ALL') {
+        if (saFilter === 'SA_ARENGKA') currentData = currentData.filter(r => r.STO || r.LOKASI ? SA_ARENGKA_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+        else if (saFilter === 'SA_PBR_BARAT') currentData = currentData.filter(r => r.SEKTOR || r.LOKASI ? mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_BARAT_LIST.includes(s)) : false);
+        else if (saFilter === 'SA_PBR_TIMUR') currentData = currentData.filter(r => r.SEKTOR || r.LOKASI ? mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_TIMUR_LIST.includes(s)) : false);
+        else if (saFilter === 'SA_BUKIT_RAYA') currentData = currentData.filter(r => r.STO || r.LOKASI ? SA_BUKIT_RAYA_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+        else if (saFilter === 'SA_DUMAI') currentData = currentData.filter(r => r.STO || r.LOKASI ? SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+        else if (saFilter === 'SA_PANGKALAN_KERINCI') currentData = currentData.filter(r => r.STO || r.LOKASI ? SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+        else if (saFilter === 'SA_RENGAT') currentData = currentData.filter(r => r.STO || r.LOKASI ? SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)) : false);
+    }
+
     const tbody = document.getElementById('monitoringTableBody');
     const grouped = {};
+    const sektorChartData = {};
 
     currentData.forEach(r => {
         let tek1 = (r["TEKNISI 1"] || "").toString().trim();
@@ -1072,11 +1120,20 @@ function renderMonitoringView() {
 
         if (!tek1 && !tek2) return;
 
-        const sektor = (r["SEKTOR"] || r["STO"] || "UNKNOWN").toString().toUpperCase();
+        let rawSTO = (r["STO"] || "").toString().toUpperCase().trim();
+        let rawSektor = (r["SEKTOR"] || "").toString().toUpperCase().trim();
+        
+        let sektor = rawSTO || rawSektor || "UNKNOWN";
+        // Tampilkan per STO, KECUALI PBRC 1, PBRC 2, PBRC 3, PBRC 4 tetap sebagai Sektor
+        if (rawSektor.includes("PBRC 1") || rawSektor.includes("PBRC 2") || rawSektor.includes("PBRC 3") || rawSektor.includes("PBRC 4") || rawSektor.includes("PBRC")) {
+            sektor = rawSektor;
+        }
+
         let tekKey = tek1 + "|||" + tek2; 
 
         if (!grouped[sektor]) grouped[sektor] = {};
         if (!grouped[sektor][tekKey]) grouped[sektor][tekKey] = { closed: [], openCount: 0, openTickets: [] };
+        if (!sektorChartData[sektor]) sektorChartData[sektor] = Array(12).fill(0);
 
         if (isTicketOpen(r)) {
             grouped[sektor][tekKey].openCount++;
@@ -1088,11 +1145,82 @@ function renderMonitoringView() {
                 if (!isNaN(date.getTime())) {
                     const hour = date.getHours(); 
                     grouped[sektor][tekKey].closed.push({ inc: r.NOTIKET, hour: hour, hvc: getTicketBucket(r) });
+                    
+                    // Increment chart data per 2 hours (0-11)
+                    const sessionIdx = Math.floor(hour / 2);
+                    sektorChartData[sektor][sessionIdx]++;
                 }
             }
         }
     });
 
+    // === RENDER CHART MONITORING TREND (BAR CHART) ===
+    const sessionLabels = ["00:00-02:00", "02:00-04:00", "04:00-06:00", "06:00-08:00", "08:00-10:00", "10:00-12:00", "12:00-14:00", "14:00-16:00", "16:00-18:00", "18:00-20:00", "20:00-22:00", "22:00-24:00"];
+    const colorPalette = ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#06b6d4', '#d946ef', '#ec4899', '#f97316', '#84cc16'];
+    
+    const datasets = Object.keys(sektorChartData).sort().map((sektor, idx) => {
+        const color = colorPalette[idx % colorPalette.length];
+        return {
+            label: sektor,
+            data: sektorChartData[sektor],
+            backgroundColor: color,
+            borderRadius: 4,
+            maxBarThickness: 32 // Membatasi agar batang tidak terlalu raksasa
+        };
+    });
+
+    if (window.chartMonitoringInst) window.chartMonitoringInst.destroy();
+    const ctxTrend = document.getElementById('chartMonitoringTrend');
+    if (ctxTrend) {
+        window.chartMonitoringInst = new Chart(ctxTrend, {
+            type: 'bar', // UBAH MENJADI BATANG
+            data: { labels: sessionLabels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } } },
+                scales: {
+                    x: { stacked: false, grid: { display: false }, ticks: { font: { size: 9 } } },
+                    y: { 
+                        stacked: false, 
+                        beginAtZero: true, 
+                        suggestedMax: 20, // FIX: Memaksa skala Y minimal mencapai 20
+                        border: { dash: [4, 4] }, 
+                        grid: { color: '#f1f5f9' }, 
+                        ticks: { 
+                            precision: 0,
+                            stepSize: 5 // FIX: Membuat rentang angka rapi per 5 poin (0, 5, 10, 15, 20)
+                        } 
+                    }
+                }
+            },
+            // FIX: Tambahkan Plugin Custom untuk menggambar angka di atas batang
+            plugins: [{
+                id: 'barLabels',
+                afterDraw(chart) {
+                    const { ctx } = chart;
+                    ctx.save();
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (meta.hidden) return; // Abaikan jika legend disembunyikan
+                        meta.data.forEach((datapoint, index) => {
+                            const value = dataset.data[index];
+                            if (value > 0) { // Hanya tampilkan jika nilainya lebih dari 0
+                                const { x, y } = datapoint.tooltipPosition();
+                                ctx.fillStyle = dataset.backgroundColor; // Warna tulisan mengikuti warna batang
+                                ctx.font = 'bold 10px Inter, sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillText(value, x, y - 2); // Posisikan sedikit di atas ujung batang
+                            }
+                        });
+                    });
+                    ctx.restore();
+                }
+            }]
+        });
+    }
+
+    // === RENDER TABEL TIMELINE ===
     let html = '';
     const sektorKeys = Object.keys(grouped).sort();
 
@@ -1103,7 +1231,7 @@ function renderMonitoringView() {
 
     sektorKeys.forEach(sektor => {
         const tekKeys = Object.keys(grouped[sektor]).sort();
-        const isExpanded = expandedSektors.has(sektor); // FIX: Membaca status array klik Sektor yang benar
+        const isExpanded = expandedSektors.has(sektor); // FIX: Membaca state global langsung dengan benar
 
         html += `
             <tr class="group cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors border-b border-slate-200" onclick="toggleSektor('${sektor.replace(/'/g, "\\'")}')">
@@ -1223,7 +1351,6 @@ function renderCharts() {
     Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
     Chart.defaults.color = '#64748b'; 
 
-    // Chart Area Daily Breakdown (Bar)
     if (window.chartDailyAreaInst) window.chartDailyAreaInst.destroy();
     if (document.getElementById('chartDailyArea')) {
         window.chartDailyAreaInst = new Chart(document.getElementById('chartDailyArea'), {
@@ -1247,7 +1374,6 @@ function renderCharts() {
 }
 
 // ===== HELPER KLIK TEKNISI =====
-// FIX: Fungsi baru untuk memunculkan detail tiket saat podium Teknisi di klik
 function openTeknisi(tekName) {
     activeModal = { type: 'TEKNISI', tekName };
     document.getElementById('modal').classList.remove('hidden');
@@ -1257,8 +1383,6 @@ function openTeknisi(tekName) {
     document.getElementById('tableView').classList.remove('hidden');
 
     let data = getActiveData();
-    
-    // Filter tiket yang dipegang oleh teknisi 1 atau teknisi 2 yang sesuai dengan nama yang diklik
     data = data.filter(r => {
         const t1 = (r["TEKNISI 1"] || "").toString().trim();
         const t2 = (r["TEKNISI 2"] || "").toString().trim();
