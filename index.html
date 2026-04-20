@@ -212,10 +212,18 @@
             <!-- DASHBOARD CONTENT -->
             <div id="standardView">
                 <!-- KPI Distribusi Kategori -->
-                <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8"></div>
+                <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"></div>
                 <!-- Breakdown Chart -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 h-80 relative">
-                    <canvas id="chartDailyArea"></canvas>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 h-[400px] relative flex flex-col">
+                    <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
+                        <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </span>
+                        Grafik Progres Tiket
+                    </h3>
+                    <div class="flex-1 relative">
+                        <canvas id="chartDailyArea"></canvas>
+                    </div>
                 </div>
                 <!-- Main Grid STO/Sektor -->
                 <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12"></div>
@@ -341,8 +349,7 @@ const categoryConfigs = [
         {l:'8:00', h:8}, {l:'9:00', h:9}, {l:'10:00', h:10}, {l:'11:00', h:11}, {l:'12:00', h:12}, 
         {l:'13:00', h:13}, {l:'14:00', h:14}, {l:'15:00', h:15}, {l:'16:00', h:16}, {l:'17:00', h:17}
     ]},
-    { id: 'HVC GOLD', label: 'GOLD', bg: 'bg-amber-100/70', text: 'text-amber-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
-    { id: 'REGULER', label: 'REGULER (NON HVC)', bg: 'bg-emerald-100/70', text: 'text-emerald-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
+    { id: 'NON_HVC', label: 'NON HVC (36 JAM)', bg: 'bg-emerald-100/70', text: 'text-emerald-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
     { id: 'SQM', label: 'SQM', bg: 'bg-rose-100/70', text: 'text-rose-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] },
     { id: 'Z_PERMINTAAN', label: 'Z PERMINTAAN', bg: 'bg-indigo-100/70', text: 'text-indigo-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] },
     { id: 'UNDERSPEC', label: 'UNDERSPEC', bg: 'bg-slate-200/70', text: 'text-slate-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] }
@@ -360,8 +367,7 @@ const menuItems = [
 const distClassMap = {
     'HVC PLATINUM': 'from-purple-50 to-purple-100 border-purple-200 text-purple-800',
     'HVC DIAMOND': 'from-blue-50 to-blue-100 border-blue-200 text-blue-800',
-    'HVC GOLD': 'from-amber-50 to-amber-100 border-amber-200 text-amber-800',
-    'REGULER': 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
+    'NON_HVC': 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
     'SQM': 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
     'Z_PERMINTAAN': 'from-indigo-50 to-indigo-100 border-indigo-200 text-indigo-800',
     'UNDERSPEC': 'from-slate-50 to-slate-100 border-slate-200 text-slate-800',
@@ -400,8 +406,9 @@ function getTicketBucket(r) {
     const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
     if(v.includes("PLATINUM")) return "HVC PLATINUM";
     if(v.includes("DIAMOND")) return "HVC DIAMOND";
-    if(v.includes("GOLD")) return "HVC GOLD";
-    return "REGULER"; 
+    
+    // Gabungkan Gold dan Reguler ke NON_HVC
+    return "NON_HVC"; 
 }
 
 function isToday(dateString) {
@@ -436,7 +443,6 @@ function getDurasiSeconds(r) {
     const op = isTicketOpen(r);
     const bucket = getTicketBucket(r);
     
-    // Khusus MANJA menggunakan JAM CUST ASSIGN (Kolom J)
     let startStr = r["REPORT DATE"] || r["DATEK"];
     if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) {
         startStr = r["JAM CUST ASSIGN"];
@@ -484,11 +490,8 @@ function getDurasi(r) {
 function getBaseData() {
     return rawData.filter(r => {
         const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
-        const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
-        
         if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER') return true; 
         
-        // MANJA SEKARANG DI DALAM REGULER
         if (ticketTypeMode === 'REGULER') {
             const isSqm = c.includes("SQM");
             const isZPerm = c.includes("Z_PERMINTAAN");
@@ -656,7 +659,6 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
     else if (rowType === 'AGING') data = data.filter(r => {
         const bkt = getTicketBucket(r);
         if (bkt === "MANJA") {
-            // FIX: Hanya tampilkan data AGING jika tiket masih OPEN
             if (!isTicketOpen(r)) return false;
             if (!isToday(r["JAM CUST ASSIGN"])) return false;
             const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
@@ -710,7 +712,6 @@ function renderReportTable() {
         const cid = getTicketBucket(r); 
         const open = isTicketOpen(r); 
         
-        // Logika SLA khusus MANJA
         let slaVal = (r.SLA || "").toUpperCase().trim();
         if (cid === "MANJA" && !open) {
             slaVal = getDurasiSeconds(r) <= 10800 ? "COMPLY" : "NOT COMPLY";
@@ -724,7 +725,6 @@ function renderReportTable() {
                     if (isToday(r["JAM CUST ASSIGN"])) {
                         if (open) {
                             cd.open++; 
-                            // FIX: Hanya hitung AGING (slot jam) jika tiket berstatus OPEN
                             const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
                             const cfgManja = categoryConfigs.find(c => c.id === "MANJA");
                             let matched = false;
@@ -781,7 +781,7 @@ function renderReportTable() {
 
     let displayCats = categoryConfigs;
     if(ticketTypeMode==='REGULER') {
-        displayCats = categoryConfigs.filter(x => ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER'].includes(x.id));
+        displayCats = categoryConfigs.filter(x => ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC'].includes(x.id));
     }
     else if(ticketTypeMode==='SQM') displayCats = categoryConfigs.filter(x => x.id === 'SQM');
     else if(ticketTypeMode==='UNDERSPEC') displayCats = categoryConfigs.filter(x => x.id === 'UNDERSPEC');
@@ -944,7 +944,7 @@ function filterKPI(f) {
         hv.innerHTML = `<div class="col-span-full py-10 text-center text-slate-500 font-bold">Data kosong.</div>`;
     } else {
         hv.innerHTML = Object.entries(map).map(([k,v]) => {
-            const bg = distClassMap[k] || distClassMap['REGULER'];
+            const bg = distClassMap[k] || distClassMap['NON_HVC'];
             return `<div onclick="openDistribution('${f}', '${k}')" class="cursor-pointer rounded-2xl p-6 border shadow-sm hover:shadow-lg transition-all flex flex-col items-center bg-gradient-to-br ${bg}"><span class="font-extrabold text-lg opacity-80">${k.replace('_', ' ')}</span><span class="text-4xl font-black">${v}</span></div>`;
         }).join("");
     }
@@ -1072,10 +1072,9 @@ function renderDistribution() {
     
     let cats = [];
     if (ticketTypeMode === 'REGULER') {
-        // URUTAN PRIORITAS: DIAMOND, PLATINUM, MANJA, GOLD, REGULER
-        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER'];
+        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC'];
     } else {
-        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
+        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
     }
     
     let st = {}; cats.forEach(x => st[x] = { t: 0, o: 0, c: 0, comp: 0, nok: 0 });
@@ -1095,11 +1094,15 @@ function renderDistribution() {
         } 
     });
 
+    // Update Grid Columns dinamis
+    c.className = `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(cats.length, 5)} gap-5 mb-8`;
+
     c.innerHTML = cats.map(k => {
-        const bg = distClassMap[k] || distClassMap['REGULER'];
+        const bg = distClassMap[k] || distClassMap['NON_HVC'];
+        const label = k === 'NON_HVC' ? 'NON HVC 36 JAM' : k.replace('_',' ');
         return `
         <div onclick="openDistribution('ALL', '${k}')" class="cursor-pointer rounded-2xl p-5 border shadow-sm transition-all hover:shadow-md hover:-translate-y-1 bg-gradient-to-br ${bg} flex flex-col items-center justify-center text-center">
-            <span class="font-extrabold text-[11px] mb-2 uppercase tracking-widest opacity-90">${k.replace('_',' ')}</span>
+            <span class="font-extrabold text-[11px] mb-2 uppercase tracking-widest opacity-90">${label}</span>
             <b class="text-5xl font-black mb-5">${st[k].t}</b>
             <div class="w-full flex flex-col gap-2">
                 <div class="w-full bg-white/90 rounded-lg px-3 py-2 flex text-[9px] font-black uppercase shadow-sm">
@@ -1163,12 +1166,11 @@ function renderGrid() {
 
         const platOpen = locData.filter(r => getTicketBucket(r) === 'HVC PLATINUM' && isTicketOpen(r)).length;
         const diamOpen = locData.filter(r => getTicketBucket(r) === 'HVC DIAMOND' && isTicketOpen(r)).length;
-        const goldOpen = locData.filter(r => getTicketBucket(r) === 'HVC GOLD' && isTicketOpen(r)).length;
-        const regOpen = locData.filter(r => getTicketBucket(r) === 'REGULER' && isTicketOpen(r)).length;
+        const manjaOpen = locData.filter(r => getTicketBucket(r) === 'MANJA' && isTicketOpen(r)).length;
+        const nonHvcOpen = locData.filter(r => getTicketBucket(r) === 'NON_HVC' && isTicketOpen(r)).length;
         const sqmOpen = locData.filter(r => getTicketBucket(r) === 'SQM' && isTicketOpen(r)).length;
         const zperOpen = locData.filter(r => getTicketBucket(r) === 'Z_PERMINTAAN' && isTicketOpen(r)).length;
         const undOpen = locData.filter(r => getTicketBucket(r) === 'UNDERSPEC' && isTicketOpen(r)).length;
-        const manjaOpen = locData.filter(r => getTicketBucket(r) === 'MANJA' && isTicketOpen(r)).length;
 
         const getBadgeHTML = (label, count, activeColorClass, catName) => {
             const colorClass = count > 0 ? activeColorClass : 'text-slate-300';
@@ -1183,7 +1185,6 @@ function renderGrid() {
 
         const isRed = openCount > 0;
         const topBorderClass = isRed ? 'bg-rose-500' : 'bg-emerald-400';
-        
         const iconHTML = isRed 
             ? `<span class="text-rose-500 bg-rose-50 rounded-full p-1.5 flex items-center justify-center"><span class="flex h-2.5 w-2.5 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span></span></span>`
             : `<span class="text-emerald-500 bg-emerald-50 rounded-full p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>`;
@@ -1191,13 +1192,11 @@ function renderGrid() {
         return `
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 transition-all duration-300 relative overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1">
                 <div class="absolute top-0 left-0 w-full h-1.5 ${topBorderClass}"></div>
-                
                 <div class="p-5 flex flex-col h-full mt-1">
                     <div onclick="openLocation('${item}', 'ALL')" class="flex justify-between items-center mb-4 cursor-pointer group">
                         <h4 class="font-black text-xl text-slate-800 group-hover:text-blue-600 transition-colors">${item}</h4>
                         ${iconHTML}
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-3 mb-4">
                         <div onclick="openLocation('${item}', 'OPEN')" class="bg-rose-50/50 p-3 rounded-xl border border-rose-100 flex flex-col items-center justify-center cursor-pointer hover:bg-rose-100/50 transition-colors">
                             <span class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">Saldo</span>
@@ -1208,7 +1207,6 @@ function renderGrid() {
                             <span class="text-3xl font-black text-emerald-600">${closeCount}</span>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-2 mb-4">
                         <div onclick="openLocation('${item}', 'COMPLY')" class="bg-blue-50/50 hover:bg-blue-100/50 px-2 py-1.5 rounded-lg border border-blue-100 flex justify-between items-center cursor-pointer">
                             <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Comply</span>
@@ -1219,13 +1217,11 @@ function renderGrid() {
                             <span class="font-black text-sm text-orange-700">${notComplyCount}</span>
                         </div>
                     </div>
-
                     <div class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-x-2 gap-y-2 mt-auto">
                         ${getBadgeHTML('DIAMOND', diamOpen, 'text-blue-500', 'HVC DIAMOND')}
                         ${getBadgeHTML('PLATINUM', platOpen, 'text-purple-600', 'HVC PLATINUM')}
                         ${getBadgeHTML('MANJA', manjaOpen, 'text-teal-600', 'MANJA')}
-                        ${getBadgeHTML('GOLD', goldOpen, 'text-amber-500', 'HVC GOLD')}
-                        ${getBadgeHTML('REGULER', regOpen, 'text-emerald-600', 'REGULER')}
+                        ${getBadgeHTML('NON HVC', nonHvcOpen, 'text-emerald-600', 'NON_HVC')}
                         ${getBadgeHTML('SQM', sqmOpen, 'text-rose-500', 'SQM')}
                         ${getBadgeHTML('Z PERM', zperOpen, 'text-indigo-500', 'Z_PERMINTAAN')}
                         <div class="col-span-2">
@@ -1244,7 +1240,6 @@ function renderAI() {
         const bkt = getTicketBucket(r);
         let nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY";
         if (bkt === "MANJA") nok = getDurasiSeconds(r) > 10800;
-        
         let t = r["TEKNISI 1"]; if(t && t.trim()){ if(!t1[t]) t1[t]={t:0,n:0}; t1[t].t++; if(nok) t1[t].n++; } 
         t = r["TEKNISI 2"]; if(t && t.trim()){ if(!t2[t]) t2[t]={t:0,n:0}; t2[t].t++; if(nok) t2[t].n++; } 
     });
@@ -1257,7 +1252,6 @@ function renderRank() {
         const bkt = getTicketBucket(r);
         let nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY";
         if (bkt === "MANJA") nok = getDurasiSeconds(r) > 10800;
-
         [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => { if(t && t.trim()){ if(!m[t]) m[t]={t:0,n:0}; m[t].t++; if(nok) m[t].n++; } }); 
     });
     const l = Object.entries(m).map(([n,v]) => ({ n, total:v.t })).sort((a,b)=>a.total-b.total).slice(0, 10);
@@ -1272,7 +1266,7 @@ function getPodium(m) {
     const modernMedals = [
         `<div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-200 via-yellow-400 to-yellow-500 p-1 mb-3 shadow-[0_4px_15px_rgba(251,191,36,0.6)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-yellow-100 to-amber-200 rounded-full flex items-center justify-center border-2 border-yellow-300/50"><span class="text-amber-700 font-black text-xl">1</span></div></div>`,
         `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-slate-200 via-slate-400 to-slate-500 p-1 mb-3 shadow-[0_4px_15px_rgba(148,163,184,0.4)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 rounded-full flex items-center justify-center border-2 border-slate-300/50"><span class="text-slate-600 font-black text-lg">2</span></div></div>`,
-        `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-200 via-orange-400 to-orange-500 p-1 mb-3 shadow-[0_4px_15px_rgba(249,115,22,0.4)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-200 rounded-full flex items-center justify-center border-2 border-orange-300/50"><span class="text-orange-700 font-black text-lg">3</span></div></div>`
+        `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-200 via-orange-400 to-orange-500 p-1 mb-3 shadow-[0_4px_15_rgba(249,115,22,0.4)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-200 rounded-full flex items-center justify-center border-2 border-orange-300/50"><span class="text-orange-700 font-black text-lg">3</span></div></div>`
     ];
     let podiumOrder = [];
     if (top.length === 1) podiumOrder = [{...top[0], idx: 0}];
@@ -1305,12 +1299,10 @@ function renderMonitoringView() {
         const ex = expandedSektors.has(s); h+=`<tr class="bg-slate-50 cursor-pointer" onclick="toggleSektor('${s.replace(/'/g, "\\'")}')"><td class="px-4 py-3 font-black text-blue-700 border-r">${s} ${ex?'▲':'▼'}</td><td colspan="13" class="px-4 py-3 text-xs font-bold text-slate-400">${Object.keys(gr[s]).length} Tim</td></tr>`;
         if(ex) Object.keys(gr[s]).sort().forEach(tk => {
             const inf = gr[s][tk]; const pts = tk.split("|||"); const getB = (h1,h2) => inf.cl.filter(t => t.hr>=h1 && t.hr<=h2).map(t => `<div class="text-[9px] bg-blue-50 p-1 rounded mb-1 text-center font-bold text-blue-700 border border-blue-200">${t.inc}</div>`).join('');
-            
             let t1Name = extractName(pts[0]);
             let t2Name = extractName(pts[1]);
             let dispName = t1Name;
             if (t2Name && t2Name.toUpperCase() !== 'N/A') dispName += ' / ' + t2Name;
-
             h+=`<tr class="border-b"><td class="border-r"></td><td class="px-4 py-3 border-r text-xs font-bold">${dispName} ${inf.o>0?`<br><span class="text-rose-500">${inf.o} Open</span>`:''}</td><td class="px-2 align-top border-r">${getB(0,1)}</td><td class="px-2 align-top border-r">${getB(2,3)}</td><td class="px-2 align-top border-r">${getB(4,5)}</td><td class="px-2 align-top border-r">${getB(6,7)}</td><td class="px-2 align-top border-r">${getB(8,9)}</td><td class="px-2 align-top border-r">${getB(10,11)}</td><td class="px-2 align-top border-r">${getB(12,13)}</td><td class="px-2 align-top border-r">${getB(14,15)}</td><td class="px-2 align-top border-r">${getB(16,17)}</td><td class="px-2 align-top border-r">${getB(18,19)}</td><td class="px-2 align-top border-r">${getB(20,21)}</td><td class="px-2 align-top">${getB(22,23)}</td></tr>`;
         });
     }); document.getElementById('monitoringTableBody').innerHTML = h;
