@@ -1035,9 +1035,33 @@ function renderCharts() {
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false, 
-                plugins: { legend: { position: 'bottom' } }, 
-                scales: { y: { suggestedMax: 20 } } 
-            } 
+                plugins: { 
+                    legend: { position: 'bottom' } 
+                }, 
+                scales: { 
+                    y: { suggestedMax: 20, grace: '10%' } 
+                } 
+            },
+            plugins: [{
+                id: 'datalabels',
+                afterDatasetsDraw: (chart) => {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    data.datasets.forEach((dataset, i) => {
+                        chart.getDatasetMeta(i).data.forEach((bar, index) => {
+                            const value = dataset.data[index];
+                            if (value > 0) {
+                                ctx.fillStyle = dataset.backgroundColor;
+                                ctx.fillText(value, bar.x, bar.y - 5);
+                            }
+                        });
+                    });
+                    ctx.restore();
+                }
+            }]
         });
     }
 }
