@@ -177,46 +177,59 @@
                     <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></span>
                     Rincian Performa Harian
                 </h3>
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8 items-stretch">
                     
                     <!-- Rincian H-1 -->
-                    <div class="relative overflow-hidden bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl shadow-sm border border-rose-200 group">
+                    <div class="relative overflow-hidden bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl shadow-sm border border-rose-200 group flex flex-col">
                         <div class="flex justify-between items-start mb-4">
                             <div class="text-sm text-rose-800 font-extrabold uppercase tracking-widest">H-1 (KEMARIN & SEBELUMNYA)</div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div onclick="filterKPI('H1_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
-                                <div id="kpiH1_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                        <div class="grid grid-cols-3 gap-3 flex-1">
+                            <div onclick="filterKPI('H1_ALL')" class="h-28 bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center leading-tight">OPEN</span>
+                                </div>
+                                <div id="kpiH1_Open" class="text-3xl font-black text-slate-800">0</div>
                             </div>
-                            <div onclick="filterKPI('H1_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
-                                <div id="kpiH1_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                            <div onclick="filterKPI('H1_CLOSE')" class="h-28 bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest text-center leading-tight">CLOSE</span>
+                                </div>
+                                <div id="kpiH1_Close" class="text-3xl font-black text-emerald-700">0</div>
                             </div>
-                            <div onclick="filterKPI('OPEN_H1')" class="bg-rose-500 rounded-xl p-3 shadow-md border border-rose-600 cursor-pointer hover:bg-rose-600 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
-                                <div id="kpiH1_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                            <div onclick="filterKPI('OPEN_H1')" class="h-28 bg-rose-500 rounded-xl p-3 shadow-md border border-rose-600 cursor-pointer hover:bg-rose-600 hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-extrabold tracking-widest text-white uppercase text-center leading-tight">SISA SALDO</span>
+                                </div>
+                                <div id="kpiH1_Saldo" class="text-3xl font-black text-white">0</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Rincian H0 (HI) -->
-                    <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-200 group">
+                    <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-200 group flex flex-col">
                         <div class="flex justify-between items-start mb-4">
-                            <div class="text-sm text-blue-800 font-extrabold uppercase tracking-widest">H-0 (HARI INI)</div>
+                            <div class="text-sm text-blue-800 font-extrabold uppercase tracking-widest">H-0 (HARI INI & SEBELUMNYA)</div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div onclick="filterKPI('H0_ALL')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-bold text-slate-500 mb-1">OPEN</div>
-                                <div id="kpiH0_Open" class="text-2xl lg:text-3xl font-black text-slate-800">0</div>
+                        <div class="grid grid-cols-3 gap-3 flex-1">
+                            <div onclick="filterKPI('H0_ALL')" class="h-28 bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center leading-tight">OPEN</span>
+                                </div>
+                                <div id="kpiH0_Open" class="text-3xl font-black text-slate-800">0</div>
                             </div>
-                            <div onclick="filterKPI('H0_CLOSE')" class="bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-bold text-emerald-600 mb-1">CLOSE</div>
-                                <div id="kpiH0_Close" class="text-2xl lg:text-3xl font-black text-emerald-700">0</div>
+                            <div onclick="filterKPI('H0_CLOSE')" class="h-28 bg-white/80 rounded-xl p-3 shadow-sm border border-white cursor-pointer hover:bg-white hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest text-center leading-tight">CLOSE</span>
+                                </div>
+                                <div id="kpiH0_Close" class="text-3xl font-black text-emerald-700">0</div>
                             </div>
-                            <div onclick="filterKPI('OPEN_H0')" class="bg-blue-600 rounded-xl p-3 shadow-md border border-blue-700 cursor-pointer hover:bg-blue-700 hover:-translate-y-1 transition-all text-center flex flex-col justify-center">
-                                <div class="text-[11px] font-extrabold tracking-widest text-white mb-1">SISA SALDO</div>
-                                <div id="kpiH0_Saldo" class="text-3xl lg:text-4xl font-black text-white">0</div>
+                            <!-- FIX: Ubah trigger menjadi OPEN_3TAHUN -->
+                            <div onclick="filterKPI('OPEN_3TAHUN')" class="h-28 bg-blue-600 rounded-xl p-3 shadow-md border border-blue-700 cursor-pointer hover:bg-blue-700 hover:-translate-y-1 transition-all flex flex-col items-center justify-center">
+                                <div class="h-8 flex items-center justify-center w-full mb-1">
+                                    <span class="text-[10px] font-extrabold tracking-widest text-white uppercase text-center leading-tight">SISA SALDO</span>
+                                </div>
+                                <div id="kpiH0_Saldo" class="text-3xl font-black text-white">0</div>
                             </div>
                         </div>
                     </div>
@@ -957,7 +970,8 @@ function renderKPI() {
     const currentData = getActiveData();
 
     let h1_open = 0; let h1_close = 0; let h1_saldo = 0;
-    let h0_open = 0; let h0_close = 0; let h0_saldo = 0;
+    let h0_open = 0; let h0_close = 0; let open3Years = 0;
+    const now = new Date();
 
     currentData.forEach(r => {
         const age = getTicketAge(r);
@@ -966,9 +980,26 @@ function renderKPI() {
         if (age === "H-1") {
             h1_open++;
             if (isOpen) h1_saldo++; else h1_close++;
-        } else if (age === "H0") {
+        }
+
+        // FIX: Kalkulasi khusus untuk mencari Tiket selama 3 TAHUN (1095 Hari) Kebelakang
+        const dateStr = r["REPORT DATE"] || r["DATEK"];
+        let isWithin3Years = false;
+        if (dateStr) {
+            const rDate = new Date(dateStr);
+            if (!isNaN(rDate.getTime())) {
+                const diffDays = (now - rDate) / (1000 * 60 * 60 * 24);
+                if (diffDays <= 1095) isWithin3Years = true; // Sinkronasi 3 Tahun (1095 hari)
+            } else {
+                isWithin3Years = true;
+            }
+        } else {
+            isWithin3Years = true;
+        }
+
+        if (isWithin3Years) {
             h0_open++;
-            if (isOpen) h0_saldo++; else h0_close++;
+            if (isOpen) open3Years++; else h0_close++;
         }
     });
 
@@ -991,7 +1022,7 @@ function renderKPI() {
 
     if (document.getElementById('kpiH0_Open')) document.getElementById('kpiH0_Open').innerText = h0_open;
     if (document.getElementById('kpiH0_Close')) document.getElementById('kpiH0_Close').innerText = h0_close;
-    if (document.getElementById('kpiH0_Saldo')) document.getElementById('kpiH0_Saldo').innerText = h0_saldo;
+    if (document.getElementById('kpiH0_Saldo')) document.getElementById('kpiH0_Saldo').innerText = open3Years; // Tampilkan saldo Open 3 Tahun
 
     renderDistribution();
 }
@@ -1006,9 +1037,9 @@ function filterKPI(f) {
     if (f === "H1_ALL") modalFilterName = "TOTAL TIKET MASUK (H-1)";
     if (f === "H1_CLOSE") modalFilterName = "CLOSE (H-1)";
     if (f === "OPEN_H1") modalFilterName = "SISA SALDO (H-1)";
-    if (f === "H0_ALL") modalFilterName = "TOTAL TIKET MASUK (H0 / HARI INI)";
-    if (f === "H0_CLOSE") modalFilterName = "CLOSE (H0 / HARI INI)";
-    if (f === "OPEN_H0") modalFilterName = "SISA SALDO (H0 / HARI INI)";
+    if (f === "H0_ALL") modalFilterName = "TOTAL TIKET (3 TAHUN TERAKHIR)";
+    if (f === "H0_CLOSE") modalFilterName = "CLOSE (3 TAHUN TERAKHIR)";
+    if (f === "OPEN_3TAHUN") modalFilterName = "SISA SALDO (3 TAHUN TERAKHIR)";
     if (f === "OPEN") modalFilterName = "OPEN / SISA SALDO GLOBAL";
 
     document.getElementById('modalTitle').innerHTML = `Filter: <span class="text-blue-600">${modalFilterName}</span> (Pilih Kategori)`;
@@ -1018,12 +1049,41 @@ function filterKPI(f) {
     let data = getActiveData();
     if (f !== "ALL") {
         if (f === "OPEN") data = data.filter(r => isTicketOpen(r));
+        else if (f === "OPEN_3TAHUN") {
+            const now = new Date();
+            data = data.filter(r => {
+                if (!isTicketOpen(r)) return false;
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
+        else if (f === "H0_ALL") {
+            const now = new Date();
+            data = data.filter(r => {
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
+        else if (f === "H0_CLOSE") {
+            const now = new Date();
+            data = data.filter(r => {
+                if (isTicketOpen(r)) return false;
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
         else if (f === "H1_ALL") data = data.filter(r => getTicketAge(r) === "H-1");
         else if (f === "H1_CLOSE") data = data.filter(r => getTicketAge(r) === "H-1" && !isTicketOpen(r));
         else if (f === "OPEN_H1") data = data.filter(r => getTicketAge(r) === "H-1" && isTicketOpen(r));
-        else if (f === "H0_ALL") data = data.filter(r => getTicketAge(r) === "H0");
-        else if (f === "H0_CLOSE") data = data.filter(r => getTicketAge(r) === "H0" && !isTicketOpen(r));
-        else if (f === "OPEN_H0") data = data.filter(r => getTicketAge(r) === "H0" && isTicketOpen(r));
         else if (f === "CLOSE") data = data.filter(r => !isTicketOpen(r));
         else data = data.filter(r => (r.SLA || "").toString().toUpperCase().trim() === f);
     }
@@ -1065,9 +1125,10 @@ function openDistribution(filter, cat) {
     if (filter === "H1_ALL") modalFilterName = "TOTAL TIKET (H-1)";
     if (filter === "H1_CLOSE") modalFilterName = "CLOSE (H-1)";
     if (filter === "OPEN_H1") modalFilterName = "SISA SALDO (H-1)";
-    if (filter === "H0_ALL") modalFilterName = "TOTAL TIKET (H-0 / HARI INI)";
-    if (filter === "H0_CLOSE") modalFilterName = "CLOSE (H-0 / HARI INI)";
-    if (filter === "OPEN_H0") modalFilterName = "SISA SALDO (H-0 / HARI INI)";
+    if (filter === "H0_ALL") modalFilterName = "TOTAL TIKET (3 TAHUN TERAKHIR)";
+    if (filter === "H0_CLOSE") modalFilterName = "CLOSE (3 TAHUN TERAKHIR)";
+    if (filter === "OPEN_H0") modalFilterName = "SISA SALDO (H-0 / HARI INI)"; // Fallback backward compatibility
+    if (filter === "OPEN_3TAHUN") modalFilterName = "SISA SALDO (3 TAHUN TERAKHIR)";
     if (filter === "OPEN") modalFilterName = "SALDO (OPEN)"; 
     if (filter === "ALL") modalFilterName = "SEMUA STATUS";
 
@@ -1079,11 +1140,41 @@ function openDistribution(filter, cat) {
     
     if (filter !== "ALL") {
         if (filter === "OPEN") data = data.filter(r => isTicketOpen(r));
+        else if (filter === "OPEN_3TAHUN") {
+            const now = new Date();
+            data = data.filter(r => {
+                if (!isTicketOpen(r)) return false;
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
+        else if (filter === "H0_ALL") {
+            const now = new Date();
+            data = data.filter(r => {
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
+        else if (filter === "H0_CLOSE") {
+            const now = new Date();
+            data = data.filter(r => {
+                if (isTicketOpen(r)) return false;
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                if (!dateStr) return true;
+                const rDate = new Date(dateStr);
+                if (isNaN(rDate.getTime())) return true;
+                return (now - rDate) / (1000 * 60 * 60 * 24) <= 1095;
+            });
+        }
         else if (filter === "H1_ALL") data = data.filter(r => getTicketAge(r) === "H-1");
         else if (filter === "H1_CLOSE") data = data.filter(r => getTicketAge(r) === "H-1" && !isTicketOpen(r));
         else if (filter === "OPEN_H1") data = data.filter(r => getTicketAge(r) === "H-1" && isTicketOpen(r));
-        else if (filter === "H0_ALL") data = data.filter(r => getTicketAge(r) === "H0");
-        else if (filter === "H0_CLOSE") data = data.filter(r => getTicketAge(r) === "H0" && !isTicketOpen(r));
         else if (filter === "OPEN_H0") data = data.filter(r => getTicketAge(r) === "H0" && isTicketOpen(r));
         else if (filter === "CLOSE") data = data.filter(r => !isTicketOpen(r));
         else data = data.filter(r => (r.SLA || "").toString().toUpperCase().trim() === filter);
@@ -1322,8 +1413,10 @@ function renderCharts() {
     else if (mode === 'SA_RENGAT') list = SA_RENGAT_LIST;
 
     let labelsArea = [];
-    let h1SaldoData = []; let h1CloseData = [];
-    let h0SaldoData = []; let h0CloseData = [];
+    let h1Data = []; 
+    let h0Data = []; 
+    let totalCloseData = [];
+    const now = new Date();
 
     list.forEach(item => {
         const locData = currentData.filter(r => {
@@ -1335,17 +1428,35 @@ function renderCharts() {
         if (locData.length === 0 && mode === 'SEKTOR') return; 
 
         labelsArea.push(item);
-        let s1 = 0, c1 = 0, s0 = 0, c0 = 0;
+        let s1 = 0, s0 = 0, tClose = 0;
         
         locData.forEach(r => {
             const age = getTicketAge(r);
             const isOpen = isTicketOpen(r);
-            if (age === "H-1") { if (isOpen) s1++; else c1++; }
-            else if (age === "H0") { if (isOpen) s0++; else c0++; }
+            
+            if (!isOpen) {
+                tClose++; // Kumpulkan semua tiket Close
+            } else {
+                if (age === "H-1") s1++; // H-1 Saldo
+                
+                // H-0 Saldo (Sinkron dengan perhitungan Saldo 3 Tahun Terakhir)
+                const dateStr = r["REPORT DATE"] || r["DATEK"];
+                let isWithin3Years = false;
+                if (dateStr) {
+                    const rDate = new Date(dateStr);
+                    if (!isNaN(rDate.getTime())) {
+                        const diffDays = (now - rDate) / (1000 * 60 * 60 * 24);
+                        if (diffDays <= 1095) isWithin3Years = true;
+                    } else isWithin3Years = true;
+                } else isWithin3Years = true;
+                
+                if (isWithin3Years) s0++;
+            }
         });
         
-        h1SaldoData.push(s1); h1CloseData.push(c1);
-        h0SaldoData.push(s0); h0CloseData.push(c0);
+        h1Data.push(s1); 
+        h0Data.push(s0); 
+        totalCloseData.push(tClose);
     });
 
     Chart.defaults.font.family = "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
@@ -1358,17 +1469,39 @@ function renderCharts() {
             data: {
                 labels: labelsArea,
                 datasets: [
-                    { label: 'H-1 Saldo', data: h1SaldoData, backgroundColor: '#f43f5e', borderRadius: 4, maxBarThickness: 32 }, 
-                    { label: 'H-1 Close', data: h1CloseData, backgroundColor: '#10b981', borderRadius: 4, maxBarThickness: 32 }, 
-                    { label: 'H-0 Saldo', data: h0SaldoData, backgroundColor: '#3b82f6', borderRadius: 4, maxBarThickness: 32 }, 
-                    { label: 'H-0 Close', data: h0CloseData, backgroundColor: '#0ea5e9', borderRadius: 4, maxBarThickness: 32 }  
+                    { label: 'H-1 Saldo', data: h1Data, backgroundColor: '#f43f5e', borderRadius: 4, maxBarThickness: 32 }, 
+                    { label: 'H-0 Saldo', data: h0Data, backgroundColor: '#3b82f6', borderRadius: 4, maxBarThickness: 32 }, 
+                    { label: 'Total Close', data: totalCloseData, backgroundColor: '#10b981', borderRadius: 4, maxBarThickness: 32 }  
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
                 scales: { x: { grid: { display: false } }, y: { border: { dash: [4, 4] }, grid: { color: '#e2e8f0' } } }
-            }
+            },
+            plugins: [{
+                id: 'barLabelsArea',
+                afterDraw(chart) {
+                    const { ctx } = chart;
+                    ctx.save();
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        if (meta.hidden) return; // Abaikan jika legend disembunyikan
+                        meta.data.forEach((datapoint, index) => {
+                            const value = dataset.data[index];
+                            if (value > 0) { // Hanya tampilkan jika nilainya lebih dari 0
+                                const { x, y } = datapoint.tooltipPosition();
+                                ctx.fillStyle = dataset.backgroundColor; 
+                                ctx.font = 'bold 10px Inter, sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillText(value, x, y - 2); 
+                            }
+                        });
+                    });
+                    ctx.restore();
+                }
+            }]
         });
     }
 }
