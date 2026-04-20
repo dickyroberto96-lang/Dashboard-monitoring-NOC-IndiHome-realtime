@@ -212,7 +212,7 @@
             <!-- DASHBOARD CONTENT -->
             <div id="standardView">
                 <!-- KPI Distribusi Kategori -->
-                <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8"></div>
+                <div id="distributionCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8"></div>
                 <!-- Breakdown Chart -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 h-80 relative">
                     <canvas id="chartDailyArea"></canvas>
@@ -337,6 +337,11 @@ const SA_MAP = {
 const categoryConfigs = [
     { id: 'HVC DIAMOND', label: 'DIAMOND (3 JAM)', bg: 'bg-pink-100/70', text: 'text-pink-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'> 3 Jam', max:Infinity}] },
     { id: 'HVC PLATINUM', label: 'PLATINUM (6 JAM)', bg: 'bg-purple-100/70', text: 'text-purple-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'> 6 Jam', max:Infinity}] },
+    // MANJA DENGAN SLOT JAM (8:00 - 17:00)
+    { id: 'MANJA', label: 'MANJA (3 JAM)', bg: 'bg-teal-100/70', text: 'text-teal-900', ranges: [
+        {l:'8:00', h:8}, {l:'9:00', h:9}, {l:'10:00', h:10}, {l:'11:00', h:11}, {l:'12:00', h:12}, 
+        {l:'13:00', h:13}, {l:'14:00', h:14}, {l:'15:00', h:15}, {l:'16:00', h:16}, {l:'17:00', h:17}
+    ]},
     { id: 'HVC GOLD', label: 'GOLD', bg: 'bg-amber-100/70', text: 'text-amber-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
     { id: 'REGULER', label: 'REGULER (NON HVC)', bg: 'bg-emerald-100/70', text: 'text-emerald-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
     { id: 'SQM', label: 'SQM', bg: 'bg-rose-100/70', text: 'text-rose-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] },
@@ -360,7 +365,8 @@ const distClassMap = {
     'REGULER': 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
     'SQM': 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
     'Z_PERMINTAAN': 'from-indigo-50 to-indigo-100 border-indigo-200 text-indigo-800',
-    'UNDERSPEC': 'from-slate-50 to-slate-100 border-slate-200 text-slate-800'
+    'UNDERSPEC': 'from-slate-50 to-slate-100 border-slate-200 text-slate-800',
+    'MANJA': 'from-teal-50 to-teal-100 border-teal-200 text-teal-800'
 };
 
 // Global State
@@ -384,15 +390,29 @@ function isTicketOpen(r) {
 }
 
 function getTicketBucket(r) {
+    const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
+    if (kt.includes("MANJA")) return "MANJA";
+    
     const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
     if (c.includes("SQM")) return "SQM";
     if (c.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
     if (c.includes("UNDERSPEC")) return "UNDERSPEC";
+    
     const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
     if(v.includes("PLATINUM")) return "HVC PLATINUM";
     if(v.includes("DIAMOND")) return "HVC DIAMOND";
     if(v.includes("GOLD")) return "HVC GOLD";
     return "REGULER"; 
+}
+
+function isToday(dateString) {
+    if (!dateString) return false;
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+           d.getMonth() === today.getMonth() &&
+           d.getFullYear() === today.getFullYear();
 }
 
 function getTicketAge(r) {
@@ -404,7 +424,6 @@ function getTicketAge(r) {
     
     if (rDay.getTime() === cDay.getTime()) return "H0";
     
-    // Logika baru: Hitung H-1 mulai dari kemarin (1 hari) sampai 3 tahun (1095 hari) ke belakang
     if (rDay.getTime() < cDay.getTime()) {
         const diffDays = Math.round((cDay.getTime() - rDay.getTime()) / (1000 * 60 * 60 * 24));
         if (diffDays >= 1 && diffDays <= 1095) {
@@ -416,17 +435,29 @@ function getTicketAge(r) {
 
 function getDurasiSeconds(r) {
     const op = isTicketOpen(r);
-    if(!op && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") {
+    const bucket = getTicketBucket(r);
+    
+    // Khusus MANJA menggunakan JAM CUST ASSIGN (Kolom J)
+    let startStr = r["REPORT DATE"] || r["DATEK"];
+    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) {
+        startStr = r["JAM CUST ASSIGN"];
+    }
+
+    if(!op && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "" && bucket !== "MANJA") {
         const p = r["DURASI CLOSE"].split(':');
         if(p.length === 3) return (parseInt(p[0])*3600)+(parseInt(p[1])*60)+parseInt(p[2]);
     }
-    const dS = r["REPORT DATE"] || r["DATEK"]; if(!dS) return 0;
-    const s = new Date(dS); if(isNaN(s.getTime())) return 0;
-    const e = !op ? (r["JAM TECH CLOSED"]||r["AM TECH CLOSE"] ? new Date(r["JAM TECH CLOSED"]||r["AM TECH CLOSE"]):new Date()) : new Date();
+
+    if(!startStr) return 0;
+    const s = new Date(startStr); if(isNaN(s.getTime())) return 0;
+    
+    let endStr = r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
+    const e = !op ? (endStr ? new Date(endStr) : new Date()) : new Date();
+    
     return Math.max(0, (e - s) / 1000);
 }
 
-function calculateDuration(sS, eS, st) {
+function calculateDuration(sS, eS, st, bucket = "") {
     if(!sS) return "-";
     const s = new Date(sS); if(isNaN(s.getTime())) return "-";
     const op = isTicketOpen({ "STATUS TIKET": st });
@@ -437,19 +468,35 @@ function calculateDuration(sS, eS, st) {
 }
 
 function getDurasi(r) {
-    const start = r["REPORT DATE"] || r["DATEK"];
-    if(!isTicketOpen(r)) {
-        if(r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") return r["DURASI CLOSE"];
-        return calculateDuration(start, r["JAM TECH CLOSED"]||r["AM TECH CLOSE"], r["STATUS TIKET"]);
+    const bucket = getTicketBucket(r);
+    let start = r["REPORT DATE"] || r["DATEK"];
+    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) {
+        start = r["JAM CUST ASSIGN"];
     }
-    return calculateDuration(start, null, "OPEN");
+
+    if(!isTicketOpen(r)) {
+        if(bucket !== "MANJA" && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") return r["DURASI CLOSE"];
+        let end = r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
+        return calculateDuration(start, end, r["STATUS TIKET"], bucket);
+    }
+    return calculateDuration(start, null, "OPEN", bucket);
 }
 
 function getBaseData() {
     return rawData.filter(r => {
         const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
+        const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
+        
         if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER') return true; 
-        if (ticketTypeMode === 'REGULER') return !c.includes("SQM") && !c.includes("Z_PERMINTAAN") && !c.includes("UNDERSPEC");
+        
+        // MANJA SEKARANG DI DALAM REGULER
+        if (ticketTypeMode === 'REGULER') {
+            const isSqm = c.includes("SQM");
+            const isZPerm = c.includes("Z_PERMINTAAN");
+            const isUnderspec = c.includes("UNDERSPEC");
+            return !isSqm && !isZPerm && !isUnderspec; 
+        }
+        
         if (ticketTypeMode === 'SQM') return c.includes("SQM");
         if (ticketTypeMode === 'Z_PERMINTAAN') return c.includes("Z_PERMINTAAN");
         if (ticketTypeMode === 'UNDERSPEC') return c.includes("UNDERSPEC");
@@ -476,7 +523,6 @@ function renderSidebar() {
     const nav = document.getElementById('sidebarNav'); if(!nav) return;
     nav.innerHTML = menuItems.map(item => {
         const act = item.id === ticketTypeMode;
-        // Penyesuaian class agar icon memiliki fixed width sehingga teks di sebelahnya lurus rapi
         const bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
         const iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
         
@@ -497,9 +543,18 @@ function renderTable(data) {
     if(data.length === 0) { tableEl.innerHTML = `<tr><td colspan="10" class="py-10 text-center text-slate-500 font-bold">Data Kosong.</td></tr>`; return; }
     data.sort((a, b) => getDurasiSeconds(a) - getDurasiSeconds(b));
     tableEl.innerHTML = data.map(r => {
-        const isOpen = isTicketOpen(r); const isNot = (r.SLA||"").toUpperCase().trim()==='NOT COMPLY';
+        const isOpen = isTicketOpen(r); 
         const bkt = getTicketBucket(r);
-        return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-bold text-center">${r.NOTIKET || '-'}</td><td class="px-6 py-4 text-center"><span class="${isOpen ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'} px-2 py-1 rounded text-xs font-bold">${r["STATUS TIKET"] || '-'}</span></td><td class="px-6 py-4 text-center"><span class="${isNot?'text-rose-600 font-black':''}">${r.SLA || '-'}</span></td><td class="px-6 py-4 text-center text-[10px] font-bold">${bkt.replace('_', ' ')}</td><td class="px-6 py-4 font-mono text-center">${r["NOMOR INET"] || "-"}</td><td class="px-6 py-4 text-xs text-center">${r["DATEK"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 1"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 2"] || "-"}</td><td class="px-6 py-4 font-mono text-sm text-center durasi-cell" data-start="${r["REPORT DATE"] || r["DATEK"] || ''}" data-status="${r["STATUS TIKET"] || ''}"><span class="durasi-text">${getDurasi(r)}</span></td><td class="px-6 py-4 text-xs">${r["KETERANGAN"] || "-"}</td></tr>`
+        
+        let slaVal = (r.SLA||"").toUpperCase().trim();
+        if (bkt === "MANJA" && !isOpen) {
+            const dur = getDurasiSeconds(r);
+            slaVal = dur <= 10800 ? "COMPLY" : "NOT COMPLY";
+        }
+        
+        const isNot = slaVal === 'NOT COMPLY';
+        
+        return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-bold text-center">${r.NOTIKET || '-'}</td><td class="px-6 py-4 text-center"><span class="${isOpen ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'} px-2 py-1 rounded text-xs font-bold">${r["STATUS TIKET"] || '-'}</span></td><td class="px-6 py-4 text-center"><span class="${isNot?'text-rose-600 font-black':''}">${slaVal || '-'}</span></td><td class="px-6 py-4 text-center text-[10px] font-bold">${bkt.replace('_', ' ')}</td><td class="px-6 py-4 font-mono text-center">${r["NOMOR INET"] || "-"}</td><td class="px-6 py-4 text-xs text-center">${r["DATEK"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 1"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 2"] || "-"}</td><td class="px-6 py-4 font-mono text-sm text-center durasi-cell" data-start="${bkt === 'MANJA' ? (r["JAM CUST ASSIGN"] || '') : (r["REPORT DATE"] || r["DATEK"] || '')}" data-status="${r["STATUS TIKET"] || ''}" data-bucket="${bkt}"><span class="durasi-text">${getDurasi(r)}</span></td><td class="px-6 py-4 text-xs">${r["KETERANGAN"] || "-"}</td></tr>`
     }).join("");
 }
 window.renderTable = renderTable;
@@ -540,10 +595,20 @@ function openLocation(ln, sf, bc) {
         let s = (r.SEKTOR || "").toUpperCase(); let st = (r.STO || "").toUpperCase(); 
         return isS ? mapSEKTOR(s).includes(ln) : mapSTO(st) === ln; 
     });
+    
     if(sf==='OPEN') fd=fd.filter(r=>isTicketOpen(r)); 
     else if(sf==='CLOSE') fd=fd.filter(r=>!isTicketOpen(r));
-    else if(sf==='COMPLY') fd=fd.filter(r=>(r.SLA||"").toUpperCase().trim()==='COMPLY');
-    else if(sf==='NOT COMPLY') fd=fd.filter(r=>(r.SLA||"").toUpperCase().trim()==='NOT COMPLY');
+    else if(sf==='COMPLY') fd=fd.filter(r=>{
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return !isTicketOpen(r) && getDurasiSeconds(r) <= 10800;
+        return !isTicketOpen(r) && (r.SLA||"").toUpperCase().trim()==='COMPLY';
+    });
+    else if(sf==='NOT COMPLY') fd=fd.filter(r=>{
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return !isTicketOpen(r) && getDurasiSeconds(r) > 10800;
+        return !isTicketOpen(r) && (r.SLA||"").toUpperCase().trim()==='NOT COMPLY';
+    });
+    
     if(bc) fd=fd.filter(r=>getTicketBucket(r)===bc); 
     renderTable(fd);
 }
@@ -572,20 +637,42 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
         });
     }
     if (catId !== 'ALL') data = data.filter(r => getTicketBucket(r) === catId);
+    
     if (rowType === 'OPEN') data = data.filter(r => isTicketOpen(r));
     else if (rowType === 'CLOSE') data = data.filter(r => !isTicketOpen(r));
-    else if (rowType === 'COMPLY') data = data.filter(r => !isTicketOpen(r) && (r.SLA || "").toUpperCase().trim() === "COMPLY");
-    else if (rowType === 'NOT_COMPLY') data = data.filter(r => !isTicketOpen(r) && (r.SLA || "").toUpperCase().trim() === "NOT COMPLY");
-    // FIX: SALDO H-1 menampilkan SEMUA tiket H-1 (tidak berkurang saat diclose hari ini)
+    else if (rowType === 'COMPLY') data = data.filter(r => {
+        if (isTicketOpen(r)) return false;
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return getDurasiSeconds(r) <= 10800;
+        return (r.SLA || "").toUpperCase().trim() === "COMPLY";
+    });
+    else if (rowType === 'NOT_COMPLY') data = data.filter(r => {
+        if (isTicketOpen(r)) return false;
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return getDurasiSeconds(r) > 10800;
+        return (r.SLA || "").toUpperCase().trim() === "NOT COMPLY";
+    });
     else if (rowType === 'SALDO_H1') data = data.filter(r => getTicketAge(r) === "H-1");
-    // FIX: SALDO HI menampilkan SISA SALDO (Hanya menghitung yang masih Open)
     else if (rowType === 'SALDO_HI') data = data.filter(r => isTicketOpen(r) && (!r["REPORT DATE"] || (now - new Date(r["REPORT DATE"])) / 864e5 <= 1095));
     else if (rowType === 'AGING') data = data.filter(r => {
-        if (!isTicketOpen(r)) return false;
-        const hrs = getDurasiSeconds(r) / 3600; const conf = categoryConfigs.find(c => c.id === catId);
-        let idx = conf.ranges.length - 1;
-        for (let i = 0; i < conf.ranges.length; i++) if (hrs <= conf.ranges[i].max) { idx = i; break; }
-        return idx === parseInt(agingIdx);
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") {
+            // Filter by Today + Hour match
+            if (!isToday(r["JAM CUST ASSIGN"])) return false;
+            const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
+            const cfg = categoryConfigs.find(c => c.id === "MANJA");
+            let targetIdx = cfg.ranges.length - 1;
+            for (let i = 0; i < cfg.ranges.length; i++) {
+                if (hour === cfg.ranges[i].h) { targetIdx = i; break; }
+            }
+            return targetIdx === parseInt(agingIdx);
+        } else {
+            if (!isTicketOpen(r)) return false;
+            const hrs = getDurasiSeconds(r) / 3600; const conf = categoryConfigs.find(c => c.id === catId);
+            let idx = conf.ranges.length - 1;
+            for (let i = 0; i < conf.ranges.length; i++) if (hrs <= conf.ranges[i].max) { idx = i; break; }
+            return idx === parseInt(agingIdx);
+        }
     });
     renderTable(data);
 }
@@ -607,7 +694,6 @@ function renderReportTable() {
     const reportData = {};
     [...tableColumns, 'TOTAL'].forEach(c => {
         reportData[c] = { h1: 0, hi: 0, cats: {} };
-        // Inisialisasi menggunakan key 'nok'
         categoryConfigs.forEach(cfg => reportData[c].cats[cfg.id] = { aging: Array(cfg.ranges.length).fill(0), open: 0, comply: 0, nok: 0, close: 0 });
     });
 
@@ -620,23 +706,53 @@ function renderReportTable() {
             else { let m = mapSTO(rSTO); if (tableColumns.includes(m)) loc = m; }
         }
         if (!loc) return;
-        const cid = getTicketBucket(r); const open = isTicketOpen(r); const sla = (r.SLA || "").toUpperCase().trim();
+        
+        const cid = getTicketBucket(r); 
+        const open = isTicketOpen(r); 
+        
+        // Logika SLA khusus MANJA
+        let slaVal = (r.SLA || "").toUpperCase().trim();
+        if (cid === "MANJA" && !open) {
+            slaVal = getDurasiSeconds(r) <= 10800 ? "COMPLY" : "NOT COMPLY";
+        }
+
         [loc, 'TOTAL'].forEach(k => {
-            // Perhitungan Kategori (Hanya untuk yang open/close sesuai logikanya)
             if (reportData[k].cats[cid]) {
                 const cd = reportData[k].cats[cid];
-                if (open) {
-                    cd.open++; const hrs = getDurasiSeconds(r) / 3600; const cfg = categoryConfigs.find(c => c.id === cid);
-                    let f = false; for (let i = 0; i < cfg.ranges.length; i++) if (hrs <= cfg.ranges[i].max) { cd.aging[i]++; f = true; break; }
-                    if (!f) cd.aging[cfg.ranges.length - 1]++;
-                } else { cd.close++; if (sla === "COMPLY") cd.comply++; if (sla === "NOT COMPLY") cd.nok++; }
+                
+                // Khusus MANJA: Hanya masuk tabel jika Jam Cust Assign adalah Hari Ini
+                if (cid === "MANJA") {
+                    if (isToday(r["JAM CUST ASSIGN"])) {
+                        if (open) cd.open++; else { cd.close++; if (slaVal === "COMPLY") cd.comply++; else cd.nok++; }
+                        
+                        // Aging berdasarkan Jam Penugasan (Slot Jam)
+                        const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
+                        const cfgManja = categoryConfigs.find(c => c.id === "MANJA");
+                        let matched = false;
+                        for (let i = 0; i < cfgManja.ranges.length; i++) {
+                            if (hour === cfgManja.ranges[i].h) { cd.aging[i]++; matched = true; break; }
+                        }
+                        if (!matched && hour > 17) cd.aging[cfgManja.ranges.length - 1]++;
+                    }
+                } else {
+                    // Logika Aging Standar (HVC/Reguler/Sqm/dll)
+                    if (open) {
+                        cd.open++; 
+                        const hrs = getDurasiSeconds(r) / 3600; 
+                        const cfg = categoryConfigs.find(c => c.id === cid);
+                        let f = false; 
+                        for (let i = 0; i < cfg.ranges.length; i++) if (hrs <= cfg.ranges[i].max) { cd.aging[i]++; f = true; break; }
+                        if (!f) cd.aging[cfg.ranges.length - 1]++;
+                    } else { 
+                        cd.close++; 
+                        if (slaVal === "COMPLY") cd.comply++; 
+                        if (slaVal === "NOT COMPLY") cd.nok++; 
+                    }
+                }
             }
             
-            // FIX: Saldo H-1 menghitung semua tiket (open/close) agar tidak berkurang saat tiket diclose hari ini
-            if (getTicketAge(r) === "H-1") {
-                reportData[k].h1++; 
-            }
-            // FIX: Saldo HI adalah Sisa Saldo (HANYA menghitung tiket yang masih Open)
+            // Hitungan Saldo di bagian bawah matriks
+            if (getTicketAge(r) === "H-1") { reportData[k].h1++; }
             if (open && (!r["REPORT DATE"] || (now - new Date(r["REPORT DATE"])) / 864e5 <= 1095)) {
                 reportData[k].hi++; 
             }
@@ -663,9 +779,10 @@ function renderReportTable() {
     }
     html += `<tbody class="bg-white">`;
 
-    // Filter categories dynamically based on selected Ticket Type
     let displayCats = categoryConfigs;
-    if(ticketTypeMode==='REGULER') displayCats = categoryConfigs.filter(x => ['REGULER','HVC PLATINUM','HVC GOLD','HVC DIAMOND'].includes(x.id));
+    if(ticketTypeMode==='REGULER') {
+        displayCats = categoryConfigs.filter(x => ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER'].includes(x.id));
+    }
     else if(ticketTypeMode==='SQM') displayCats = categoryConfigs.filter(x => x.id === 'SQM');
     else if(ticketTypeMode==='UNDERSPEC') displayCats = categoryConfigs.filter(x => x.id === 'UNDERSPEC');
     else if(ticketTypeMode==='Z_PERMINTAAN') displayCats = categoryConfigs.filter(x => x.id === 'Z_PERMINTAAN');
@@ -697,7 +814,6 @@ function renderReportTable() {
     tableColumns.forEach(c => html += `<td onclick="openMatrixDetail('${c}', 'ALL', 'SALDO_H1')" class="cursor-pointer px-2 py-2 border-r border-slate-300 hover:bg-slate-400">${reportData[c].h1}</td>`);
     html += `<td onclick="openMatrixDetail('TOTAL', 'ALL', 'SALDO_H1')" class="cursor-pointer px-2 py-2 bg-slate-400 border-l border-slate-500 hover:bg-slate-500">${reportData['TOTAL'].h1}</td></tr>`;
     
-    // FIX: Mengganti label dari SALDO OPEN HI menjadi SISA SALDO (HI) agar lebih relevan dengan isi angkanya
     html += `<tr class="bg-slate-200 font-bold border-b border-slate-400 transition-colors"><td class="px-2 py-2 text-left sticky-col bg-slate-300 border-r border-slate-400 shadow-sm">SISA SALDO (HI)</td>`;
     tableColumns.forEach(c => html += `<td onclick="openMatrixDetail('${c}', 'ALL', 'SALDO_HI')" class="cursor-pointer px-2 py-2 border-r border-slate-300 hover:bg-slate-400">${reportData[c].hi}</td>`);
     html += `<td onclick="openMatrixDetail('TOTAL', 'ALL', 'SALDO_HI')" class="cursor-pointer px-2 py-2 bg-slate-400 border-l border-slate-500 hover:bg-slate-500">${reportData['TOTAL'].hi}</td></tr>`;
@@ -712,7 +828,6 @@ function renderReportTable() {
     
     html += `</tbody></table>`;
     
-    // Set dynamic report title
     let reportTitle = "Laporan Progres Tiket Gangguan";
     if (mode === 'PEKANBARU') reportTitle += " Branch Pekanbaru";
     else if (mode === 'DUMAI') reportTitle += " Branch Dumai";
@@ -733,7 +848,6 @@ async function load() {
         const json = await res.json(); rawData = Array.isArray(json) ? json : [];
         renderSidebar(); updateDashboard();
         if(sUI) {
-            // Format waktu menjadi 24 jam (misal: 17:45:24)
             const timeStr = new Date().toLocaleTimeString('id-ID', { hour12: false });
             sUI.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span> Updated: ${timeStr}`;
             sUI.className = "flex items-center justify-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-4 py-2.5 rounded-full shadow-sm border border-emerald-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
@@ -771,8 +885,21 @@ function renderKPI() {
         if(!rD || isNaN(rD.getTime()) || (now - rD) / 864e5 <= 1095) { h0o++; if(op) o3Y++; else h0c++; }
     });
     const opG = data.filter(r => isTicketOpen(r)).length, clG = data.filter(r => !isTicketOpen(r)).length;
-    const cmp = data.filter(r => (r.SLA||"").toUpperCase().trim()==="COMPLY").length;
-    const nok = data.filter(r => (r.SLA||"").toUpperCase().trim()==="NOT COMPLY").length;
+    
+    const cmp = data.filter(r => {
+        if (isTicketOpen(r)) return false;
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return getDurasiSeconds(r) <= 10800;
+        return (r.SLA||"").toUpperCase().trim()==="COMPLY";
+    }).length;
+    
+    const nok = data.filter(r => {
+        if (isTicketOpen(r)) return false;
+        const bkt = getTicketBucket(r);
+        if (bkt === "MANJA") return getDurasiSeconds(r) > 10800;
+        return (r.SLA||"").toUpperCase().trim()==="NOT COMPLY";
+    }).length;
+
     document.getElementById('kpiOpen').innerText = opG; document.getElementById('kpiClose').innerText = clG;
     document.getElementById('kpiComply').innerText = cmp; document.getElementById('kpiNot').innerText = nok;
     document.getElementById('kpiSaldo').innerText = opG;
@@ -786,7 +913,6 @@ function filterKPI(f) {
     activeModal = { type: 'KPI', f }; document.getElementById('modal').classList.remove("hidden");
     document.getElementById('hvcView').classList.remove('hidden'); document.getElementById('tableView').classList.add('hidden');
     
-    // Tambahkan Update Judul agar lebih jelas (Opsional tapi direkomendasikan)
     let modalFilterName = f;
     if (f === "H1_ALL") modalFilterName = "TOTAL TIKET (H-1)";
     else if (f === "H1_CLOSE") modalFilterName = "CLOSE (H-1)";
@@ -800,7 +926,7 @@ function filterKPI(f) {
 
     let d = getActiveData(); if(f!=="ALL") {
         if(f==="OPEN") d = d.filter(r => isTicketOpen(r));
-        else if(f==="CLOSE") d = d.filter(r => !isTicketOpen(r)); // FIX: Tambahkan logika filter khusus CLOSE di sini
+        else if(f==="CLOSE") d = d.filter(r => !isTicketOpen(r)); 
         else if(["OPEN_3TAHUN","H0_ALL","H0_CLOSE"].includes(f)) {
             const now = new Date(); d = d.filter(r => {
                 const rd = r["REPORT DATE"] ? new Date(r["REPORT DATE"]) : null; const w = !rd || isNaN(rd.getTime()) || (now - rd) / 864e5 <= 1095;
@@ -809,7 +935,15 @@ function filterKPI(f) {
         } else if(f==="H1_ALL") d = d.filter(r => getTicketAge(r)==="H-1");
         else if(f==="H1_CLOSE") d = d.filter(r => getTicketAge(r)==="H-1" && !isTicketOpen(r));
         else if(f==="OPEN_H1") d = d.filter(r => getTicketAge(r)==="H-1" && isTicketOpen(r));
-        else d = d.filter(r => (r.SLA||"").toUpperCase().trim()===f);
+        else d = d.filter(r => {
+            if (isTicketOpen(r)) return false;
+            const bkt = getTicketBucket(r);
+            if (bkt === "MANJA") {
+                const isC = getDurasiSeconds(r) <= 10800;
+                return f === "COMPLY" ? isC : !isC;
+            }
+            return (r.SLA||"").toUpperCase().trim()===f;
+        });
     }
     const map = {}; d.forEach(r => { const b = getTicketBucket(r); map[b] = (map[b] || 0) + 1; });
     const hv = document.getElementById('hvcView');
@@ -850,7 +984,15 @@ function openDistribution(f, c) {
                 if(f.includes("CLOSE")) return w && !isTicketOpen(r); if(f.includes("OPEN") || f.includes("3TAHUN")) return w && isTicketOpen(r); return w;
             });
         } else if(f.includes("H1")) d = d.filter(r => getTicketAge(r)==="H-1");
-        else d = d.filter(r => (r.SLA||"").toUpperCase().trim()===f);
+        else d = d.filter(r => {
+            if (isTicketOpen(r)) return false;
+            const bkt = getTicketBucket(r);
+            if (bkt === "MANJA") {
+                const isC = getDurasiSeconds(r) <= 10800;
+                return f === "COMPLY" ? isC : !isC;
+            }
+            return (r.SLA||"").toUpperCase().trim()===f;
+        });
     }
     renderTable(d.filter(r => getTicketBucket(r)===c));
 }
@@ -873,10 +1015,7 @@ function renderCharts() {
         lbl.push(item); let s1 = 0, s0 = 0, c = 0;
         
         locData.forEach(r => { 
-            // FIX: s1 sekarang menghitung SEMUA tiket H-1 (baik open maupun close) 
-            // agar nilainya cocok dengan angka di kotak KPI "OPEN"
             if(getTicketAge(r) === "H-1") s1++; 
-            
             if(!isTicketOpen(r)) {
                 c++; 
             } else { 
@@ -914,9 +1053,14 @@ function renderCharts() {
 function renderDistribution() {
     const c = document.getElementById('distributionCards'); if (!c) return; 
     const d = getActiveData();
-    let cats = (ticketTypeMode === 'REGULER') 
-        ? ['HVC PLATINUM', 'HVC DIAMOND', 'HVC GOLD', 'REGULER'] 
-        : ['HVC PLATINUM', 'HVC DIAMOND', 'HVC GOLD', 'REGULER', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
+    
+    let cats = [];
+    if (ticketTypeMode === 'REGULER') {
+        // URUTAN PRIORITAS: DIAMOND, PLATINUM, MANJA, GOLD, REGULER
+        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER'];
+    } else {
+        cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'HVC GOLD', 'REGULER', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
+    }
     
     let st = {}; cats.forEach(x => st[x] = { t: 0, o: 0, c: 0, comp: 0, nok: 0 });
     
@@ -924,9 +1068,14 @@ function renderDistribution() {
         const b = getTicketBucket(r); 
         if (st[b]) { 
             st[b].t++; 
-            if (isTicketOpen(r)) st[b].o++; else st[b].c++; 
-            const sla = (r.SLA || "").toString().toUpperCase().trim();
-            if (sla === "COMPLY") st[b].comp++; else if (sla === "NOT COMPLY") st[b].nok++;
+            const open = isTicketOpen(r);
+            if (open) st[b].o++; else st[b].c++; 
+            
+            if (!open) {
+                let isC = (r.SLA || "").toUpperCase().trim() === "COMPLY";
+                if (b === "MANJA") isC = getDurasiSeconds(r) <= 10800;
+                if (isC) st[b].comp++; else st[b].nok++;
+            }
         } 
     });
 
@@ -982,8 +1131,19 @@ function renderGrid() {
         const openCount = locData.filter(r => isTicketOpen(r)).length;
         const closeCount = locData.filter(r => !isTicketOpen(r)).length;
         
-        const complyCount = locData.filter(r => !isTicketOpen(r) && (r.SLA || "").toString().toUpperCase().trim() === "COMPLY").length;
-        const notComplyCount = locData.filter(r => !isTicketOpen(r) && (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY").length;
+        const complyCount = locData.filter(r => {
+            if (isTicketOpen(r)) return false;
+            const bkt = getTicketBucket(r);
+            if (bkt === "MANJA") return getDurasiSeconds(r) <= 10800;
+            return (r.SLA || "").toString().toUpperCase().trim() === "COMPLY";
+        }).length;
+        
+        const notComplyCount = locCount = locData.filter(r => {
+            if (isTicketOpen(r)) return false;
+            const bkt = getTicketBucket(r);
+            if (bkt === "MANJA") return getDurasiSeconds(r) > 10800;
+            return (r.SLA || "").toString().toUpperCase().trim() === "NOT COMPLY";
+        }).length;
 
         const platOpen = locData.filter(r => getTicketBucket(r) === 'HVC PLATINUM' && isTicketOpen(r)).length;
         const diamOpen = locData.filter(r => getTicketBucket(r) === 'HVC DIAMOND' && isTicketOpen(r)).length;
@@ -992,6 +1152,7 @@ function renderGrid() {
         const sqmOpen = locData.filter(r => getTicketBucket(r) === 'SQM' && isTicketOpen(r)).length;
         const zperOpen = locData.filter(r => getTicketBucket(r) === 'Z_PERMINTAAN' && isTicketOpen(r)).length;
         const undOpen = locData.filter(r => getTicketBucket(r) === 'UNDERSPEC' && isTicketOpen(r)).length;
+        const manjaOpen = locData.filter(r => getTicketBucket(r) === 'MANJA' && isTicketOpen(r)).length;
 
         const getBadgeHTML = (label, count, activeColorClass, catName) => {
             const colorClass = count > 0 ? activeColorClass : 'text-slate-300';
@@ -1007,7 +1168,6 @@ function renderGrid() {
         const isRed = openCount > 0;
         const topBorderClass = isRed ? 'bg-rose-500' : 'bg-emerald-400';
         
-        // FIX: Menambahkan efek animasi (menyala) pada indikator merah jika ada tiket Open
         const iconHTML = isRed 
             ? `<span class="text-rose-500 bg-rose-50 rounded-full p-1.5 flex items-center justify-center"><span class="flex h-2.5 w-2.5 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span></span></span>`
             : `<span class="text-emerald-500 bg-emerald-50 rounded-full p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>`;
@@ -1045,14 +1205,15 @@ function renderGrid() {
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-x-2 gap-y-2 mt-auto">
-                        ${getBadgeHTML('PLATINUM', platOpen, 'text-purple-600', 'HVC PLATINUM')}
                         ${getBadgeHTML('DIAMOND', diamOpen, 'text-blue-500', 'HVC DIAMOND')}
+                        ${getBadgeHTML('PLATINUM', platOpen, 'text-purple-600', 'HVC PLATINUM')}
+                        ${getBadgeHTML('MANJA', manjaOpen, 'text-teal-600', 'MANJA')}
                         ${getBadgeHTML('GOLD', goldOpen, 'text-amber-500', 'HVC GOLD')}
                         ${getBadgeHTML('REGULER', regOpen, 'text-emerald-600', 'REGULER')}
                         ${getBadgeHTML('SQM', sqmOpen, 'text-rose-500', 'SQM')}
                         ${getBadgeHTML('Z PERM', zperOpen, 'text-indigo-500', 'Z_PERMINTAAN')}
                         <div class="col-span-2">
-                            ${getBadgeHTML('UNDERSPEC', undOpen, 'text-slate-600', 'UNDERSPEC')}
+                            ${getBadgeHTML('UNSPEC', undOpen, 'text-slate-600', 'UNDERSPEC')}
                         </div>
                     </div>
                 </div>
@@ -1062,19 +1223,34 @@ function renderGrid() {
 }
 
 function renderAI() {
-    const t1={}, t2={}; getActiveData().forEach(r => { if(isTicketOpen(r)) return; const nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY"; let t = r["TEKNISI 1"]; if(t && t.trim()){ if(!t1[t]) t1[t]={t:0,n:0}; t1[t].t++; if(nok) t1[t].n++; } t = r["TEKNISI 2"]; if(t && t.trim()){ if(!t2[t]) t2[t]={t:0,n:0}; t2[t].t++; if(nok) t2[t].n++; } });
+    const t1={}, t2={}; getActiveData().forEach(r => { 
+        if(isTicketOpen(r)) return; 
+        const bkt = getTicketBucket(r);
+        let nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY";
+        if (bkt === "MANJA") nok = getDurasiSeconds(r) > 10800;
+        
+        let t = r["TEKNISI 1"]; if(t && t.trim()){ if(!t1[t]) t1[t]={t:0,n:0}; t1[t].t++; if(nok) t1[t].n++; } 
+        t = r["TEKNISI 2"]; if(t && t.trim()){ if(!t2[t]) t2[t]={t:0,n:0}; t2[t].t++; if(nok) t2[t].n++; } 
+    });
     if(document.getElementById('insightTek1')) document.getElementById('insightTek1').innerHTML = getPodium(t1); if(document.getElementById('insightTek2')) document.getElementById('insightTek2').innerHTML = getPodium(t2);
 }
 
 function renderRank() {
-    const m = {}; getActiveData().forEach(r => { if(isTicketOpen(r)) return; const nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY"; [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => { if(t && t.trim()){ if(!m[t]) m[t]={t:0,n:0}; m[t].t++; if(nok) m[t].n++; } }); });
-    const l = Object.entries(m).map(([n,v]) => ({ n, sla: v.t>0?((v.t-v.n)/v.t)*100:0, total:v.t })).sort((a,b)=>a.total-b.total).slice(0, 10);
+    const m = {}; getActiveData().forEach(r => { 
+        if(isTicketOpen(r)) return; 
+        const bkt = getTicketBucket(r);
+        let nok = (r.SLA||"").toUpperCase().trim()==="NOT COMPLY";
+        if (bkt === "MANJA") nok = getDurasiSeconds(r) > 10800;
+
+        [r["TEKNISI 1"], r["TEKNISI 2"]].forEach(t => { if(t && t.trim()){ if(!m[t]) m[t]={t:0,n:0}; m[t].t++; if(nok) m[t].n++; } }); 
+    });
+    const l = Object.entries(m).map(([n,v]) => ({ n, total:v.t })).sort((a,b)=>a.total-b.total).slice(0, 10);
     const rk = document.getElementById('rank'); if(!rk) return;
     rk.innerHTML = l.length > 0 ? l.map((r, i) => `<div onclick="openTeknisi('${r.n.replace(/'/g, "\\'")}')" class="flex justify-between items-center p-3 rounded-xl border bg-white cursor-pointer hover:scale-[1.02] transition-transform shadow-sm"><div class="flex items-center gap-3"><span class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-black text-xs text-slate-500 border border-slate-200 shadow-sm">#${i+1}</span><span class="truncate font-bold text-xs max-w-[120px]" title="${extractName(r.n)}">${extractName(r.n)}</span></div><span class="font-black text-[11px] text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100 shadow-sm">${r.total} Tiket</span></div>`).join("") : "<div class='text-center text-slate-400'>Data kosong</div>";
 }
 
 function getPodium(m) {
-    const l = Object.entries(m).map(([n,v]) => ({ n, sla: v.t>0?((v.t-v.n)/v.t)*100:0, total:v.t })).sort((a,b)=>b.total-a.total);
+    const l = Object.entries(m).map(([n,v]) => ({ n, total:v.t })).sort((a,b)=>b.total-a.total);
     if(l.length===0) return "<div class='text-slate-400 font-medium italic p-4'>Data tidak cukup</div>";
     const top = l.slice(0, 3);
     const modernMedals = [
@@ -1114,7 +1290,6 @@ function renderMonitoringView() {
         if(ex) Object.keys(gr[s]).sort().forEach(tk => {
             const inf = gr[s][tk]; const pts = tk.split("|||"); const getB = (h1,h2) => inf.cl.filter(t => t.hr>=h1 && t.hr<=h2).map(t => `<div class="text-[9px] bg-blue-50 p-1 rounded mb-1 text-center font-bold text-blue-700 border border-blue-200">${t.inc}</div>`).join('');
             
-            // Logika untuk menyembunyikan N/A jika teknisi pendamping tidak ada
             let t1Name = extractName(pts[0]);
             let t2Name = extractName(pts[1]);
             let dispName = t1Name;
@@ -1140,10 +1315,11 @@ window.closeModal = closeModal;
 setInterval(() => {
     const m = document.getElementById('modal'); if (!m || m.classList.contains("hidden")) return;
     document.querySelectorAll('.durasi-cell').forEach(c => {
+        const bucket = c.getAttribute('data-bucket');
         if (isTicketOpen({ "STATUS TIKET": c.getAttribute('data-status') })) {
             const start = c.getAttribute('data-start'); if (start) {
                 const textEl = c.querySelector('.durasi-text');
-                if (textEl) textEl.innerText = calculateDuration(start, null, 'OPEN');
+                if (textEl) textEl.innerText = calculateDuration(start, null, 'OPEN', bucket);
             }
         }
     });
