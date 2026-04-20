@@ -337,7 +337,6 @@ const SA_MAP = {
 const categoryConfigs = [
     { id: 'HVC DIAMOND', label: 'DIAMOND (3 JAM)', bg: 'bg-pink-100/70', text: 'text-pink-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'> 3 Jam', max:Infinity}] },
     { id: 'HVC PLATINUM', label: 'PLATINUM (6 JAM)', bg: 'bg-purple-100/70', text: 'text-purple-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'> 6 Jam', max:Infinity}] },
-    // MANJA DENGAN SLOT JAM (8:00 - 17:00)
     { id: 'MANJA', label: 'MANJA (3 JAM)', bg: 'bg-teal-100/70', text: 'text-teal-900', ranges: [
         {l:'8:00', h:8}, {l:'9:00', h:9}, {l:'10:00', h:10}, {l:'11:00', h:11}, {l:'12:00', h:12}, 
         {l:'13:00', h:13}, {l:'14:00', h:14}, {l:'15:00', h:15}, {l:'16:00', h:16}, {l:'17:00', h:17}
@@ -657,7 +656,8 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
     else if (rowType === 'AGING') data = data.filter(r => {
         const bkt = getTicketBucket(r);
         if (bkt === "MANJA") {
-            // Filter by Today + Hour match
+            // FIX: Hanya tampilkan data AGING jika tiket masih OPEN
+            if (!isTicketOpen(r)) return false;
             if (!isToday(r["JAM CUST ASSIGN"])) return false;
             const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
             const cfg = categoryConfigs.find(c => c.id === "MANJA");
@@ -720,22 +720,24 @@ function renderReportTable() {
             if (reportData[k].cats[cid]) {
                 const cd = reportData[k].cats[cid];
                 
-                // Khusus MANJA: Hanya masuk tabel jika Jam Cust Assign adalah Hari Ini
                 if (cid === "MANJA") {
                     if (isToday(r["JAM CUST ASSIGN"])) {
-                        if (open) cd.open++; else { cd.close++; if (slaVal === "COMPLY") cd.comply++; else cd.nok++; }
-                        
-                        // Aging berdasarkan Jam Penugasan (Slot Jam)
-                        const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
-                        const cfgManja = categoryConfigs.find(c => c.id === "MANJA");
-                        let matched = false;
-                        for (let i = 0; i < cfgManja.ranges.length; i++) {
-                            if (hour === cfgManja.ranges[i].h) { cd.aging[i]++; matched = true; break; }
+                        if (open) {
+                            cd.open++; 
+                            // FIX: Hanya hitung AGING (slot jam) jika tiket berstatus OPEN
+                            const hour = new Date(r["JAM CUST ASSIGN"]).getHours();
+                            const cfgManja = categoryConfigs.find(c => c.id === "MANJA");
+                            let matched = false;
+                            for (let i = 0; i < cfgManja.ranges.length; i++) {
+                                if (hour === cfgManja.ranges[i].h) { cd.aging[i]++; matched = true; break; }
+                            }
+                            if (!matched && hour > 17) cd.aging[cfgManja.ranges.length - 1]++;
+                        } else { 
+                            cd.close++; 
+                            if (slaVal === "COMPLY") cd.comply++; else cd.nok++; 
                         }
-                        if (!matched && hour > 17) cd.aging[cfgManja.ranges.length - 1]++;
                     }
                 } else {
-                    // Logika Aging Standar (HVC/Reguler/Sqm/dll)
                     if (open) {
                         cd.open++; 
                         const hrs = getDurasiSeconds(r) / 3600; 
@@ -751,7 +753,6 @@ function renderReportTable() {
                 }
             }
             
-            // Hitungan Saldo di bagian bawah matriks
             if (getTicketAge(r) === "H-1") { reportData[k].h1++; }
             if (open && (!r["REPORT DATE"] || (now - new Date(r["REPORT DATE"])) / 864e5 <= 1095)) {
                 reportData[k].hi++; 
@@ -761,7 +762,6 @@ function renderReportTable() {
 
     let html = `<table class="w-full text-[10px] text-center border-collapse border border-slate-300">`;
     
-    // RENDER HEADER
     if (!['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) {
         let saGroups = []; let currSA = null; let count = 0;
         tableColumns.forEach(c => { let sa = SA_MAP[c] || 'OTHER'; if (sa !== currSA) { if (currSA) saGroups.push({ name: currSA, span: count }); currSA = sa; count = 1; } else count++; });
@@ -827,14 +827,6 @@ function renderReportTable() {
     const totalG = reportData['TOTAL'].h1 - reportData['TOTAL'].hi; html += `<td class="px-2 py-2 bg-slate-600 border-l border-slate-500 shadow-inner">${totalG < 0 ? 'K' : 'M'}</td></tr>`;
     
     html += `</tbody></table>`;
-    
-    let reportTitle = "Laporan Progres Tiket Gangguan";
-    if (mode === 'PEKANBARU') reportTitle += " Branch Pekanbaru";
-    else if (mode === 'DUMAI') reportTitle += " Branch Dumai";
-    else if (mode === 'SEKTOR') reportTitle += " (Semua Sektor)";
-    else if (mode !== 'STO') reportTitle += " " + mode.replace('SA_', 'SA ').replace(/_/g, ' ');
-    const titleEl = document.getElementById('matrixReportTitleText');
-    if(titleEl) titleEl.innerText = reportTitle;
     
     reportEl.innerHTML = html;
 }
@@ -1138,7 +1130,7 @@ function renderGrid() {
             return (r.SLA || "").toString().toUpperCase().trim() === "COMPLY";
         }).length;
         
-        const notComplyCount = locCount = locData.filter(r => {
+        const notComplyCount = locData.filter(r => {
             if (isTicketOpen(r)) return false;
             const bkt = getTicketBucket(r);
             if (bkt === "MANJA") return getDurasiSeconds(r) > 10800;
