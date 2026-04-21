@@ -13,6 +13,9 @@
     <!-- HTML2CANVAS UNTUK EXPORT GAMBAR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+    <!-- SHEETJS UNTUK EXPORT EXCEL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -242,10 +245,16 @@
                             <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"></path></svg></span>
                             <span id="matrixReportTitleText">Laporan Progres Tiket Gangguan (Matriks)</span>
                         </h3>
-                        <button onclick="exportElementToImage('matrixCard', 'Laporan_Matriks', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:scale-105 px-4 py-2 rounded-xl transition-all shadow-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Export PNG
-                        </button>
+                        <div class="flex gap-2" data-html2canvas-ignore="true">
+                            <button onclick="exportElementToImage('matrixCard', 'Laporan_Matriks', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                PNG HD
+                            </button>
+                            <button onclick="exportTableToExcel('matrixTableExport', 'Laporan_Matriks_Excel')" class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                                Excel
+                            </button>
+                        </div>
                     </div>
                     <div id="reportTableWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[800px] overflow-y-auto relative bg-slate-50/50">
                         <div id="reportTableContent" class="min-w-max bg-white"></div>
@@ -321,10 +330,16 @@
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 Hari Ini: -
                             </div>
-                            <button onclick="exportElementToImage('kehadiranCard', 'Laporan_Kehadiran', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:scale-105 px-4 py-2 rounded-xl transition-all shadow-sm w-full sm:w-auto">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                Export PNG
-                            </button>
+                            <div class="flex gap-2" data-html2canvas-ignore="true">
+                                <button onclick="exportElementToImage('kehadiranCard', 'Laporan_Kehadiran', this)" class="flex-1 sm:flex-none items-center justify-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    PNG HD
+                                </button>
+                                <button onclick="exportTableToExcel('kehadiranTableExport', 'Laporan_Kehadiran_Excel')" class="flex-1 sm:flex-none items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                                    Excel
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -880,7 +895,7 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
 }
 window.openMatrixDetail = openMatrixDetail;
 
-// ===== 4. EXPORT GAMBAR (html2canvas) =====
+// ===== 4. EXPORT GAMBAR & EXCEL =====
 async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
     const el = document.getElementById(elementId);
     if(!el) return;
@@ -913,7 +928,7 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
         await new Promise(r => setTimeout(r, 200)); 
         
         const canvas = await html2canvas(el, { 
-            scale: 2, 
+            scale: 3, // Peningkatan resolusi untuk Full HD
             backgroundColor: '#ffffff',
             useCORS: true 
         });
@@ -938,6 +953,26 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
     }
 }
 window.exportElementToImage = exportElementToImage;
+
+function exportTableToExcel(tableId, fileNamePrefix) {
+    const tableElement = document.getElementById(tableId);
+    if (!tableElement) {
+        alert("Tabel belum termuat atau data kosong.");
+        return;
+    }
+    
+    // Menggunakan library SheetJS (XLSX) yang ada di header
+    try {
+        const wb = XLSX.utils.table_to_book(tableElement, {sheet: "Laporan"});
+        const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/[\/\s:]/g, '');
+        XLSX.writeFile(wb, `${fileNamePrefix}_${dateStr}.xlsx`);
+    } catch (e) {
+        console.error("Gagal export excel: ", e);
+        alert("Gagal meng-export Excel. Pastikan data sudah termuat penuh.");
+    }
+}
+window.exportTableToExcel = exportTableToExcel;
+
 
 // ===== 5. MATRIX TABLE GENERATOR =====
 function renderUnderspecMatrix(reportEl) {
@@ -1034,7 +1069,7 @@ function renderUnderspecMatrix(reportEl) {
         m.saldoPagi = m.sisaAll + m.closeHI; 
     }
 
-    let html = `<table class="w-full text-[11px] text-center border-collapse bg-white shadow-sm rounded-xl overflow-hidden ring-1 ring-slate-200/50">`;
+    let html = `<table id="matrixTableExport" class="w-full text-[11px] text-center border-collapse bg-white shadow-sm rounded-xl overflow-hidden ring-1 ring-slate-200/50">`;
     html += `<thead class="sticky-header shadow-sm">
         <tr class="bg-slate-900 text-slate-100 uppercase text-[10px] tracking-wider font-bold">
             <th rowspan="2" class="px-4 py-3 border-r border-slate-700 align-middle min-w-[120px]">BRANCH</th>
@@ -1223,7 +1258,7 @@ function renderReportTable() {
         });
     });
 
-    let html = `<table class="w-full text-[10px] text-center border-collapse border border-slate-300">`;
+    let html = `<table id="matrixTableExport" class="w-full text-[10px] text-center border-collapse border border-slate-300">`;
     
     if (!['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR', 'SA'].includes(mode)) {
         let saGroups = []; let currSA = null; let count = 0;
@@ -1935,7 +1970,7 @@ function renderKehadiranView() {
     let dayKeys = Array.from({length: 31}, (_, i) => (i + 1).toString());
     
     let tableHTML = `
-        <table class="w-full text-sm text-left whitespace-nowrap border-collapse">
+        <table id="kehadiranTableExport" class="w-full text-sm text-left whitespace-nowrap border-collapse">
             <thead class="text-[10px] text-slate-500 font-extrabold uppercase bg-slate-50 border-b border-slate-300 sticky top-0 z-20 text-center">
                 <tr>
                     <th class="px-3 py-3 border-r border-slate-200">NO</th>
