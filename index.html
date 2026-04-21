@@ -73,7 +73,6 @@
                                 <optgroup label="Tampilan Utama">
                                     <option value="STO" selected>Semua STO</option>
                                     <option value="SEKTOR">Semua Sektor</option>
-                                    <!-- TAMBAHAN SEMUA SERVICE AREA -->
                                     <option value="SA">Semua Service Area</option>
                                 </optgroup>
                                 <optgroup label="Branch">
@@ -293,13 +292,37 @@
             </div>
             
             <!-- KEHADIRAN TEKNISI VIEW -->
-            <div id="kehadiranView" class="hidden mb-12">
-                <div class="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center min-h-[400px]">
-                    <div class="p-4 bg-blue-50 text-blue-500 rounded-full mb-4">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <div id="kehadiranView" class="hidden mb-12 flex-col gap-6">
+                <!-- KPI Kehadiran -->
+                <div id="kpiKehadiran" class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <!-- Summary Cards Akan Di-inject via JS -->
+                </div>
+                
+                <!-- Tabel Kehadiran -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <h3 class="font-black text-slate-800 flex items-center gap-2">
+                            <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg></span>
+                            Laporan Kehadiran Teknisi
+                        </h3>
+                        <div class="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-2" id="kehadiranInfoTgl">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Hari Ini: -
+                        </div>
                     </div>
-                    <h3 class="text-2xl font-black text-slate-800 mb-2">Kehadiran Teknisi</h3>
-                    <p class="text-slate-500 font-bold">Modul laporan kehadiran teknisi sedang dalam tahap pengembangan (Coming Soon).</p>
+                    
+                    <div id="tableKehadiranWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[600px] overflow-y-auto relative">
+                        <!-- Table Content Akan Di-inject via JS -->
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="mt-5 flex flex-wrap gap-4 text-[10px] font-bold text-slate-600 border-t border-slate-100 pt-4">
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> HDR (Hadir)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM/PS (Malam/Piket)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> OFF (Libur)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> SKT (Sakit)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> TKR/REQ (Cuti/Resign)</div>
+                    </div>
                 </div>
             </div>
 
@@ -394,6 +417,8 @@ const distClassMap = {
 
 // Global State
 let rawData = [];
+let rawKehadiranData = [];
+let dateKeyMap = {}; // Penyimpanan mapping tanggal ke json key otomatis
 let mode = "STO";
 let ticketTypeMode = "ALL_TIKET";
 let expandedSektors = new Set();
@@ -402,6 +427,62 @@ let chartDailyAreaInst = null;
 let chartMonitoringInst = null;
 
 // ===== 2. DATA PROCESSING HELPERS =====
+function getVal(row, possibleKeys) {
+    if (!row) return "";
+    for (let k of Object.keys(row)) {
+        if (possibleKeys.includes(k.trim().toUpperCase())) return row[k];
+    }
+    return "";
+}
+
+// Fungsi paling tangguh untuk membangun map keys dari tanggal di API JSON secara dinamis
+function buildDateMap(data) {
+    dateKeyMap = {};
+    const standardKeys = ["NO", "NIK", "NAMA", "NO HP", "NOHP", "NO. HP", "SERVICE AREA", "SEKTOR", "STO", "BRANCH", "POSISI", "FLAGGING TEKNISI", "FLAGGING", "MITRA"];
+    
+    // Cari baris yang kemungkinan besar merupakan "Baris 2" tempat tanggal angka itu berada
+    // Biasanya ini merupakan baris pertama data di JSON Opensheet, tapi agar aman, kita cari.
+    let headerRow = data.find(r => {
+        const vals = Object.values(r).map(v => (v||"").toString().trim());
+        // Mencari apakah baris tersebut memuat angka-angka tanggal seperti 1, 10, dan 20
+        return vals.includes("1") && vals.includes("10") && vals.includes("20"); 
+    });
+    
+    if (headerRow) {
+        for (let k of Object.keys(headerRow)) {
+            let kt = k.trim().toUpperCase();
+            if (!standardKeys.includes(kt)) { // Jangan sampai menimpa kolom standar
+                let val = (headerRow[k] || "").toString().trim();
+                if (!isNaN(val) && parseInt(val) >= 1 && parseInt(val) <= 31) {
+                    dateKeyMap[parseInt(val)] = k;
+                }
+            }
+        }
+    } else {
+        // Fallback darurat jika headerRow angka tidak ketemu
+        if (data.length > 0) {
+            let dayCounter = 1;
+            for (let k of Object.keys(data[0])) {
+                let kt = k.trim().toUpperCase();
+                if (!standardKeys.includes(kt)) {
+                    dateKeyMap[dayCounter] = k;
+                    dayCounter++;
+                    if(dayCounter > 31) break;
+                }
+            }
+        }
+    }
+}
+
+// Mengambil kehadiran langsung menggunakan mapping key yang sudah digenerate di atas
+function getKehadiranStatus(r, day) {
+    let key = dateKeyMap[day];
+    if (key && r[key] !== undefined) {
+        return r[key];
+    }
+    return "";
+}
+
 function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "").replace(/-/g, ""); }
 function mapSTO(val) { 
     let n = norm(val); 
@@ -558,6 +639,32 @@ function getActiveData() {
     else if (mode === 'SA_PANGKALAN_KERINCI') return b.filter(r => SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
     else if (mode === 'SA_RENGAT') return b.filter(r => SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)));
     return b; // Termasuk 'SA', 'STO', 'SEKTOR' tidak perlu filter ekstra untuk active data karena akan dihandle saat rendering
+}
+
+function getActiveKehadiranData() {
+    if (!rawKehadiranData || rawKehadiranData.length === 0) return [];
+    return rawKehadiranData.filter(r => {
+        let nama = getVal(r, ["NAMA"]);
+        // Abaikan data legend dari Google Sheet tempat nama adalah kosong dan kita tau itu bukan data aktual teknisi
+        if (!nama || nama.trim() === '') return false; 
+        
+        if (mode === 'STO' || mode === 'SEKTOR' || mode === 'SA') return true;
+        
+        const st = mapSTO(getVal(r, ["STO", "LOKASI"]));
+        const sek = mapSEKTOR(getVal(r, ["SEKTOR"]));
+        
+        if (mode === 'PEKANBARU') return PEKANBARU_LIST.includes(st);
+        if (mode === 'DUMAI') return DUMAI_LIST.includes(st);
+        if (mode === 'SA_ARENGKA') return SA_ARENGKA_LIST.includes(st);
+        if (mode === 'SA_PBR_BARAT') return sek.some(s => SA_PBR_BARAT_LIST.includes(s));
+        if (mode === 'SA_PBR_TIMUR') return sek.some(s => SA_PBR_TIMUR_LIST.includes(s));
+        if (mode === 'SA_BUKIT_RAYA') return SA_BUKIT_RAYA_LIST.includes(st);
+        if (mode === 'SA_DUMAI') return SA_DUMAI_LIST.includes(st);
+        if (mode === 'SA_PANGKALAN_KERINCI') return SA_PANGKALAN_KERINCI_LIST.includes(st);
+        if (mode === 'SA_RENGAT') return SA_RENGAT_LIST.includes(st);
+        
+        return true;
+    });
 }
 
 // ===== 3. COMPONENT RENDERERS =====
@@ -912,8 +1019,21 @@ window.renderReportTable = renderReportTable;
 async function load() {
     const sUI = document.getElementById('syncStatus');
     try {
-        const res = await fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB");
-        const json = await res.json(); rawData = Array.isArray(json) ? json : [];
+        const [resDB, resTeknisi] = await Promise.all([
+            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB").catch(() => null),
+            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null)
+        ]);
+        
+        if (resDB) {
+            const jsonDB = await resDB.json().catch(() => []);
+            rawData = Array.isArray(jsonDB) ? jsonDB : [];
+        }
+        if (resTeknisi) {
+            const jsonTeknisi = await resTeknisi.json().catch(() => []);
+            rawKehadiranData = Array.isArray(jsonTeknisi) ? jsonTeknisi : [];
+            buildDateMap(rawKehadiranData); // Jalankan auto-mapper untuk tanggal di file API
+        }
+
         renderSidebar(); updateDashboard();
         if(sUI) {
             const timeStr = new Date().toLocaleTimeString('id-ID', { hour12: false });
@@ -941,18 +1061,19 @@ function updateDashboard() {
         stdView.classList.add('hidden');
         monView.classList.remove('hidden');
         rinView.classList.add('hidden');
-        if(kehView) kehView.classList.add('hidden');
+        if(kehView) { kehView.classList.add('hidden'); kehView.classList.remove('flex'); }
         renderMonitoringView();
     } else if (ticketTypeMode === 'KEHADIRAN_TEKNISI') {
         stdView.classList.add('hidden');
         monView.classList.add('hidden');
         rinView.classList.add('hidden');
-        if(kehView) kehView.classList.remove('hidden');
+        if(kehView) { kehView.classList.remove('hidden'); kehView.classList.add('flex'); }
+        renderKehadiranView();
     } else {
         stdView.classList.remove('hidden');
         monView.classList.add('hidden');
         rinView.classList.remove('hidden');
-        if(kehView) kehView.classList.add('hidden');
+        if(kehView) { kehView.classList.add('hidden'); kehView.classList.remove('flex'); }
         renderCharts(); renderGrid(); renderReportTable(); 
     }
 }
@@ -1476,6 +1597,131 @@ function renderMonitoringView() {
         }
     }); 
     document.getElementById('monitoringTableBody').innerHTML = h;
+}
+
+function renderKehadiranView() {
+    const data = getActiveKehadiranData();
+    const todayStr = new Date().getDate().toString();
+    
+    const labelTgl = document.getElementById('kehadiranInfoTgl');
+    if(labelTgl) labelTgl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Hari Ini: Tanggal ${todayStr}`;
+    
+    let hadir = 0, off = 0, sakit = 0, lain = 0;
+    data.forEach(r => {
+        let stat = getKehadiranStatus(r, todayStr).toString().toUpperCase().trim();
+        // Cek format singkatan dan format teks panjang dari Sheet
+        if (stat === 'HDR' || stat === 'HADIR' || stat === 'PM' || stat === 'KERJA MALAM' || stat === 'PS' || stat === 'PIKET SIANG') hadir++;
+        else if (stat === 'OFF' || stat === 'OFF / LIBUR') off++;
+        else if (stat === 'SKT' || stat === 'SAKIT') sakit++;
+        else if (stat !== '') lain++;
+    });
+    
+    // Render Summary KPI Cards
+    const kpiContainer = document.getElementById('kpiKehadiran');
+    if (kpiContainer) {
+        kpiContainer.innerHTML = `
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="text-xs text-slate-500 font-extrabold uppercase tracking-widest mb-2">Total Teknisi</div>
+                <div class="text-4xl font-black text-slate-800">${data.length}</div>
+            </div>
+            <div class="bg-emerald-50 p-5 rounded-2xl shadow-sm border border-emerald-100 flex flex-col justify-between">
+                <div class="text-xs text-emerald-600 font-extrabold uppercase tracking-widest mb-2">Hadir Hari Ini</div>
+                <div class="text-4xl font-black text-emerald-700">${hadir}</div>
+            </div>
+            <div class="bg-slate-100 p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="text-xs text-slate-500 font-extrabold uppercase tracking-widest mb-2">Off / Libur</div>
+                <div class="text-4xl font-black text-slate-600">${off}</div>
+            </div>
+            <div class="bg-amber-50 p-5 rounded-2xl shadow-sm border border-amber-100 flex flex-col justify-between">
+                <div class="text-xs text-amber-600 font-extrabold uppercase tracking-widest mb-2">Sakit / Izin</div>
+                <div class="text-4xl font-black text-amber-700">${sakit}</div>
+            </div>
+        `;
+    }
+    
+    // Render Data Table
+    let dayKeys = Array.from({length: 31}, (_, i) => (i + 1).toString());
+    
+    let tableHTML = `
+        <table class="w-full text-sm text-left whitespace-nowrap border-collapse">
+            <thead class="text-[10px] text-slate-500 font-extrabold uppercase bg-slate-50 border-b border-slate-300 sticky top-0 z-20 text-center">
+                <tr>
+                    <th class="px-3 py-3 border-r border-slate-200">NO</th>
+                    <th class="px-3 py-3 border-r border-slate-200">NIK</th>
+                    <th class="px-4 py-3 border-r border-slate-200 text-left min-w-[160px]">NAMA TEKNISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200">NO HP</th>
+                    <th class="px-3 py-3 border-r border-slate-200">SERVICE AREA</th>
+                    <th class="px-3 py-3 border-r border-slate-200">SEKTOR</th>
+                    <th class="px-2 py-3 border-r border-slate-200 w-20">STO</th>
+                    <th class="px-3 py-3 border-r border-slate-200">BRANCH</th>
+                    <th class="px-3 py-3 border-r border-slate-200">POSISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200">FLAGGING TEKNISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200">MITRA</th>
+                    ${dayKeys.map(d => `<th class="px-1.5 py-3 min-w-[32px] border-r border-slate-200 ${d === todayStr ? 'bg-blue-100 text-blue-700 font-black ring-inset ring-2 ring-blue-400' : ''}">${d}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white text-center">
+    `;
+    
+    if (data.length === 0) {
+        tableHTML += `<tr><td colspan="${dayKeys.length + 11}" class="px-4 py-8 text-center text-slate-400 font-bold">Data Kehadiran Kosong / Belum Dimuat.</td></tr>`;
+    } else {
+        tableHTML += data.map((r, index) => {
+            let no = getVal(r, ['NO']) || (index + 1);
+            let nik = getVal(r, ['NIK']);
+            let nm = getVal(r, ['NAMA']);
+            let nohp = getVal(r, ['NO HP', 'NOHP', 'NO. HP']);
+            let sa = getVal(r, ['SERVICE AREA']);
+            let sek = getVal(r, ['SEKTOR']);
+            let st = getVal(r, ['STO']);
+            let br = getVal(r, ['BRANCH']);
+            let ps = getVal(r, ['POSISI']);
+            let flag = getVal(r, ['FLAGGING TEKNISI', 'FLAGGING']);
+            let mitra = getVal(r, ['MITRA']);
+
+            return `<tr class="hover:bg-slate-50 transition-colors group">
+                <td class="px-3 py-2 text-[10px] text-slate-500 border-r border-slate-100">${no}</td>
+                <td class="px-3 py-2 text-[10px] text-slate-500 border-r border-slate-100">${nik || '-'}</td>
+                <td class="px-4 py-2 font-bold text-left text-[11px] border-r border-slate-100 truncate max-w-[200px] text-slate-800" title="${nm || '-'}">${nm || '-'}</td>
+                <td class="px-3 py-2 text-[10px] text-slate-500 border-r border-slate-100">${nohp || '-'}</td>
+                <td class="px-3 py-2 text-[10px] font-bold border-r border-slate-100 text-blue-700">${sa || '-'}</td>
+                <td class="px-3 py-2 text-[10px] border-r border-slate-100">${sek || '-'}</td>
+                <td class="px-2 py-2 text-[10px] font-bold border-r border-slate-100 text-indigo-700">${st || '-'}</td>
+                <td class="px-3 py-2 text-[10px] border-r border-slate-100">${br || '-'}</td>
+                <td class="px-3 py-2 text-[9px] text-slate-500 border-r border-slate-100 truncate max-w-[120px]" title="${ps || '-'}">${ps || '-'}</td>
+                <td class="px-3 py-2 text-[9px] text-slate-500 border-r border-slate-100 truncate max-w-[120px]" title="${flag || '-'}">${flag || '-'}</td>
+                <td class="px-3 py-2 text-[9px] text-slate-500 border-r border-slate-100">${mitra || '-'}</td>
+                ${dayKeys.map(d => {
+                    let stat = getKehadiranStatus(r, d).toString().toUpperCase().trim();
+                    let badgeClass = 'text-slate-300 font-medium';
+                    
+                    // Parsing otomatis format teks panjang ke warna UI yang sesuai
+                    if(stat==='HDR' || stat==='HADIR') badgeClass='bg-emerald-100 text-emerald-700 font-bold shadow-sm';
+                    else if(stat==='OFF' || stat==='OFF / LIBUR') badgeClass='bg-slate-200 text-slate-600 font-bold shadow-sm';
+                    else if(stat==='SKT' || stat==='SAKIT') badgeClass='bg-amber-100 text-amber-700 font-bold shadow-sm';
+                    else if(stat==='PM' || stat==='KERJA MALAM') badgeClass='bg-blue-100 text-blue-700 font-bold shadow-sm';
+                    else if(stat==='PS' || stat==='PIKET SIANG') badgeClass='bg-indigo-100 text-indigo-700 font-bold shadow-sm';
+                    else if(stat==='TKR' || stat==='REQ' || stat==='RESIGN') badgeClass='bg-rose-100 text-rose-700 font-bold shadow-sm';
+                    else if(stat==='CUTI') badgeClass='bg-purple-100 text-purple-700 font-bold shadow-sm';
+                    
+                    // Merapikan Teks agar tabel tidak jelek akibat teks kepanjangan
+                    let displayStat = stat;
+                    if(stat === 'OFF / LIBUR') displayStat = 'OFF';
+                    else if(stat === 'KERJA MALAM') displayStat = 'PM';
+                    else if(stat === 'PIKET SIANG') displayStat = 'PS';
+                    else if(stat === 'HADIR') displayStat = 'HDR';
+                    else if(stat === 'SAKIT') displayStat = 'SKT';
+                    else if(stat === 'RESIGN') displayStat = 'REQ';
+                    
+                    return `<td class="px-0.5 py-1.5 border-r border-slate-50 ${d === todayStr ? 'bg-blue-50/30' : ''}"><div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClass}" title="${stat}">${displayStat || '-'}</span></div></td>`;
+                }).join('')}
+            </tr>`;
+        }).join('');
+    }
+    
+    tableHTML += `</tbody></table>`;
+    const wrap = document.getElementById('tableKehadiranWrapper');
+    if(wrap) wrap.innerHTML = tableHTML;
 }
 
 function openTeknisi(tekName) {
