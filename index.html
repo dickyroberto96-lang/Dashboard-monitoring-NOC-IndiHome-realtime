@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Tiket Gangguan Indihome RIDAR</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- TAMBAHKAN CHART.JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    
-    /* Matrix Table Sticky Styles */
-    .sticky-col { position: sticky; left: 0; z-index: 20; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
-    
-    /* CSS Fix for Frozen Header on Matrix */
-    .sticky-header th {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-    }
-    
-    /* Mengamankan layer header matriks agar selalu di atas */
-    #reportTableWrapper thead {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Tiket Gangguan Indihome RIDAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- TAMBAHKAN CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Matrix Table Sticky Styles */
+        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: white; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
+        
+        /* CSS Fix for Frozen Header on Matrix */
+        .sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        /* Mengamankan layer header matriks agar selalu di atas */
+        #reportTableWrapper thead {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] text-slate-800 font-sans min-h-screen selection:bg-blue-500/30 overflow-x-hidden">
@@ -390,8 +391,20 @@ let chartMonitoringInst = null;
 
 // ===== 2. DATA PROCESSING HELPERS =====
 function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "").replace(/-/g, ""); }
-function mapSTO(val) { let n = norm(val); if(n.includes("PBRC")) return "PBR"; return (val || "").toString().toUpperCase(); }
-function mapSEKTOR(val) { let n = norm(val); if(n.includes("ARENGKA")) return ["ARK-1", "ARK-2"]; return [(val || "").toString().toUpperCase()]; }
+function mapSTO(val) { 
+    let n = norm(val); 
+    if(n.includes("PBRC")) return "PBR"; 
+    let res = (val || "").toString().toUpperCase();
+    if(res === "KDS" || n === "KDS") return "MIS";
+    return res; 
+}
+function mapSEKTOR(val) { 
+    let n = norm(val); 
+    if(n.includes("ARENGKA")) return ["ARK-1", "ARK-2"]; 
+    let res = (val || "").toString().toUpperCase();
+    if(res === "KDS" || n === "KDS") return ["MIS"];
+    return [res]; 
+}
 function extractName(f) { if(!f) return 'N/A'; const s = f.toString(); const i = s.indexOf('-'); return i !== -1 ? s.substring(i+1).trim() : s.trim(); }
 
 // Fungsi Helper untuk mendapatkan Service Area dari raw data
@@ -1396,22 +1409,32 @@ function renderMonitoringView() {
         
         // Kalkulasi Total Close untuk area/sektor ini
         let totalCloseArea = 0;
+        let sessTotals = Array(12).fill(0);
         Object.keys(gr[s]).forEach(tk => {
             totalCloseArea += gr[s][tk].cl.length;
+            gr[s][tk].cl.forEach(t => {
+                let bIdx = Math.floor(t.hr / 2);
+                if (bIdx >= 0 && bIdx <= 11) sessTotals[bIdx]++;
+            });
         });
+        
+        let sessHTML = sessTotals.map(tot => {
+            return `<td class="px-2 py-3 text-center border-b border-slate-100 border-l font-bold text-[10px] ${tot > 0 ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-300'}">${tot > 0 ? tot : '-'}</td>`;
+        }).join('');
         
         // Menambahkan Badge Total Close pada header
         h+=`<tr class="bg-slate-50 cursor-pointer hover:bg-blue-50 transition-colors" onclick="toggleSektor('${s.replace(/'/g, "\\'")}')">
-                <td class="px-4 py-3 font-black text-blue-700 border-r whitespace-nowrap">${s} ${ex?'▲':'▼'}</td>
-                <td colspan="13" class="px-4 py-3 border-b border-slate-100">
-                    <div class="flex items-center gap-4 text-xs">
-                        <span class="font-bold text-slate-500">${Object.keys(gr[s]).length} Tim Teknisi</span>
-                        <span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md font-black shadow-sm flex items-center gap-1.5 border border-emerald-200">
+                <td class="px-4 py-3 font-black text-blue-700 border-r border-b border-slate-100 whitespace-nowrap">${s} ${ex?'▲':'▼'}</td>
+                <td class="px-4 py-3 border-b border-slate-100">
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <span class="font-bold text-slate-500">${Object.keys(gr[s]).length} Tim</span>
+                        <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md font-black shadow-sm flex items-center gap-1 border border-emerald-200">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                            Total Close: ${totalCloseArea}
+                            ${totalCloseArea}
                         </span>
                     </div>
                 </td>
+                ${sessHTML}
             </tr>`;
             
         if(ex) {
