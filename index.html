@@ -72,6 +72,8 @@
                                 <optgroup label="Tampilan Utama">
                                     <option value="STO" selected>Semua STO</option>
                                     <option value="SEKTOR">Semua Sektor</option>
+                                    <!-- TAMBAHAN SEMUA SERVICE AREA -->
+                                    <option value="SA">Semua Service Area</option>
                                 </optgroup>
                                 <optgroup label="Branch">
                                     <option value="PEKANBARU">Branch Pekanbaru</option>
@@ -92,7 +94,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- NOTIFIKASI SYNC (DESAIN BARU) -->
+                    <!-- NOTIFIKASI SYNC -->
                     <div id="syncStatus" class="flex items-center justify-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-4 py-2.5 rounded-full shadow-sm border border-emerald-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors">
                         <span class="flex h-2.5 w-2.5 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -325,6 +327,9 @@
 const STO_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
 const PEKANBARU_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH"];
 const DUMAI_LIST = ["BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
+
+const SA_LIST = ["ARENGKA", "PBR BARAT", "PBR TIMUR", "BUKIT RAYA", "DUMAI", "PANGKALAN KERINCI", "RENGAT"];
+
 const SA_ARENGKA_LIST = ["ARK"];
 const SA_PBR_BARAT_LIST = ["PBRC 1", "PBRC 2"];
 const SA_PBR_TIMUR_LIST = ["PBRC 3", "PBRC 4"];
@@ -388,6 +393,16 @@ function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "")
 function mapSTO(val) { let n = norm(val); if(n.includes("PBRC")) return "PBR"; return (val || "").toString().toUpperCase(); }
 function mapSEKTOR(val) { let n = norm(val); if(n.includes("ARENGKA")) return ["ARK-1", "ARK-2"]; return [(val || "").toString().toUpperCase()]; }
 function extractName(f) { if(!f) return 'N/A'; const s = f.toString(); const i = s.indexOf('-'); return i !== -1 ? s.substring(i+1).trim() : s.trim(); }
+
+// Fungsi Helper untuk mendapatkan Service Area dari raw data
+function getSA(r) {
+    let st = mapSTO(r.STO || r.LOKASI);
+    let sek = (r.SEKTOR || "").toUpperCase();
+    if (sek.includes("PBRC 1") || sek.includes("PBRC 2")) return "PBR BARAT";
+    if (sek.includes("PBRC 3") || sek.includes("PBRC 4")) return "PBR TIMUR";
+    if (st === 'ARK' || sek.includes("ARK")) return "ARENGKA";
+    return SA_MAP[st] || "OTHER";
+}
 
 function isTicketOpen(r) {
     const s = (r["STATUS TIKET"] || "").toString().toUpperCase().trim();
@@ -517,7 +532,7 @@ function getActiveData() {
     else if (mode === 'SA_DUMAI') return b.filter(r => SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
     else if (mode === 'SA_PANGKALAN_KERINCI') return b.filter(r => SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
     else if (mode === 'SA_RENGAT') return b.filter(r => SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    return b; 
+    return b; // Termasuk 'SA', 'STO', 'SEKTOR' tidak perlu filter ekstra untuk active data karena akan dihandle saat rendering
 }
 
 // ===== 3. COMPONENT RENDERERS =====
@@ -604,6 +619,7 @@ function openLocation(ln, sf, bc) {
     let modeText = mode;
     if (mode === 'PEKANBARU') modeText = 'BRANCH PEKANBARU';
     else if (mode === 'DUMAI') modeText = 'BRANCH DUMAI';
+    else if (mode === 'SA') modeText = 'SERVICE AREA';
     else if (mode.startsWith('SA_')) modeText = mode.replace('SA_', 'SA ').replace(/_/g, ' ');
 
     let titleText = `Detail Area: <span class="text-blue-600">${ln}</span> (${modeText})`;
@@ -617,7 +633,10 @@ function openLocation(ln, sf, bc) {
     document.getElementById('modalTitle').innerHTML = titleText;
     
     const isS = ['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode);
+    const isSA = mode === 'SA';
+
     let fd = getBaseData().filter(r => { 
+        if (isSA) return getSA(r) === ln;
         let s = (r.SEKTOR || "").toUpperCase(); let st = (r.STO || "").toUpperCase(); 
         return isS ? mapSEKTOR(s).includes(ln) : mapSTO(st) === ln; 
     });
@@ -656,6 +675,7 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
     let data = getActiveData(); const now = new Date();
     if (loc !== 'TOTAL') {
         data = data.filter(r => {
+            if (mode === 'SA') return getSA(r) === loc;
             let s = (r["SEKTOR"] || "").toUpperCase(); let st = (r["STO"] || "").toUpperCase();
             if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) return mapSEKTOR(s).includes(loc);
             if (loc.startsWith("PBRC")) return s.includes(loc);
@@ -707,14 +727,19 @@ window.openMatrixDetail = openMatrixDetail;
 // ===== 4. MATRIX TABLE GENERATOR =====
 function renderReportTable() {
     const reportEl = document.getElementById('reportTableContent'); if (!reportEl) return;
-    let list = STO_LIST; if (mode === 'SEKTOR') list = SEKTOR_LIST; else if (mode === 'PEKANBARU') list = PEKANBARU_LIST; else if (mode === 'DUMAI') list = DUMAI_LIST;
+    
+    let list = STO_LIST; 
+    if (mode === 'SEKTOR') list = SEKTOR_LIST; 
+    else if (mode === 'SA') list = SA_LIST;
+    else if (mode === 'PEKANBARU') list = PEKANBARU_LIST; 
+    else if (mode === 'DUMAI') list = DUMAI_LIST;
     else if (mode.startsWith('SA_')) {
         if (mode === 'SA_ARENGKA') list = SA_ARENGKA_LIST; else if (mode === 'SA_PBR_BARAT') list = SA_PBR_BARAT_LIST; else if (mode === 'SA_PBR_TIMUR') list = SA_PBR_TIMUR_LIST;
         else if (mode === 'SA_BUKIT_RAYA') list = SA_BUKIT_RAYA_LIST; else if (mode === 'SA_DUMAI') list = SA_DUMAI_LIST; else if (mode === 'SA_PANGKALAN_KERINCI') list = SA_PANGKALAN_KERINCI_LIST; else if (mode === 'SA_RENGAT') list = SA_RENGAT_LIST;
     }
     
     let tableColumns = [];
-    if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) tableColumns = [...list];
+    if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR', 'SA'].includes(mode)) tableColumns = [...list];
     else list.forEach(i => { if (i === 'PBR') tableColumns.push('PBRC 1', 'PBRC 2', 'PBRC 3', 'PBRC 4'); else tableColumns.push(i); });
     
     const reportData = {};
@@ -726,7 +751,8 @@ function renderReportTable() {
     const now = new Date();
     getActiveData().forEach(r => {
         let loc = null; let rSTO = (r["STO"] || "").toUpperCase(); let rSektor = (r["SEKTOR"] || "").toUpperCase();
-        if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) loc = tableColumns.find(c => mapSEKTOR(rSektor).includes(c));
+        if (mode === 'SA') loc = tableColumns.find(c => getSA(r) === c);
+        else if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) loc = tableColumns.find(c => mapSEKTOR(rSektor).includes(c));
         else {
             if (rSektor.includes("PBRC 1")) loc = "PBRC 1"; else if (rSektor.includes("PBRC 2")) loc = "PBRC 2"; else if (rSektor.includes("PBRC 3")) loc = "PBRC 3"; else if (rSektor.includes("PBRC 4")) loc = "PBRC 4";
             else { let m = mapSTO(rSTO); if (tableColumns.includes(m)) loc = m; }
@@ -786,7 +812,7 @@ function renderReportTable() {
 
     let html = `<table class="w-full text-[10px] text-center border-collapse border border-slate-300">`;
     
-    if (!['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) {
+    if (!['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR', 'SA'].includes(mode)) {
         let saGroups = []; let currSA = null; let count = 0;
         tableColumns.forEach(c => { let sa = SA_MAP[c] || 'OTHER'; if (sa !== currSA) { if (currSA) saGroups.push({ name: currSA, span: count }); currSA = sa; count = 1; } else count++; });
         if (currSA) saGroups.push({ name: currSA, span: count });
@@ -797,7 +823,8 @@ function renderReportTable() {
         tableColumns.forEach(c => html += `<th class="px-2 py-1 border border-blue-700 min-w-[3.5rem] bg-blue-500 text-white">${c}</th>`);
         html += `</tr></thead>`;
     } else {
-        html += `<thead class="sticky-header"><tr class="bg-blue-600 text-white font-bold uppercase"><th class="px-2 py-2 border border-blue-700 sticky-col bg-blue-700 w-32 !z-[60]">SEKTOR</th>`;
+        let headerText = mode === 'SA' ? 'SERVICE AREA' : 'SEKTOR';
+        html += `<thead class="sticky-header"><tr class="bg-blue-600 text-white font-bold uppercase"><th class="px-2 py-2 border border-blue-700 sticky-col bg-blue-700 w-32 !z-[60]">${headerText}</th>`;
         tableColumns.forEach(c => html += `<th class="px-2 py-2 border border-blue-700 min-w-[3.5rem] bg-blue-600 text-white">${c}</th>`);
         html += `<th class="px-2 py-2 border border-blue-700 bg-blue-800 w-16 text-white">TOTAL</th></tr></thead>`;
     }
@@ -1015,14 +1042,20 @@ function openDistribution(f, c) {
 window.openDistribution = openDistribution;
 
 function renderCharts() {
-    const d = getActiveData(); let list = STO_LIST; let isS = false;
+    const d = getActiveData(); 
+    let list = STO_LIST; 
+    let isS = false;
+    let isSA = false;
+
     if (mode === 'SEKTOR') { list = SEKTOR_LIST; isS = true; }
+    else if (mode === 'SA') { list = SA_LIST; isSA = true; }
     else if (mode === 'PEKANBARU') list = PEKANBARU_LIST;
     else if (mode === 'DUMAI') list = DUMAI_LIST;
     
     let lbl=[], h1=[], h0=[], tc=[]; const now = new Date();
     list.forEach(item => {
         const locData = d.filter(r => {
+            if (isSA) return getSA(r) === item;
             let v = (isS ? r.SEKTOR : r.STO) || r.LOKASI;
             return v && (isS ? mapSEKTOR(v).includes(item) : mapSTO(v) === item);
         });
@@ -1147,8 +1180,10 @@ function renderGrid() {
     
     let list = STO_LIST; 
     let isSektorRender = false;
+    let isSARender = false;
     
     if (mode === 'SEKTOR') { list = SEKTOR_LIST; isSektorRender = true; } 
+    else if (mode === 'SA') { list = SA_LIST; isSARender = true; }
     else if (mode === 'PEKANBARU') list = PEKANBARU_LIST; 
     else if (mode === 'DUMAI') list = DUMAI_LIST;
     else if (mode.startsWith('SA_')) {
@@ -1164,12 +1199,13 @@ function renderGrid() {
     const baseData = getBaseData();
     gridEl.innerHTML = list.map(item => {
         const locData = baseData.filter(r => {
+            if (isSARender) return getSA(r) === item;
             const val = (isSektorRender ? r.SEKTOR : r.STO) || r.LOKASI;
             if (!val) return false;
             return isSektorRender ? mapSEKTOR(val).includes(item) : mapSTO(val) === item;
         });
 
-        if(locData.length === 0 && mode === 'SEKTOR') return ''; 
+        if(locData.length === 0 && (mode === 'SEKTOR' || mode === 'SA')) return ''; 
 
         const openCount = locData.filter(r => isTicketOpen(r)).length;
         const closeCount = locData.filter(r => !isTicketOpen(r)).length;
@@ -1311,25 +1347,87 @@ function renderMonitoringView() {
     const gr = {}; const sC = {};
     d.forEach(r => {
         let t1=(r["TEKNISI 1"]||"").trim(), t2=(r["TEKNISI 2"]||"").trim(); if(!t1 && !t2) return;
-        let s = (r["STO"]||r["SEKTOR"]||"UNKNOWN").toUpperCase(); if((r["SEKTOR"]||"").toUpperCase().includes("PBRC")) s=r["SEKTOR"].toUpperCase();
-        let k = t1 + "|||" + t2; if(!gr[s]) gr[s]={}; if(!gr[s][k]) gr[s][k]={cl:[],o:0}; if(!sC[s]) sC[s]=Array(12).fill(0);
-        if(isTicketOpen(r)) gr[s][k].o++;
-        else { const rt = r["JAM TECH CLOSED"]||r["AM TECH CLOSE"]; if(rt) { const dt=new Date(rt); if(!isNaN(dt.getTime())){ const hr=dt.getHours(); gr[s][k].cl.push({inc:r.NOTIKET,hr}); sC[s][Math.floor(hr/2)]++; } } }
+        
+        // Penyesuaian grouping berdasarkan mode
+        let s = "UNKNOWN";
+        if (mode === 'SA') {
+            s = getSA(r);
+        } else if (mode === 'SEKTOR' || mode.startsWith('SA_PBR_')) {
+            s = mapSEKTOR(r.SEKTOR || r.LOKASI)[0] || "UNKNOWN";
+        } else {
+            s = mapSTO(r["STO"] || r["LOKASI"] || "UNKNOWN");
+            if (s === 'PBR') {
+                let sek = (r["SEKTOR"] || "").toUpperCase();
+                if (sek.includes("PBRC 1")) s = "PBRC 1";
+                else if (sek.includes("PBRC 2")) s = "PBRC 2";
+                else if (sek.includes("PBRC 3")) s = "PBRC 3";
+                else if (sek.includes("PBRC 4")) s = "PBRC 4";
+            }
+        }
+        
+        let k = t1 + "|||" + t2; 
+        if(!gr[s]) gr[s]={}; 
+        if(!gr[s][k]) gr[s][k]={cl:[],o:0}; 
+        if(!sC[s]) sC[s]=Array(12).fill(0);
+        
+        if(isTicketOpen(r)) {
+            gr[s][k].o++;
+        } else { 
+            const rt = r["JAM TECH CLOSED"]||r["AM TECH CLOSE"]; 
+            if(rt) { 
+                const dt=new Date(rt); 
+                if(!isNaN(dt.getTime())){ 
+                    const hr=dt.getHours(); 
+                    gr[s][k].cl.push({inc:r.NOTIKET,hr}); 
+                    sC[s][Math.floor(hr/2)]++; 
+                } 
+            } 
+        }
     });
+    
     if(window.chartMonitoringInst) window.chartMonitoringInst.destroy();
     const ctx = document.getElementById('chartMonitoringTrend');
     if(ctx) window.chartMonitoringInst = new Chart(ctx, { type:'bar', data: { labels: ["00-02","02-04","04-06","06-08","08-10","10-12","12-14","14-16","16-18","18-20","20-22","22-00"], datasets: Object.keys(sC).sort().map((s,i)=>({label:s,data:sC[s],backgroundColor:['#3b82f6','#10b981','#f59e0b','#f43f5e','#8b5cf6'][i%5],borderRadius:4})) }, options: { responsive:true, maintainAspectRatio:false, scales:{y:{suggestedMax:20}} } });
-    let h=''; const sk = Object.keys(gr).sort(); sk.forEach(s => {
-        const ex = expandedSektors.has(s); h+=`<tr class="bg-slate-50 cursor-pointer" onclick="toggleSektor('${s.replace(/'/g, "\\'")}')"><td class="px-4 py-3 font-black text-blue-700 border-r">${s} ${ex?'▲':'▼'}</td><td colspan="13" class="px-4 py-3 text-xs font-bold text-slate-400">${Object.keys(gr[s]).length} Tim</td></tr>`;
-        if(ex) Object.keys(gr[s]).sort().forEach(tk => {
-            const inf = gr[s][tk]; const pts = tk.split("|||"); const getB = (h1,h2) => inf.cl.filter(t => t.hr>=h1 && t.hr<=h2).map(t => `<div class="text-[9px] bg-blue-50 p-1 rounded mb-1 text-center font-bold text-blue-700 border border-blue-200">${t.inc}</div>`).join('');
-            let t1Name = extractName(pts[0]);
-            let t2Name = extractName(pts[1]);
-            let dispName = t1Name;
-            if (t2Name && t2Name.toUpperCase() !== 'N/A') dispName += ' / ' + t2Name;
-            h+=`<tr class="border-b"><td class="border-r"></td><td class="px-4 py-3 border-r text-xs font-bold">${dispName} ${inf.o>0?`<br><span class="text-rose-500">${inf.o} Open</span>`:''}</td><td class="px-2 align-top border-r">${getB(0,1)}</td><td class="px-2 align-top border-r">${getB(2,3)}</td><td class="px-2 align-top border-r">${getB(4,5)}</td><td class="px-2 align-top border-r">${getB(6,7)}</td><td class="px-2 align-top border-r">${getB(8,9)}</td><td class="px-2 align-top border-r">${getB(10,11)}</td><td class="px-2 align-top border-r">${getB(12,13)}</td><td class="px-2 align-top border-r">${getB(14,15)}</td><td class="px-2 align-top border-r">${getB(16,17)}</td><td class="px-2 align-top border-r">${getB(18,19)}</td><td class="px-2 align-top border-r">${getB(20,21)}</td><td class="px-2 align-top">${getB(22,23)}</td></tr>`;
+    
+    let h=''; 
+    const sk = Object.keys(gr).sort(); 
+    sk.forEach(s => {
+        const ex = expandedSektors.has(s); 
+        
+        // Kalkulasi Total Close untuk area/sektor ini
+        let totalCloseArea = 0;
+        Object.keys(gr[s]).forEach(tk => {
+            totalCloseArea += gr[s][tk].cl.length;
         });
-    }); document.getElementById('monitoringTableBody').innerHTML = h;
+        
+        // Menambahkan Badge Total Close pada header
+        h+=`<tr class="bg-slate-50 cursor-pointer hover:bg-blue-50 transition-colors" onclick="toggleSektor('${s.replace(/'/g, "\\'")}')">
+                <td class="px-4 py-3 font-black text-blue-700 border-r whitespace-nowrap">${s} ${ex?'▲':'▼'}</td>
+                <td colspan="13" class="px-4 py-3 border-b border-slate-100">
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="font-bold text-slate-500">${Object.keys(gr[s]).length} Tim Teknisi</span>
+                        <span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md font-black shadow-sm flex items-center gap-1.5 border border-emerald-200">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            Total Close: ${totalCloseArea}
+                        </span>
+                    </div>
+                </td>
+            </tr>`;
+            
+        if(ex) {
+            Object.keys(gr[s]).sort().forEach(tk => {
+                const inf = gr[s][tk]; 
+                const pts = tk.split("|||"); 
+                const getB = (h1,h2) => inf.cl.filter(t => t.hr>=h1 && t.hr<=h2).map(t => `<div class="text-[9px] bg-blue-50 p-1 rounded mb-1 text-center font-bold text-blue-700 border border-blue-200">${t.inc}</div>`).join('');
+                let t1Name = extractName(pts[0]);
+                let t2Name = extractName(pts[1]);
+                let dispName = t1Name;
+                if (t2Name && t2Name.toUpperCase() !== 'N/A') dispName += ' / ' + t2Name;
+                h+=`<tr class="border-b"><td class="border-r"></td><td class="px-4 py-3 border-r text-xs font-bold">${dispName} ${inf.o>0?`<br><span class="text-rose-500">${inf.o} Open</span>`:''}</td><td class="px-2 align-top border-r">${getB(0,1)}</td><td class="px-2 align-top border-r">${getB(2,3)}</td><td class="px-2 align-top border-r">${getB(4,5)}</td><td class="px-2 align-top border-r">${getB(6,7)}</td><td class="px-2 align-top border-r">${getB(8,9)}</td><td class="px-2 align-top border-r">${getB(10,11)}</td><td class="px-2 align-top border-r">${getB(12,13)}</td><td class="px-2 align-top border-r">${getB(14,15)}</td><td class="px-2 align-top border-r">${getB(16,17)}</td><td class="px-2 align-top border-r">${getB(18,19)}</td><td class="px-2 align-top border-r">${getB(20,21)}</td><td class="px-2 align-top">${getB(22,23)}</td></tr>`;
+            });
+        }
+    }); 
+    document.getElementById('monitoringTableBody').innerHTML = h;
 }
 
 function openTeknisi(tekName) {
