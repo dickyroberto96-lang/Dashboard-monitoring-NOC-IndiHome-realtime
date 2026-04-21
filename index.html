@@ -1655,6 +1655,9 @@ function renderKehadiranView() {
         else if (stat !== '' && stat !== 'RSG' && stat !== 'RESIGN') lain++;
     });
     
+    // Hitung Persentase Kehadiran
+    let persentaseHadir = data.length > 0 ? ((hadir / data.length) * 100).toFixed(1) : 0;
+    
     // Render Summary KPI Cards
     const kpiContainer = document.getElementById('kpiKehadiran');
     if (kpiContainer) {
@@ -1665,7 +1668,10 @@ function renderKehadiranView() {
             </div>
             <div class="bg-emerald-50 p-5 rounded-2xl shadow-sm border border-emerald-100 flex flex-col justify-between">
                 <div class="text-xs text-emerald-600 font-extrabold uppercase tracking-widest mb-2">Hadir Hari Ini</div>
-                <div class="text-4xl font-black text-emerald-700">${hadir}</div>
+                <div class="flex items-end gap-2">
+                    <div class="text-4xl font-black text-emerald-700">${hadir}</div>
+                    <div class="mb-1 text-xs font-black text-emerald-700 bg-emerald-200/60 px-2 py-0.5 rounded-md border border-emerald-300/50">${persentaseHadir}%</div>
+                </div>
             </div>
             <div class="bg-slate-100 p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="text-xs text-slate-500 font-extrabold uppercase tracking-widest mb-2">Off / Libur</div>
