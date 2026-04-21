@@ -1094,23 +1094,27 @@ function updateDashboard() {
     const monView = document.getElementById('monitoringView');
     const rinView = document.getElementById('rincianHarianView');
     const kehView = document.getElementById('kehadiranView');
+    const kpiMainView = document.getElementById('kpiMainView');
 
     if (ticketTypeMode === 'MONITORING_ORDER') {
         stdView.classList.add('hidden');
         monView.classList.remove('hidden');
         rinView.classList.add('hidden');
+        if(kpiMainView) kpiMainView.classList.remove('hidden');
         if(kehView) { kehView.classList.add('hidden'); kehView.classList.remove('flex'); }
         renderMonitoringView();
     } else if (ticketTypeMode === 'KEHADIRAN_TEKNISI') {
         stdView.classList.add('hidden');
         monView.classList.add('hidden');
         rinView.classList.add('hidden');
+        if(kpiMainView) kpiMainView.classList.add('hidden');
         if(kehView) { kehView.classList.remove('hidden'); kehView.classList.add('flex'); }
         renderKehadiranView();
     } else {
         stdView.classList.remove('hidden');
         monView.classList.add('hidden');
         rinView.classList.remove('hidden');
+        if(kpiMainView) kpiMainView.classList.remove('hidden');
         if(kehView) { kehView.classList.add('hidden'); kehView.classList.remove('flex'); }
         renderCharts(); renderGrid(); renderReportTable(); 
     }
