@@ -1287,7 +1287,7 @@ function renderReportTable() {
     else if(ticketTypeMode==='Z_PERMINTAAN') displayCats = categoryConfigs.filter(x => x.id === 'Z_PERMINTAAN');
 
     displayCats.forEach(c => {
-        html += `<tr class="${c.bg} ${c.text} font-black uppercase tracking-widest text-[11px] border-y border-slate-200"><td colspan="${tableColumns.length + 2}" class="px-4 py-2.5 text-left sticky-col !z-10 w-full shadow-[inset_-2px_0_5px_rgba(0,0,0,0.02)]">${c.label}</td></tr>`;
+        html += `<tr class="${c.bg} ${c.text} font-black uppercase tracking-widest text-[11px] border-y border-slate-200"><td colspan="${tableColumns.length + 2}" class="px-4 py-2.5 text-center !z-10 w-full shadow-[inset_-2px_0_5px_rgba(0,0,0,0.02)]">${c.label}</td></tr>`;
         
         c.ranges.forEach((rng, idx) => {
             html += `<tr class="border-b border-slate-100 hover:bg-blue-50/50 transition-colors group">
