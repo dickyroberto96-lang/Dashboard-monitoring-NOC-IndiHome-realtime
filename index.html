@@ -429,57 +429,88 @@ let chartMonitoringInst = null;
 // ===== 2. DATA PROCESSING HELPERS =====
 function getVal(row, possibleKeys) {
     if (!row) return "";
-    for (let k of Object.keys(row)) {
+    let keys = Object.keys(row);
+    
+    // Prioritas 1: Exact Match (Kecocokan Persis)
+    for (let k of keys) {
         if (possibleKeys.includes(k.trim().toUpperCase())) return row[k];
+    }
+    
+    // Prioritas 2: Pencarian Parsial Aman (Solusi untuk NAMA TEKNISI dll)
+    for (let k of keys) {
+        let ku = k.trim().toUpperCase();
+        if (possibleKeys.includes('NAMA') && ku.includes('NAMA')) return row[k];
+        if (possibleKeys.includes('NIK') && (ku.includes('NIK') || ku.includes('ID TEKNISI'))) return row[k];
+        if (possibleKeys.includes('NO HP') && (ku.includes('HP') || ku.includes('TELEPON'))) return row[k];
+        if (possibleKeys.includes('FLAGGING TEKNISI') && ku.includes('FLAGGING')) return row[k];
+        if (possibleKeys.includes('SERVICE AREA') && ku.includes('AREA')) return row[k];
     }
     return "";
 }
 
-// Fungsi paling tangguh untuk membangun map keys dari tanggal di API JSON secara dinamis
+// Fungsi Pemetaan Otomatis (Ultra-Robust) untuk Kalender
+// Menyelesaikan masalah Google Sheets yang merubah format cell tanggal/angka menjadi "M/D/YYYY" di JSON
 function buildDateMap(data) {
     dateKeyMap = {};
-    const standardKeys = ["NO", "NIK", "NAMA", "NO HP", "NOHP", "NO. HP", "SERVICE AREA", "SEKTOR", "STO", "BRANCH", "POSISI", "FLAGGING TEKNISI", "FLAGGING", "MITRA"];
+    if (!data || !Array.isArray(data) || data.length === 0) return;
     
-    // Cari baris yang kemungkinan besar merupakan "Baris 2" tempat tanggal angka itu berada
-    // Biasanya ini merupakan baris pertama data di JSON Opensheet, tapi agar aman, kita cari.
-    let headerRow = data.find(r => {
-        const vals = Object.values(r).map(v => (v||"").toString().trim());
-        // Mencari apakah baris tersebut memuat angka-angka tanggal seperti 1, 10, dan 20
-        return vals.includes("1") && vals.includes("10") && vals.includes("20"); 
+    const knownKeys = [
+        "NO", "NUM", "NOMOR", "NIK", "ID TEKNISI", "NAMA", "NAMA TEKNISI", "NAMA LENGKAP", 
+        "NO HP", "NOHP", "NO. HP", "TELEPON", "SERVICE AREA", "SA", "SEKTOR", "SECTOR", 
+        "STO", "LOKASI", "BRANCH", "CABANG", "POSISI", "POSITION", "FLAGGING TEKNISI", 
+        "FLAGGING", "MITRA", "VENDOR"
+    ];
+    
+    let firstRowKeys = Object.keys(data[0]);
+    
+    // Pisahkan key yang kemungkinan adalah kolom tanggal (bukan header statis)
+    let unknownKeys = firstRowKeys.filter(k => {
+        let ku = k.trim().toUpperCase();
+        return !knownKeys.some(known => ku === known || ku.includes(known));
     });
     
-    if (headerRow) {
-        for (let k of Object.keys(headerRow)) {
-            let kt = k.trim().toUpperCase();
-            if (!standardKeys.includes(kt)) { // Jangan sampai menimpa kolom standar
-                let val = (headerRow[k] || "").toString().trim();
-                if (!isNaN(val) && parseInt(val) >= 1 && parseInt(val) <= 31) {
-                    dateKeyMap[parseInt(val)] = k;
-                }
-            }
+    let mappedCount = 0;
+    unknownKeys.forEach(k => {
+        let cleanK = k.trim();
+        
+        // Skenario 1: Cek apakah key murni angka 1-31 (Jika format cell di sheet adalah Text/Number biasa)
+        if (/^(0?[1-9]|[12]\d|3[01])$/.test(cleanK)) {
+            let day = parseInt(cleanK, 10);
+            dateKeyMap[day] = k;
+            mappedCount++;
+            return;
         }
-    } else {
-        // Fallback darurat jika headerRow angka tidak ketemu
-        if (data.length > 0) {
-            let dayCounter = 1;
-            for (let k of Object.keys(data[0])) {
-                let kt = k.trim().toUpperCase();
-                if (!standardKeys.includes(kt)) {
-                    dateKeyMap[dayCounter] = k;
-                    dayCounter++;
-                    if(dayCounter > 31) break;
-                }
+        
+        // Skenario 2: Cek apakah key adalah tanggal "M/D/YYYY" (Format Date default Google Sheets)
+        let d = new Date(cleanK);
+        if (!isNaN(d.getTime())) {
+            let day = d.getDate();
+            if (!dateKeyMap[day]) { // Prioritaskan map pertama yang cocok untuk tanggal tersebut
+                dateKeyMap[day] = k;
+                mappedCount++;
             }
+            return;
         }
+    });
+    
+    // Skenario 3: Fallback Ekstrem (Jika format sangat hancur tapi berderet 28-31 kolom tersisa)
+    if (mappedCount < 10 && unknownKeys.length >= 28) {
+        dateKeyMap = {};
+        unknownKeys.forEach((k, idx) => {
+            if (idx < 31) dateKeyMap[idx + 1] = k;
+        });
     }
 }
 
 // Mengambil kehadiran langsung menggunakan mapping key yang sudah digenerate di atas
 function getKehadiranStatus(r, day) {
-    let key = dateKeyMap[day];
-    if (key && r[key] !== undefined) {
-        return r[key];
-    }
+    let mappedKey = dateKeyMap[day];
+    if (mappedKey && r[mappedKey] !== undefined) return r[mappedKey];
+    
+    // Fallback darurat
+    let dayStr = day.toString();
+    if (r[dayStr] !== undefined) return r[dayStr];
+    
     return "";
 }
 
@@ -631,13 +662,13 @@ function getActiveData() {
     let b = getBaseData(); 
     if (mode === 'PEKANBARU') return b.filter(r => PEKANBARU_LIST.includes(mapSTO(r.STO || r.LOKASI)));
     else if (mode === 'DUMAI') return b.filter(r => DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    else if (mode === 'SA_ARENGKA') return b.filter(r => SA_ARENGKA_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    else if (mode === 'SA_PBR_BARAT') return b.filter(r => mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_BARAT_LIST.includes(s)));
-    else if (mode === 'SA_PBR_TIMUR') return b.filter(r => mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_TIMUR_LIST.includes(s)));
-    else if (mode === 'SA_BUKIT_RAYA') return b.filter(r => SA_BUKIT_RAYA_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    else if (mode === 'SA_DUMAI') return b.filter(r => SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    else if (mode === 'SA_PANGKALAN_KERINCI') return b.filter(r => SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)));
-    else if (mode === 'SA_RENGAT') return b.filter(r => SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)));
+    else if (mode === 'SA_ARENGKA') return b.filter(r => SA_ARENGKA_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'ARENGKA');
+    else if (mode === 'SA_PBR_BARAT') return b.filter(r => mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_BARAT_LIST.includes(s)) || getSA(r) === 'PBR BARAT' || (r["SERVICE AREA"]||"").toUpperCase().trim() === 'PEKANBARU BARAT');
+    else if (mode === 'SA_PBR_TIMUR') return b.filter(r => mapSEKTOR(r.SEKTOR || r.LOKASI).some(s => SA_PBR_TIMUR_LIST.includes(s)) || getSA(r) === 'PBR TIMUR' || (r["SERVICE AREA"]||"").toUpperCase().trim() === 'PEKANBARU TIMUR');
+    else if (mode === 'SA_BUKIT_RAYA') return b.filter(r => SA_BUKIT_RAYA_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'BUKIT RAYA');
+    else if (mode === 'SA_DUMAI') return b.filter(r => SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'DUMAI');
+    else if (mode === 'SA_PANGKALAN_KERINCI') return b.filter(r => SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'PANGKALAN KERINCI');
+    else if (mode === 'SA_RENGAT') return b.filter(r => SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'RENGAT');
     return b; // Termasuk 'SA', 'STO', 'SEKTOR' tidak perlu filter ekstra untuk active data karena akan dihandle saat rendering
 }
 
@@ -652,16 +683,20 @@ function getActiveKehadiranData() {
         
         const st = mapSTO(getVal(r, ["STO", "LOKASI"]));
         const sek = mapSEKTOR(getVal(r, ["SEKTOR"]));
+        const sa_col = getVal(r, ["SERVICE AREA", "SA"]).toUpperCase().trim();
         
-        if (mode === 'PEKANBARU') return PEKANBARU_LIST.includes(st);
-        if (mode === 'DUMAI') return DUMAI_LIST.includes(st);
-        if (mode === 'SA_ARENGKA') return SA_ARENGKA_LIST.includes(st);
-        if (mode === 'SA_PBR_BARAT') return sek.some(s => SA_PBR_BARAT_LIST.includes(s));
-        if (mode === 'SA_PBR_TIMUR') return sek.some(s => SA_PBR_TIMUR_LIST.includes(s));
-        if (mode === 'SA_BUKIT_RAYA') return SA_BUKIT_RAYA_LIST.includes(st);
-        if (mode === 'SA_DUMAI') return SA_DUMAI_LIST.includes(st);
-        if (mode === 'SA_PANGKALAN_KERINCI') return SA_PANGKALAN_KERINCI_LIST.includes(st);
-        if (mode === 'SA_RENGAT') return SA_RENGAT_LIST.includes(st);
+        if (mode === 'PEKANBARU') return PEKANBARU_LIST.includes(st) || sa_col.includes('PEKANBARU');
+        if (mode === 'DUMAI') return DUMAI_LIST.includes(st) || sa_col.includes('DUMAI');
+        if (mode === 'SA_ARENGKA') return SA_ARENGKA_LIST.includes(st) || sa_col === 'ARENGKA' || sa_col === 'SA ARENGKA';
+        
+        // Perbaikan Pencocokan Nama PEKANBARU BARAT dan PEKANBARU TIMUR
+        if (mode === 'SA_PBR_BARAT') return sek.some(s => SA_PBR_BARAT_LIST.includes(s)) || sa_col === 'PEKANBARU BARAT' || sa_col === 'PBR BARAT';
+        if (mode === 'SA_PBR_TIMUR') return sek.some(s => SA_PBR_TIMUR_LIST.includes(s)) || sa_col === 'PEKANBARU TIMUR' || sa_col === 'PBR TIMUR';
+        
+        if (mode === 'SA_BUKIT_RAYA') return SA_BUKIT_RAYA_LIST.includes(st) || sa_col === 'BUKIT RAYA' || sa_col === 'SA BUKIT RAYA';
+        if (mode === 'SA_DUMAI') return SA_DUMAI_LIST.includes(st) || sa_col === 'DUMAI' || sa_col === 'SA DUMAI';
+        if (mode === 'SA_PANGKALAN_KERINCI') return SA_PANGKALAN_KERINCI_LIST.includes(st) || sa_col.includes('KERINCI');
+        if (mode === 'SA_RENGAT') return SA_RENGAT_LIST.includes(st) || sa_col === 'RENGAT' || sa_col === 'SA RENGAT';
         
         return true;
     });
@@ -1031,7 +1066,8 @@ async function load() {
         if (resTeknisi) {
             const jsonTeknisi = await resTeknisi.json().catch(() => []);
             rawKehadiranData = Array.isArray(jsonTeknisi) ? jsonTeknisi : [];
-            buildDateMap(rawKehadiranData); // Jalankan auto-mapper untuk tanggal di file API
+            // Jalankan Smart Mapper Tanggal
+            buildDateMap(rawKehadiranData); 
         }
 
         renderSidebar(); updateDashboard();
@@ -1667,17 +1703,17 @@ function renderKehadiranView() {
         tableHTML += `<tr><td colspan="${dayKeys.length + 11}" class="px-4 py-8 text-center text-slate-400 font-bold">Data Kehadiran Kosong / Belum Dimuat.</td></tr>`;
     } else {
         tableHTML += data.map((r, index) => {
-            let no = getVal(r, ['NO']) || (index + 1);
-            let nik = getVal(r, ['NIK']);
-            let nm = getVal(r, ['NAMA']);
-            let nohp = getVal(r, ['NO HP', 'NOHP', 'NO. HP']);
-            let sa = getVal(r, ['SERVICE AREA']);
-            let sek = getVal(r, ['SEKTOR']);
-            let st = getVal(r, ['STO']);
-            let br = getVal(r, ['BRANCH']);
-            let ps = getVal(r, ['POSISI']);
+            let no = getVal(r, ['NO', 'NUM', 'NOMOR']);
+            let nik = getVal(r, ['NIK', 'ID TEKNISI']);
+            let nm = getVal(r, ['NAMA', 'NAMA TEKNISI', 'NAMA LENGKAP']);
+            let nohp = getVal(r, ['NO HP', 'NOHP', 'NO. HP', 'TELEPON']);
+            let sa = getVal(r, ['SERVICE AREA', 'SA']);
+            let sek = getVal(r, ['SEKTOR', 'SECTOR']);
+            let st = getVal(r, ['STO', 'LOKASI']);
+            let br = getVal(r, ['BRANCH', 'CABANG']);
+            let ps = getVal(r, ['POSISI', 'POSITION']);
             let flag = getVal(r, ['FLAGGING TEKNISI', 'FLAGGING']);
-            let mitra = getVal(r, ['MITRA']);
+            let mitra = getVal(r, ['MITRA', 'VENDOR']);
 
             return `<tr class="hover:bg-slate-50 transition-colors group">
                 <td class="px-3 py-2 text-[10px] text-slate-500 border-r border-slate-100">${no}</td>
