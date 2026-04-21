@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Tiket Gangguan Indihome RIDAR</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- TAMBAHKAN CHART.JS -->
+    
+    <!-- CHART.JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <!-- HTML2CANVAS UNTUK EXPORT GAMBAR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -231,12 +236,18 @@
                 <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12"></div>
                 
                 <!-- MATRIKS LAPORAN PROGRES -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-12 flex flex-col">
-                    <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
-                        <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"></path></svg></span>
-                        <span id="matrixReportTitleText">Laporan Progres Tiket Gangguan (Matriks)</span>
-                    </h3>
-                    <div id="reportTableWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[800px] overflow-y-auto relative">
+                <div id="matrixCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-12 flex flex-col relative">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <h3 class="font-black text-slate-800 flex items-center gap-2">
+                            <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"></path></svg></span>
+                            <span id="matrixReportTitleText">Laporan Progres Tiket Gangguan (Matriks)</span>
+                        </h3>
+                        <button onclick="exportElementToImage('matrixCard', 'Laporan_Matriks', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 hover:scale-105 px-4 py-2 rounded-xl transition-all shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Export PNG
+                        </button>
+                    </div>
+                    <div id="reportTableWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[800px] overflow-y-auto relative bg-slate-50/50">
                         <div id="reportTableContent" class="min-w-max bg-white"></div>
                     </div>
                 </div>
@@ -299,31 +310,37 @@
                 </div>
                 
                 <!-- Tabel Kehadiran -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative">
+                <div id="kehadiranCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col relative">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h3 class="font-black text-slate-800 flex items-center gap-2">
                             <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg></span>
                             Laporan Kehadiran Teknisi
                         </h3>
-                        <div class="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-2" id="kehadiranInfoTgl">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Hari Ini: -
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 flex items-center gap-2" id="kehadiranInfoTgl">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Hari Ini: -
+                            </div>
+                            <button onclick="exportElementToImage('kehadiranCard', 'Laporan_Kehadiran', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:scale-105 px-4 py-2 rounded-xl transition-all shadow-sm w-full sm:w-auto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Export PNG
+                            </button>
                         </div>
                     </div>
                     
-                    <div id="tableKehadiranWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[600px] overflow-y-auto relative">
+                    <div id="tableKehadiranWrapper" class="w-full overflow-x-auto rounded-xl border border-slate-300 shadow-inner max-h-[600px] overflow-y-auto relative bg-slate-50/50">
                         <!-- Table Content Akan Di-inject via JS -->
                     </div>
                     
                     <!-- Legend -->
-                    <div class="mt-5 flex flex-wrap gap-4 text-[10px] font-bold text-slate-600 border-t border-slate-100 pt-4">
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> HDR (Hadir)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM (Kerja Malam)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-200"></span> PS (Piket Siang)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> OFF (Libur)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> SKT (Sakit)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-100 border border-purple-200"></span> TKR (Cuti)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> RSG (Resign)</div>
+                    <div class="mt-5 flex flex-wrap justify-center sm:justify-start gap-4 text-[10px] font-bold text-slate-600 border-t border-slate-100 pt-4">
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200 shadow-sm"></span> HDR (Hadir)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200 shadow-sm"></span> PM (Kerja Malam)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-200 shadow-sm"></span> PS (Piket Siang)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300 shadow-sm"></span> OFF (Libur)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200 shadow-sm"></span> SKT (Sakit)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-100 border border-purple-200 shadow-sm"></span> TKR (Cuti)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200 shadow-sm"></span> RSG (Resign)</div>
                     </div>
                 </div>
             </div>
@@ -451,7 +468,6 @@ function getVal(row, possibleKeys) {
 }
 
 // Fungsi Pemetaan Otomatis (Ultra-Robust) untuk Kalender
-// Menyelesaikan masalah Google Sheets yang merubah format cell tanggal/angka menjadi "M/D/YYYY" di JSON
 function buildDateMap(data) {
     dateKeyMap = {};
     if (!data || !Array.isArray(data) || data.length === 0) return;
@@ -464,8 +480,6 @@ function buildDateMap(data) {
     ];
     
     let firstRowKeys = Object.keys(data[0]);
-    
-    // Pisahkan key yang kemungkinan adalah kolom tanggal (bukan header statis)
     let unknownKeys = firstRowKeys.filter(k => {
         let ku = k.trim().toUpperCase();
         return !knownKeys.some(known => ku === known || ku.includes(known));
@@ -474,20 +488,16 @@ function buildDateMap(data) {
     let mappedCount = 0;
     unknownKeys.forEach(k => {
         let cleanK = k.trim();
-        
-        // Skenario 1: Cek apakah key murni angka 1-31 (Jika format cell di sheet adalah Text/Number biasa)
         if (/^(0?[1-9]|[12]\d|3[01])$/.test(cleanK)) {
             let day = parseInt(cleanK, 10);
             dateKeyMap[day] = k;
             mappedCount++;
             return;
         }
-        
-        // Skenario 2: Cek apakah key adalah tanggal "M/D/YYYY" (Format Date default Google Sheets)
         let d = new Date(cleanK);
         if (!isNaN(d.getTime())) {
             let day = d.getDate();
-            if (!dateKeyMap[day]) { // Prioritaskan map pertama yang cocok untuk tanggal tersebut
+            if (!dateKeyMap[day]) { 
                 dateKeyMap[day] = k;
                 mappedCount++;
             }
@@ -495,7 +505,6 @@ function buildDateMap(data) {
         }
     });
     
-    // Skenario 3: Fallback Ekstrem (Jika format sangat hancur tapi berderet 28-31 kolom tersisa)
     if (mappedCount < 10 && unknownKeys.length >= 28) {
         dateKeyMap = {};
         unknownKeys.forEach((k, idx) => {
@@ -504,15 +513,11 @@ function buildDateMap(data) {
     }
 }
 
-// Mengambil kehadiran langsung menggunakan mapping key yang sudah digenerate di atas
 function getKehadiranStatus(r, day) {
     let mappedKey = dateKeyMap[day];
     if (mappedKey && r[mappedKey] !== undefined) return r[mappedKey];
-    
-    // Fallback darurat
     let dayStr = day.toString();
     if (r[dayStr] !== undefined) return r[dayStr];
-    
     return "";
 }
 
@@ -533,7 +538,6 @@ function mapSEKTOR(val) {
 }
 function extractName(f) { if(!f) return 'N/A'; const s = f.toString(); const i = s.indexOf('-'); return i !== -1 ? s.substring(i+1).trim() : s.trim(); }
 
-// Fungsi Helper untuk mendapatkan Service Area dari raw data
 function getSA(r) {
     let st = mapSTO(r.STO || r.LOKASI);
     let sek = (r.SEKTOR || "").toUpperCase();
@@ -553,15 +557,17 @@ function getTicketBucket(r) {
     if (kt.includes("MANJA")) return "MANJA";
     
     const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
-    if (c.includes("SQM")) return "SQM";
-    if (c.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
-    if (c.includes("UNDERSPEC")) return "UNDERSPEC";
+    const tipe = (r["TIPE TIKET"] || r["TIPE"] || "").toString().toUpperCase().trim();
+    const detail = (r["DETAIL TIKET"] || r["KETERANGAN"] || "").toString().toUpperCase().trim();
+
+    if (c.includes("SQM") || kt.includes("SQM")) return "SQM";
+    if (c.includes("Z_PERMINTAAN") || kt.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
+    if (c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC")) return "UNDERSPEC";
     
     const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
     if(v.includes("PLATINUM")) return "HVC PLATINUM";
     if(v.includes("DIAMOND")) return "HVC DIAMOND";
     
-    // Gabungkan Gold dan Reguler ke NON_HVC
     return "NON_HVC"; 
 }
 
@@ -583,12 +589,9 @@ function getTicketAge(r) {
     const cDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     if (rDay.getTime() === cDay.getTime()) return "H0";
-    
     if (rDay.getTime() < cDay.getTime()) {
         const diffDays = Math.round((cDay.getTime() - rDay.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 1 && diffDays <= 1095) {
-            return "H-1";
-        }
+        if (diffDays >= 1 && diffDays <= 1095) return "H-1";
     }
     return "UNKNOWN";
 }
@@ -596,11 +599,8 @@ function getTicketAge(r) {
 function getDurasiSeconds(r) {
     const op = isTicketOpen(r);
     const bucket = getTicketBucket(r);
-    
     let startStr = r["REPORT DATE"] || r["DATEK"];
-    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) {
-        startStr = r["JAM CUST ASSIGN"];
-    }
+    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) startStr = r["JAM CUST ASSIGN"];
 
     if(!op && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "" && bucket !== "MANJA") {
         const p = r["DURASI CLOSE"].split(':');
@@ -609,7 +609,6 @@ function getDurasiSeconds(r) {
 
     if(!startStr) return 0;
     const s = new Date(startStr); if(isNaN(s.getTime())) return 0;
-    
     let endStr = r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
     const e = !op ? (endStr ? new Date(endStr) : new Date()) : new Date();
     
@@ -629,9 +628,7 @@ function calculateDuration(sS, eS, st, bucket = "") {
 function getDurasi(r) {
     const bucket = getTicketBucket(r);
     let start = r["REPORT DATE"] || r["DATEK"];
-    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) {
-        start = r["JAM CUST ASSIGN"];
-    }
+    if (bucket === "MANJA" && r["JAM CUST ASSIGN"]) start = r["JAM CUST ASSIGN"];
 
     if(!isTicketOpen(r)) {
         if(bucket !== "MANJA" && r["DURASI CLOSE"] && r["DURASI CLOSE"].trim() !== "") return r["DURASI CLOSE"];
@@ -644,18 +641,22 @@ function getDurasi(r) {
 function getBaseData() {
     return rawData.filter(r => {
         const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
+        const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
+        const tipe = (r["TIPE TIKET"] || r["TIPE"] || "").toString().toUpperCase().trim();
+        const detail = (r["DETAIL TIKET"] || r["KETERANGAN"] || "").toString().toUpperCase().trim();
+        
+        const isSqm = c.includes("SQM") || kt.includes("SQM");
+        const isZPerm = c.includes("Z_PERMINTAAN") || kt.includes("Z_PERMINTAAN") || c.includes("Z_PERMINTAAN");
+        const isUnderspec = c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC");
+        
         if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER' || ticketTypeMode === 'KEHADIRAN_TEKNISI') return true; 
         
         if (ticketTypeMode === 'REGULER') {
-            const isSqm = c.includes("SQM");
-            const isZPerm = c.includes("Z_PERMINTAAN");
-            const isUnderspec = c.includes("UNDERSPEC");
             return !isSqm && !isZPerm && !isUnderspec; 
         }
-        
-        if (ticketTypeMode === 'SQM') return c.includes("SQM");
-        if (ticketTypeMode === 'Z_PERMINTAAN') return c.includes("Z_PERMINTAAN");
-        if (ticketTypeMode === 'UNDERSPEC') return c.includes("UNDERSPEC");
+        if (ticketTypeMode === 'SQM') return isSqm;
+        if (ticketTypeMode === 'Z_PERMINTAAN') return isZPerm;
+        if (ticketTypeMode === 'UNDERSPEC') return isUnderspec;
         return true;
     });
 }
@@ -671,16 +672,14 @@ function getActiveData() {
     else if (mode === 'SA_DUMAI') return b.filter(r => SA_DUMAI_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'DUMAI');
     else if (mode === 'SA_PANGKALAN_KERINCI') return b.filter(r => SA_PANGKALAN_KERINCI_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'PANGKALAN KERINCI');
     else if (mode === 'SA_RENGAT') return b.filter(r => SA_RENGAT_LIST.includes(mapSTO(r.STO || r.LOKASI)) || getSA(r) === 'RENGAT');
-    return b; // Termasuk 'SA', 'STO', 'SEKTOR' tidak perlu filter ekstra untuk active data karena akan dihandle saat rendering
+    return b; 
 }
 
 function getActiveKehadiranData() {
     if (!rawKehadiranData || rawKehadiranData.length === 0) return [];
     return rawKehadiranData.filter(r => {
         let nama = getVal(r, ["NAMA"]);
-        // Abaikan data legend dari Google Sheet tempat nama adalah kosong dan kita tau itu bukan data aktual teknisi
         if (!nama || nama.trim() === '') return false; 
-        
         if (mode === 'STO' || mode === 'SEKTOR' || mode === 'SA') return true;
         
         const st = mapSTO(getVal(r, ["STO", "LOKASI"]));
@@ -690,16 +689,12 @@ function getActiveKehadiranData() {
         if (mode === 'PEKANBARU') return PEKANBARU_LIST.includes(st) || sa_col.includes('PEKANBARU');
         if (mode === 'DUMAI') return DUMAI_LIST.includes(st) || sa_col.includes('DUMAI');
         if (mode === 'SA_ARENGKA') return SA_ARENGKA_LIST.includes(st) || sa_col === 'ARENGKA' || sa_col === 'SA ARENGKA';
-        
-        // Perbaikan Pencocokan Nama PEKANBARU BARAT dan PEKANBARU TIMUR
         if (mode === 'SA_PBR_BARAT') return sek.some(s => SA_PBR_BARAT_LIST.includes(s)) || sa_col === 'PEKANBARU BARAT' || sa_col === 'PBR BARAT';
         if (mode === 'SA_PBR_TIMUR') return sek.some(s => SA_PBR_TIMUR_LIST.includes(s)) || sa_col === 'PEKANBARU TIMUR' || sa_col === 'PBR TIMUR';
-        
         if (mode === 'SA_BUKIT_RAYA') return SA_BUKIT_RAYA_LIST.includes(st) || sa_col === 'BUKIT RAYA' || sa_col === 'SA BUKIT RAYA';
         if (mode === 'SA_DUMAI') return SA_DUMAI_LIST.includes(st) || sa_col === 'DUMAI' || sa_col === 'SA DUMAI';
         if (mode === 'SA_PANGKALAN_KERINCI') return SA_PANGKALAN_KERINCI_LIST.includes(st) || sa_col.includes('KERINCI');
         if (mode === 'SA_RENGAT') return SA_RENGAT_LIST.includes(st) || sa_col === 'RENGAT' || sa_col === 'SA RENGAT';
-        
         return true;
     });
 }
@@ -711,15 +706,13 @@ function renderSidebar() {
         const act = item.id === ticketTypeMode;
         const bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
         const iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
-        
         return `
         <button onclick="setTicketType('${item.id}', '${item.shortLabel}')" class="w-full flex items-center px-4 py-3 mb-1.5 rounded-[12px] text-sm font-extrabold transition-all duration-300 ${bgCls}">
             <div class="flex-shrink-0 w-8 flex justify-start items-center transition-transform ${iconCls}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">${item.icon}</svg>
             </div>
             <span class="text-left tracking-wide leading-tight">${item.label}</span>
-        </button>
-        `;
+        </button>`;
     }).join("");
 }
 window.renderSidebar = renderSidebar;
@@ -728,11 +721,7 @@ function renderTable(data) {
     const tableEl = document.getElementById('table'); if(!tableEl) return;
     const theadTr = document.querySelector('#tableView thead tr');
     
-    // Cek apakah view modal saat ini secara spesifik hanya menampilkan kategori MANJA
-    const isManjaView = activeModal && 
-        (activeModal.catId === 'MANJA' || activeModal.bucketCat === 'MANJA' || activeModal.cat === 'MANJA');
-
-    // Sesuaikan Header secara dinamis
+    const isManjaView = activeModal && (activeModal.catId === 'MANJA' || activeModal.bucketCat === 'MANJA' || activeModal.cat === 'MANJA');
     if (isManjaView) {
         theadTr.innerHTML = `<th class="px-6 py-4">No Tiket</th><th class="px-6 py-4 whitespace-nowrap text-blue-600">Jam Cust Assign</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">SLA</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 font-mono">Inet</th><th class="px-6 py-4">Datek</th><th class="px-6 py-4 text-center">Tek1</th><th class="px-6 py-4 text-center">Tek2</th><th class="px-6 py-4 text-center">Durasi</th><th class="px-6 py-4">Ket</th>`;
     } else {
@@ -757,8 +746,6 @@ function renderTable(data) {
         }
         
         const isNot = slaVal === 'NOT COMPLY';
-        
-        // Render sel tambahan jika sedang view MANJA
         let extraCol = '';
         if (isManjaView) {
             extraCol = `<td class="px-6 py-4 text-center text-xs font-bold text-blue-700 bg-blue-50/30 whitespace-nowrap">${r["JAM CUST ASSIGN"] || '-'}</td>`;
@@ -893,15 +880,72 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
 }
 window.openMatrixDetail = openMatrixDetail;
 
-// ===== 4. MATRIX TABLE GENERATOR =====
+// ===== 4. EXPORT GAMBAR (html2canvas) =====
+async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
+    const el = document.getElementById(elementId);
+    if(!el) return;
+    
+    // Fix: Find scrollable elements
+    const scrollWrappers = el.querySelectorAll('.overflow-y-auto, .overflow-x-auto, [class*="max-h-"]');
+    const originalStyles = [];
+    
+    scrollWrappers.forEach(w => {
+        originalStyles.push({
+            el: w,
+            maxHeight: w.style.maxHeight,
+            overflow: w.style.overflow,
+            overflowX: w.style.overflowX,
+            overflowY: w.style.overflowY
+        });
+        // Buka scroll agar seluruh konten tertangkap html2canvas
+        w.style.maxHeight = 'none';
+        w.style.overflow = 'visible';
+        w.style.overflowX = 'visible';
+        w.style.overflowY = 'visible';
+    });
+
+    const originalText = btnElement.innerHTML;
+    btnElement.innerHTML = `<span class="animate-pulse">⏳ Menyimpan...</span>`;
+    btnElement.disabled = true;
+
+    try {
+        // Beri sedikit jeda agar DOM sempat memperbarui ukuran tabel
+        await new Promise(r => setTimeout(r, 200)); 
+        
+        const canvas = await html2canvas(el, { 
+            scale: 2, 
+            backgroundColor: '#ffffff',
+            useCORS: true 
+        });
+        
+        const link = document.createElement('a');
+        const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/[\/\s:]/g, '');
+        link.download = `${fileNamePrefix}_${dateStr}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (e) {
+        console.error('Export gagal:', e);
+    } finally {
+        // Kembalikan styling original
+        scrollWrappers.forEach((w, i) => {
+            w.style.maxHeight = originalStyles[i].maxHeight;
+            w.style.overflow = originalStyles[i].overflow;
+            w.style.overflowX = originalStyles[i].overflowX;
+            w.style.overflowY = originalStyles[i].overflowY;
+        });
+        btnElement.innerHTML = originalText;
+        btnElement.disabled = false;
+    }
+}
+window.exportElementToImage = exportElementToImage;
+
+// ===== 5. MATRIX TABLE GENERATOR =====
 function renderUnderspecMatrix(reportEl) {
-    // Definisi hierarki yang tetap seperti pada gambar
     const underspecHierarchy = [
         { branch: 'DUMAI', sas: [{ name: 'BUKIT RAYA', stos: ['BKR', 'BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'UBT'] }, { name: 'DUMAI', stos: ['BAG', 'BAS', 'DUM', 'SLJ', 'BGU', 'DRI'] }] },
         { branch: 'PEKANBARU', sas: [{ name: 'PANGKALAN KERINCI', stos: ['MIS', 'PKR', 'PWG', 'RBI', 'SOK'] }, { name: 'PEKANBARU BARAT', stos: ['PBRC 1', 'PBRC 2'] }, { name: 'PEKANBARU TIMUR', stos: ['PBRC 3', 'PBRC 4'] }, { name: 'RENGAT', stos: ['AMK', 'KLE', 'PMB', 'RGT', 'TAK', 'TBH'] }, { name: 'ARENGKA', stos: ['ARK'] }] }
     ];
     
-    // Konstanta target "LIST" berdasarkan gambar referensi
     const portList = { 'BKR': 8181, 'BKN': 3071, 'PPN': 1271, 'SAK': 1660, 'SEA': 329, 'SGP': 278, 'UBT': 3747, 'BAG': 2217, 'BAS': 2671, 'DUM': 7398, 'SLJ': 2261, 'BGU': 1999, 'DRI': 9901, 'MIS': 1148, 'PKR': 5775, 'PWG': 2521, 'RBI': 6650, 'SOK': 8420, 'PBRC 1': 6867, 'PBRC 2': 8247, 'PBRC 3': 9903, 'PBRC 4': 11748, 'AMK': 3563, 'KLE': 229, 'PMB': 1552, 'RGT': 5537, 'TAK': 4575, 'TBH': 4898, 'ARK': 28254 };
     const displayStos = { 'PBRC 1': 'PBB 1', 'PBRC 2': 'PBB 2', 'PBRC 3': 'PBB 3', 'PBRC 4': 'PBB 4' };
 
@@ -910,10 +954,9 @@ function renderUnderspecMatrix(reportEl) {
         metrics[key] = { list: portList[key], tgt: Math.ceil(portList[key] * 0.0005), saldoPagi: 0, autoSpec: 0, close8_12: 0, close12_16: 0, close16_20: 0, kendala: 0, closeHI: 0, sisaProgres: 0, sisaAll: 0 };
     }
 
-    // Kalkulasi Data Aktual
     const data = getActiveData();
     data.forEach(r => {
-        if (getTicketBucket(r) !== 'UNDERSPEC') return; // Pastikan hanya data Underspec
+        if (getTicketBucket(r) !== 'UNDERSPEC') return; 
         
         let sto = mapSTO(r["STO"] || r["LOKASI"]);
         let sek = (r["SEKTOR"] || "").toUpperCase();
@@ -924,35 +967,73 @@ function renderUnderspecMatrix(reportEl) {
         
         let m = metrics[sto];
         let isOpen = isTicketOpen(r);
-        let isK = (r["KETERANGAN"] || "").toUpperCase().includes("KENDALA") || (r["STATUS TIKET"] || "").toUpperCase().includes("PENDING");
+        let isK = (r["KETERANGAN"] || "").toUpperCase().includes("KENDALA") || 
+                  (r["STATUS TIKET"] || "").toUpperCase().includes("PENDING") ||
+                  (r["STATUS KENDALA"] || "").toUpperCase().includes("KENDALA");
         
+        // 1. DETEKSI AUTO SPEC PAGI (Berdasarkan Nomor INET & Keterangan "SPEC PAGI" di Kolom U)
+        let hasInet = (r["NOMOR INET"] || r["INET"] || "").toString().trim() !== "";
+        let autoSpecKey = Object.keys(r).find(k => {
+            let ku = k.toUpperCase().replace(/\n/g, ' ').replace(/\s+/g, ' ');
+            return ku.includes("AUTO SPEC") || ku.includes("U SPEC PAGI") || ku === "U" || ku.includes("KOLOM U");
+        });
+        
+        let isAutoSpec = false;
+        if (autoSpecKey && r[autoSpecKey]) {
+            let val = r[autoSpecKey].toString().replace(/\s+/g, ' ').trim().toUpperCase();
+            if (val.includes("SPEC PAGI") && hasInet) {
+                isAutoSpec = true;
+            }
+        }
+
+        // Tambahkan ke counter autoSpec jika memenuhi kriteria
+        if (isAutoSpec) {
+            m.autoSpec++;
+        }
+
         if (isOpen) {
             m.sisaAll++;
             if (isK) m.kendala++;
         } else {
-            m.closeHI++;
-            let closeTime = r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
-            if (closeTime) {
-                let d = new Date(closeTime);
-                if (!isNaN(d.getTime())) {
-                    let h = d.getHours();
-                    if (h < 8) m.autoSpec++;
-                    else if (h >= 8 && h < 12) m.close8_12++;
-                    else if (h >= 12 && h < 16) m.close12_16++;
-                    else if (h >= 16 && h < 20) m.close16_20++;
+            // Sinkronisasi otomatis: Membaca string 'JAM CLOSE PERSESI'
+            let sessionStr = (r["JAM TECH CLOSE"] || r["AM TECH CLOSE"] || r["JAM TECH CLOSED"] || r["AM TECH CLOSED"] || r["JAM CLOSE"] || "").toString().replace(/:/g, '.').replace(/\s/g, '').toUpperCase();
+            let matchedSession = false;
+
+            if (sessionStr.includes("08.00-12.00") || sessionStr.includes("8.00-12.00")) {
+                m.close8_12++; matchedSession = true;
+            } else if (sessionStr.includes("12.00-16.00")) {
+                m.close12_16++; matchedSession = true;
+            } else if (sessionStr.includes("16.00-20.00") || sessionStr.includes("16.00-24.00") || sessionStr.includes("20.00-00.00")) {
+                m.close16_20++; matchedSession = true;
+            }
+
+            if (matchedSession) {
+                m.closeHI++;
+            } else {
+                // Fallback jika format jam tidak terisi: deteksi dari format tanggal
+                let closeTime = r["TGL CLOSE"] || r["DATEK CLOSE"] || r["REPORT DATE"] || r["JAM TECH CLOSED"] || r["AM TECH CLOSE"];
+                if (isToday(closeTime)) {
+                    m.closeHI++;
+                    if (closeTime) {
+                        let d = new Date(closeTime);
+                        if (!isNaN(d.getTime())) {
+                            let h = d.getHours();
+                            if (h >= 8 && h < 12) m.close8_12++;
+                            else if (h >= 12 && h < 16) m.close12_16++;
+                            else if (h >= 16) m.close16_20++;
+                        }
+                    }
                 }
             }
         }
     });
 
-    // Menghitung Sisa
     for(let key in metrics) {
         let m = metrics[key];
         m.sisaProgres = m.sisaAll - m.kendala;
         m.saldoPagi = m.sisaAll + m.closeHI; 
     }
 
-    // Membangun Tabel dengan gaya Elegan
     let html = `<table class="w-full text-[11px] text-center border-collapse bg-white shadow-sm rounded-xl overflow-hidden ring-1 ring-slate-200/50">`;
     html += `<thead class="sticky-header shadow-sm">
         <tr class="bg-slate-900 text-slate-100 uppercase text-[10px] tracking-wider font-bold">
@@ -994,13 +1075,22 @@ function renderUnderspecMatrix(reportEl) {
                 let m = metrics[sto];
                 totalAll.list += m.list; totalAll.tgt += m.tgt; totalAll.saldoPagi += m.saldoPagi; totalAll.autoSpec += m.autoSpec; totalAll.close8_12 += m.close8_12; totalAll.close12_16 += m.close12_16; totalAll.close16_20 += m.close16_20; totalAll.kendala += m.kendala; totalAll.closeHI += m.closeHI; totalAll.sisaProgres += m.sisaProgres; totalAll.sisaAll += m.sisaAll;
                 
+                let sisaProgresClass = "font-bold text-slate-700 bg-slate-50/50";
+                if (m.sisaProgres <= m.tgt) {
+                    sisaProgresClass = "font-black text-emerald-700 bg-emerald-50 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.3)]";
+                } else if (m.tgt > 0 && m.sisaProgres <= m.tgt * 1.5) {
+                    sisaProgresClass = "font-black text-amber-700 bg-amber-50 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.3)]";
+                } else if (m.sisaProgres > 0) {
+                    sisaProgresClass = "font-black text-rose-700 bg-rose-50 shadow-[inset_0_0_0_1px_rgba(244,63,94,0.3)]";
+                }
+
                 html += `<tr class="border-b border-slate-200 hover:bg-blue-50/60 transition-colors">`;
                 if (isFirstBranchRow) html += `<td rowspan="${branchRows}" class="px-4 py-2 font-black text-slate-800 bg-white border-r border-slate-200 align-middle shadow-[inset_-3px_0_6px_rgba(0,0,0,0.02)]">${branchObj.branch}</td>`;
                 if (isFirstSARow) html += `<td rowspan="${saRows}" class="px-4 py-2 font-bold text-slate-700 bg-white border-r border-slate-200 align-middle shadow-[inset_-3px_0_6px_rgba(0,0,0,0.02)]">${saObj.name}</td>`;
                 
-                html += `<td class="px-3 py-2 font-bold text-slate-800 border-r border-slate-200 bg-white">${displayStos[sto] || sto}</td>`;
+                html += `<td class="px-3 py-2 font-bold text-slate-800 border-r border-slate-200 bg-white" title="Nama Asli STO: ${sto}">${displayStos[sto] || sto}</td>`;
                 html += `<td class="px-2 py-2 border-r border-slate-200 font-medium text-slate-500">${m.list}</td>`;
-                html += `<td class="px-2 py-2 border-r border-slate-200 font-medium text-slate-500">${m.tgt}</td>`;
+                html += `<td class="px-2 py-2 border-r border-slate-200 font-black text-blue-700">${m.tgt}</td>`;
                 html += `<td class="px-2 py-2 border-r border-slate-200 bg-slate-50/50 font-bold text-slate-700">${m.saldoPagi}</td>`;
                 html += `<td class="px-2 py-2 border-r border-emerald-200 bg-emerald-50 text-emerald-700 font-black">${m.autoSpec}</td>`;
                 html += `<td class="px-2 py-2 border-r border-slate-200 text-slate-600">${m.close8_12}</td>`;
@@ -1008,9 +1098,10 @@ function renderUnderspecMatrix(reportEl) {
                 html += `<td class="px-2 py-2 border-r border-slate-200 text-slate-600">${m.close16_20}</td>`;
                 html += `<td class="px-2 py-2 border-r border-slate-200 text-rose-600 font-bold">${m.kendala}</td>`;
                 html += `<td class="px-2 py-2 border-r border-slate-200 text-indigo-600 font-bold">${m.closeHI}</td>`;
-                html += `<td class="px-2 py-2 border-r border-slate-200 font-bold text-slate-700">${m.sisaProgres}</td>`;
-                html += `<td class="px-2 py-2 border-r border-slate-200 font-black text-slate-900">${m.sisaAll}</td>`;
                 
+                html += `<td class="px-2 py-2 border-r border-slate-200 ${sisaProgresClass}">${m.sisaProgres}</td>`;
+                
+                html += `<td class="px-2 py-2 border-r border-slate-200 font-black text-slate-900">${m.sisaAll}</td>`;
                 if (isFirstBranchRow) html += `<td rowspan="${branchRows}" class="px-3 py-2 font-black text-slate-800 bg-white border-l border-slate-200 align-middle shadow-[inset_3px_0_6px_rgba(0,0,0,0.02)]">${branchCloseTotal}</td>`;
                 
                 html += `</tr>`;
@@ -1022,8 +1113,8 @@ function renderUnderspecMatrix(reportEl) {
     html += `<tr class="bg-slate-900 text-white font-black uppercase text-[11px] tracking-wider">
         <td colspan="3" class="px-4 py-4 text-right border-r border-slate-700">TOTAL</td>
         <td class="px-2 py-4 border-r border-slate-700">${totalAll.list}</td>
-        <td class="px-2 py-4 border-r border-slate-700">${totalAll.tgt}</td>
-        <td class="px-2 py-4 border-r border-slate-700 text-blue-300">${totalAll.saldoPagi}</td>
+        <td class="px-2 py-4 border-r border-slate-700 text-blue-300">${totalAll.tgt}</td>
+        <td class="px-2 py-4 border-r border-slate-700 text-slate-300">${totalAll.saldoPagi}</td>
         <td class="px-2 py-4 border-r border-emerald-600 bg-emerald-500 text-white">${totalAll.autoSpec}</td>
         <td class="px-2 py-4 border-r border-slate-700">${totalAll.close8_12}</td>
         <td class="px-2 py-4 border-r border-slate-700">${totalAll.close12_16}</td>
@@ -1043,12 +1134,10 @@ function renderReportTable() {
     
     const titleEl = document.getElementById('matrixReportTitleText');
     if (ticketTypeMode === 'UNDERSPEC') {
-        // Tampilan judul dinamis dan modern saat di UNDERSPEC
         titleEl.innerHTML = `PROGRESS TIKET UNDERSPEC RIDAR <span class="text-xs text-slate-500 font-bold ml-3 px-2.5 py-1 bg-slate-100 rounded-md border border-slate-200 font-mono tracking-tight">${new Date().toLocaleString('id-ID')}</span>`;
         renderUnderspecMatrix(reportEl);
         return;
     } else {
-        // Kembalikan ke judul default untuk tab lain
         titleEl.innerHTML = 'Laporan Progres Tiket Gangguan (Matriks)';
     }
 
@@ -1207,7 +1296,7 @@ function renderReportTable() {
 }
 window.renderReportTable = renderReportTable;
 
-// ===== 5. DASHBOARD MAIN ENGINE =====
+// ===== 6. DASHBOARD MAIN ENGINE =====
 async function load() {
     const sUI = document.getElementById('syncStatus');
     try {
@@ -1486,6 +1575,12 @@ function renderDistribution() {
     let cats = [];
     if (ticketTypeMode === 'REGULER') {
         cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC'];
+    } else if (ticketTypeMode === 'SQM') {
+        cats = ['SQM'];
+    } else if (ticketTypeMode === 'Z_PERMINTAAN') {
+        cats = ['Z_PERMINTAAN'];
+    } else if (ticketTypeMode === 'UNDERSPEC') {
+        cats = ['UNDERSPEC'];
     } else {
         cats = ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC', 'SQM', 'Z_PERMINTAAN', 'UNDERSPEC'];
     }
@@ -1704,7 +1799,6 @@ function renderMonitoringView() {
     d.forEach(r => {
         let t1=(r["TEKNISI 1"]||"").trim(), t2=(r["TEKNISI 2"]||"").trim(); if(!t1 && !t2) return;
         
-        // Penyesuaian grouping berdasarkan mode
         let s = "UNKNOWN";
         if (mode === 'SA') {
             s = getSA(r);
@@ -1750,7 +1844,6 @@ function renderMonitoringView() {
     sk.forEach(s => {
         const ex = expandedSektors.has(s); 
         
-        // Kalkulasi Total Close untuk area/sektor ini
         let totalCloseArea = 0;
         let sessTotals = Array(12).fill(0);
         Object.keys(gr[s]).forEach(tk => {
@@ -1765,7 +1858,6 @@ function renderMonitoringView() {
             return `<td class="px-2 py-3 text-center border-b border-slate-100 border-l font-bold text-[10px] ${tot > 0 ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-300'}">${tot > 0 ? tot : '-'}</td>`;
         }).join('');
         
-        // Menambahkan Badge Total Close pada header
         h+=`<tr class="bg-slate-50 cursor-pointer hover:bg-blue-50 transition-colors" onclick="toggleSektor('${s.replace(/'/g, "\\'")}')">
                 <td class="px-4 py-3 font-black text-blue-700 border-r border-b border-slate-100 whitespace-nowrap">${s} ${ex?'▲':'▼'}</td>
                 <td class="px-4 py-3 border-b border-slate-100">
@@ -1807,17 +1899,14 @@ function renderKehadiranView() {
     data.forEach(r => {
         let stat = getKehadiranStatus(r, todayStr).toString().toUpperCase().trim();
         
-        // Pengelompokan KPI Cards
         if (stat === 'HDR' || stat === 'HADIR' || stat === 'PM' || stat === 'KERJA MALAM' || stat === 'PS' || stat === 'PIKET SIANG') hadir++;
         else if (stat === 'OFF' || stat === 'OFF / LIBUR') off++;
         else if (stat === 'SKT' || stat === 'SAKIT' || stat === 'TKR' || stat === 'CUTI') sakit++;
         else if (stat !== '' && stat !== 'RSG' && stat !== 'RESIGN') lain++;
     });
     
-    // Hitung Persentase Kehadiran
     let persentaseHadir = data.length > 0 ? ((hadir / data.length) * 100).toFixed(1) : 0;
     
-    // Render Summary KPI Cards
     const kpiContainer = document.getElementById('kpiKehadiran');
     if (kpiContainer) {
         kpiContainer.innerHTML = `
@@ -1843,7 +1932,6 @@ function renderKehadiranView() {
         `;
     }
     
-    // Render Data Table
     let dayKeys = Array.from({length: 31}, (_, i) => (i + 1).toString());
     
     let tableHTML = `
@@ -1900,7 +1988,6 @@ function renderKehadiranView() {
                     let badgeClass = 'text-slate-300 font-medium';
                     let displayStat = stat || '-';
                     
-                    // Parsing warna dan inisial teks otomatis
                     if(stat==='HDR' || stat==='HADIR') { badgeClass='bg-emerald-100 text-emerald-700 font-bold shadow-sm'; displayStat='HDR'; }
                     else if(stat==='OFF' || stat==='OFF / LIBUR') { badgeClass='bg-slate-200 text-slate-600 font-bold shadow-sm'; displayStat='OFF'; }
                     else if(stat==='SKT' || stat==='SAKIT') { badgeClass='bg-amber-100 text-amber-700 font-bold shadow-sm'; displayStat='SKT'; }
@@ -1919,7 +2006,6 @@ function renderKehadiranView() {
     const wrap = document.getElementById('tableKehadiranWrapper');
     if(wrap) wrap.innerHTML = tableHTML;
     
-    // Render Legend di bagian bawah tabel
     const legendContainer = document.querySelector('.mt-5.flex.flex-wrap.gap-4');
     if (legendContainer) {
         legendContainer.innerHTML = `
