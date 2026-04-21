@@ -460,6 +460,20 @@ let activeModal = null;
 let chartDailyAreaInst = null;
 let chartMonitoringInst = null;
 
+// Helper: Custom Toast to replace alert()
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl z-[100] font-bold text-sm transition-opacity duration-300';
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    // Fade out and remove
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+window.showToast = showToast;
+
 // ===== 2. DATA PROCESSING HELPERS =====
 function getVal(row, possibleKeys) {
     if (!row) return "";
@@ -960,26 +974,46 @@ window.exportElementToImage = exportElementToImage;
 
 function exportTableToExcel(tableId, fileNamePrefix) {
     const tableElement = document.getElementById(tableId);
-    if (!tableElement) {
-        alert("Tabel belum termuat atau data kosong.");
-        return;
-    }
     
     // Menggunakan library SheetJS (XLSX) yang ada di header
     try {
-        const wb = XLSX.utils.table_to_book(tableElement, {sheet: "Laporan"});
+        const wb = XLSX.utils.book_new();
+        let exported = false;
+
+        // Tabel pertama (Matriks Utama)
+        const mainTable = document.getElementById(tableId);
+        if (mainTable) {
+            const ws1 = XLSX.utils.table_to_sheet(mainTable);
+            XLSX.utils.book_append_sheet(wb, ws1, "Laporan Utama");
+            exported = true;
+        }
+        
+        // Tabel kedua (Tabel Khusus Underspec jika sedang di Dashboard All Tiket)
+        const underspecTable = document.getElementById(tableId + '_Underspec');
+        if (underspecTable) {
+            const ws2 = XLSX.utils.table_to_sheet(underspecTable);
+            XLSX.utils.book_append_sheet(wb, ws2, "Underspec");
+            exported = true;
+        }
+
+        if (!exported) {
+            showToast("Tabel belum termuat atau data kosong.");
+            return;
+        }
+        
         const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/[\/\s:]/g, '');
         XLSX.writeFile(wb, `${fileNamePrefix}_${dateStr}.xlsx`);
+        showToast("File Excel berhasil di-download.");
     } catch (e) {
         console.error("Gagal export excel: ", e);
-        alert("Gagal meng-export Excel. Pastikan data sudah termuat penuh.");
+        showToast("Gagal meng-export Excel. Pastikan data sudah termuat penuh.");
     }
 }
 window.exportTableToExcel = exportTableToExcel;
 
 
 // ===== 5. MATRIX TABLE GENERATOR =====
-function renderUnderspecMatrix(reportEl) {
+function getUnderspecMatrixHTML() {
     const underspecHierarchy = [
         { branch: 'DUMAI', sas: [{ name: 'BUKIT RAYA', stos: ['BKR', 'BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'UBT'] }, { name: 'DUMAI', stos: ['BAG', 'BAS', 'DUM', 'SLJ', 'BGU', 'DRI'] }] },
         { branch: 'PEKANBARU', sas: [{ name: 'PANGKALAN KERINCI', stos: ['MIS', 'PKR', 'PWG', 'RBI', 'SOK'] }, { name: 'PEKANBARU BARAT', stos: ['PBRC 1', 'PBRC 2'] }, { name: 'PEKANBARU TIMUR', stos: ['PBRC 3', 'PBRC 4'] }, { name: 'RENGAT', stos: ['AMK', 'KLE', 'PMB', 'RGT', 'TAK', 'TBH'] }, { name: 'ARENGKA', stos: ['ARK'] }] }
@@ -1073,7 +1107,7 @@ function renderUnderspecMatrix(reportEl) {
         m.saldoPagi = m.sisaAll + m.closeHI; 
     }
 
-    let html = `<table id="matrixTableExport" class="w-full text-[11px] text-center border-collapse bg-white shadow-sm rounded-xl overflow-hidden ring-1 ring-slate-200/50">`;
+    let html = `<table id="matrixTableExport_Underspec" class="w-full text-[11px] text-center border-collapse bg-white shadow-sm rounded-xl overflow-hidden ring-1 ring-slate-200/50">`;
     html += `<thead class="sticky-header shadow-sm">
         <tr class="bg-slate-900 text-slate-100 font-bold uppercase tracking-wider text-[10px]">
             <th rowspan="2" class="px-4 py-3 border-r border-slate-700 sticky-col bg-slate-900 w-32 !z-[60] align-middle shadow-[2px_0_5px_rgba(0,0,0,0.2)]">BRANCH</th>
@@ -1171,7 +1205,8 @@ function renderUnderspecMatrix(reportEl) {
         <td class="px-2 py-4 border-l border-slate-700 text-[12px]">${totalAll.branchClose}</td>
     </tr>`;
     html += `</tbody></table>`;
-    reportEl.innerHTML = html;
+    
+    return html;
 }
 
 function renderReportTable() {
@@ -1180,7 +1215,7 @@ function renderReportTable() {
     const titleEl = document.getElementById('matrixReportTitleText');
     if (ticketTypeMode === 'UNDERSPEC') {
         titleEl.innerHTML = `PROGRESS TIKET UNDERSPEC RIDAR <span class="text-xs text-slate-500 font-bold ml-3 px-2.5 py-1 bg-slate-100 rounded-md border border-slate-200 font-mono tracking-tight">${new Date().toLocaleString('id-ID')}</span>`;
-        renderUnderspecMatrix(reportEl);
+        reportEl.innerHTML = getUnderspecMatrixHTML();
         return;
     } else {
         titleEl.innerHTML = 'Laporan Progres Tiket Gangguan (Matriks)';
@@ -1293,8 +1328,11 @@ function renderReportTable() {
         displayCats = categoryConfigs.filter(x => ['HVC DIAMOND', 'HVC PLATINUM', 'MANJA', 'NON_HVC'].includes(x.id));
     }
     else if(ticketTypeMode==='SQM') displayCats = categoryConfigs.filter(x => x.id === 'SQM');
-    else if(ticketTypeMode==='UNDERSPEC') displayCats = categoryConfigs.filter(x => x.id === 'UNDERSPEC');
     else if(ticketTypeMode==='Z_PERMINTAAN') displayCats = categoryConfigs.filter(x => x.id === 'Z_PERMINTAAN');
+    else if(ticketTypeMode==='ALL_TIKET') {
+        // Hapus UNDERSPEC dari matriks standar agar tidak dobel karena memiliki format tabel yang berbeda
+        displayCats = categoryConfigs.filter(x => x.id !== 'UNDERSPEC');
+    }
 
     const getCell = (val, clickAction, activeText, activeBg) => {
         if (val > 0) {
@@ -1426,6 +1464,17 @@ function renderReportTable() {
     html += `<td class="px-2 py-2.5 border-l border-slate-700 shadow-inner font-black text-[12px] ${totalBg}">${totalG < 0 ? 'K' : (totalG > 0 ? 'M' : 'S')}</td></tr>`;
 
     html += `</tbody></table>`;
+    
+    // Tambahkan format tabel khusus Underspec jika sedang di Dashboard All Tiket
+    if (ticketTypeMode === 'ALL_TIKET') {
+        html += `<div class="mt-12 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h3 class="font-black text-slate-800 flex items-center gap-2">
+                        <span class="p-1.5 bg-slate-800 text-white rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-width="2"></path></svg></span>
+                        <span>Laporan Progres Tiket Underspec (Matriks)</span>
+                    </h3>
+                </div>`;
+        html += getUnderspecMatrixHTML();
+    }
     
     reportEl.innerHTML = html;
 }
