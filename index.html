@@ -318,10 +318,12 @@
                     <!-- Legend -->
                     <div class="mt-5 flex flex-wrap gap-4 text-[10px] font-bold text-slate-600 border-t border-slate-100 pt-4">
                         <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> HDR (Hadir)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM/PS (Malam/Piket)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM (Kerja Malam)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-200"></span> PS (Piket Siang)</div>
                         <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> OFF (Libur)</div>
                         <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> SKT (Sakit)</div>
-                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> TKR/REQ (Cuti/Resign)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-100 border border-purple-200"></span> TKR (Cuti)</div>
+                        <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> RSG (Resign)</div>
                     </div>
                 </div>
             </div>
@@ -396,7 +398,7 @@ const categoryConfigs = [
 ];
 
 const menuItems = [
-    { id: 'ALL_TIKET', label: '1. Dashboard All Tiket', shortLabel: 'Dashboard All Tiket', icon: '<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>' },
+    { id: 'ALL_TIKET', label: '1. Dashboard All Tiket', shortLabel: 'Dashboard All Tiket', icon: '<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>' },
     { id: 'REGULER', label: '2. Tiket Reguler', shortLabel: 'Tiket Reguler', icon: '<path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>' },
     { id: 'SQM', label: '3. Tiket SQM', shortLabel: 'Tiket SQM', icon: '<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>' },
     { id: 'UNDERSPEC', label: '4. Tiket Underspec', shortLabel: 'Tiket Underspec', icon: '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' },
@@ -1645,11 +1647,12 @@ function renderKehadiranView() {
     let hadir = 0, off = 0, sakit = 0, lain = 0;
     data.forEach(r => {
         let stat = getKehadiranStatus(r, todayStr).toString().toUpperCase().trim();
-        // Cek format singkatan dan format teks panjang dari Sheet
+        
+        // Pengelompokan KPI Cards
         if (stat === 'HDR' || stat === 'HADIR' || stat === 'PM' || stat === 'KERJA MALAM' || stat === 'PS' || stat === 'PIKET SIANG') hadir++;
         else if (stat === 'OFF' || stat === 'OFF / LIBUR') off++;
-        else if (stat === 'SKT' || stat === 'SAKIT') sakit++;
-        else if (stat !== '') lain++;
+        else if (stat === 'SKT' || stat === 'SAKIT' || stat === 'TKR' || stat === 'CUTI') sakit++;
+        else if (stat !== '' && stat !== 'RSG' && stat !== 'RESIGN') lain++;
     });
     
     // Render Summary KPI Cards
@@ -1669,7 +1672,7 @@ function renderKehadiranView() {
                 <div class="text-4xl font-black text-slate-600">${off}</div>
             </div>
             <div class="bg-amber-50 p-5 rounded-2xl shadow-sm border border-amber-100 flex flex-col justify-between">
-                <div class="text-xs text-amber-600 font-extrabold uppercase tracking-widest mb-2">Sakit / Izin</div>
+                <div class="text-xs text-amber-600 font-extrabold uppercase tracking-widest mb-2">Sakit / Izin / Cuti</div>
                 <div class="text-4xl font-black text-amber-700">${sakit}</div>
             </div>
         `;
@@ -1730,26 +1733,18 @@ function renderKehadiranView() {
                 ${dayKeys.map(d => {
                     let stat = getKehadiranStatus(r, d).toString().toUpperCase().trim();
                     let badgeClass = 'text-slate-300 font-medium';
+                    let displayStat = stat || '-';
                     
-                    // Parsing otomatis format teks panjang ke warna UI yang sesuai
-                    if(stat==='HDR' || stat==='HADIR') badgeClass='bg-emerald-100 text-emerald-700 font-bold shadow-sm';
-                    else if(stat==='OFF' || stat==='OFF / LIBUR') badgeClass='bg-slate-200 text-slate-600 font-bold shadow-sm';
-                    else if(stat==='SKT' || stat==='SAKIT') badgeClass='bg-amber-100 text-amber-700 font-bold shadow-sm';
-                    else if(stat==='PM' || stat==='KERJA MALAM') badgeClass='bg-blue-100 text-blue-700 font-bold shadow-sm';
-                    else if(stat==='PS' || stat==='PIKET SIANG') badgeClass='bg-indigo-100 text-indigo-700 font-bold shadow-sm';
-                    else if(stat==='TKR' || stat==='REQ' || stat==='RESIGN') badgeClass='bg-rose-100 text-rose-700 font-bold shadow-sm';
-                    else if(stat==='CUTI') badgeClass='bg-purple-100 text-purple-700 font-bold shadow-sm';
+                    // Parsing warna dan inisial teks otomatis
+                    if(stat==='HDR' || stat==='HADIR') { badgeClass='bg-emerald-100 text-emerald-700 font-bold shadow-sm'; displayStat='HDR'; }
+                    else if(stat==='OFF' || stat==='OFF / LIBUR') { badgeClass='bg-slate-200 text-slate-600 font-bold shadow-sm'; displayStat='OFF'; }
+                    else if(stat==='SKT' || stat==='SAKIT') { badgeClass='bg-amber-100 text-amber-700 font-bold shadow-sm'; displayStat='SKT'; }
+                    else if(stat==='PM' || stat==='KERJA MALAM') { badgeClass='bg-blue-100 text-blue-700 font-bold shadow-sm'; displayStat='PM'; }
+                    else if(stat==='PS' || stat==='PIKET SIANG') { badgeClass='bg-indigo-100 text-indigo-700 font-bold shadow-sm'; displayStat='PS'; }
+                    else if(stat==='TKR' || stat==='CUTI') { badgeClass='bg-purple-100 text-purple-700 font-bold shadow-sm'; displayStat='TKR'; }
+                    else if(stat==='RSG' || stat==='RESIGN') { badgeClass='bg-rose-100 text-rose-700 font-bold shadow-sm'; displayStat='RSG'; }
                     
-                    // Merapikan Teks agar tabel tidak jelek akibat teks kepanjangan
-                    let displayStat = stat;
-                    if(stat === 'OFF / LIBUR') displayStat = 'OFF';
-                    else if(stat === 'KERJA MALAM') displayStat = 'PM';
-                    else if(stat === 'PIKET SIANG') displayStat = 'PS';
-                    else if(stat === 'HADIR') displayStat = 'HDR';
-                    else if(stat === 'SAKIT') displayStat = 'SKT';
-                    else if(stat === 'RESIGN') displayStat = 'REQ';
-                    
-                    return `<td class="px-0.5 py-1.5 border-r border-slate-50 ${d === todayStr ? 'bg-blue-50/30' : ''}"><div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClass}" title="${stat}">${displayStat || '-'}</span></div></td>`;
+                    return `<td class="px-0.5 py-1.5 border-r border-slate-50 ${d === todayStr ? 'bg-blue-50/30' : ''}"><div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClass}" title="${stat}">${displayStat}</span></div></td>`;
                 }).join('')}
             </tr>`;
         }).join('');
@@ -1758,6 +1753,20 @@ function renderKehadiranView() {
     tableHTML += `</tbody></table>`;
     const wrap = document.getElementById('tableKehadiranWrapper');
     if(wrap) wrap.innerHTML = tableHTML;
+    
+    // Render Legend di bagian bawah tabel
+    const legendContainer = document.querySelector('.mt-5.flex.flex-wrap.gap-4');
+    if (legendContainer) {
+        legendContainer.innerHTML = `
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> HDR (Hadir)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM (Kerja Malam)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-200"></span> PS (Piket Siang)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> OFF (Libur)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> SKT (Sakit)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-100 border border-purple-200"></span> TKR (Cuti)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> RSG (Resign)</div>
+        `;
+    }
 }
 
 function openTeknisi(tekName) {
