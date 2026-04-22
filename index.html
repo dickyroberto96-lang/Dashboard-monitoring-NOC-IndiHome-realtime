@@ -972,26 +972,28 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
     });
 
     const originalText = btnElement.innerHTML;
-    btnElement.innerHTML = `<span class="animate-pulse">⏳ Menyimpan...</span>`;
+    btnElement.innerHTML = `<span class="animate-pulse">⏳ Menyimpan HD...</span>`;
     btnElement.disabled = true;
 
     try {
         // Beri sedikit jeda agar DOM sempat memperbarui ukuran tabel
-        await new Promise(r => setTimeout(r, 200)); 
+        await new Promise(r => setTimeout(r, 300)); 
         
         const canvas = await html2canvas(el, { 
-            scale: 3, // Peningkatan resolusi untuk Full HD
+            scale: 5, // Peningkatan resolusi untuk ULTRA HD (Sangat Tajam)
             backgroundColor: '#ffffff',
-            useCORS: true 
+            useCORS: true,
+            logging: false
         });
         
         const link = document.createElement('a');
         const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/[\/\s:]/g, '');
-        link.download = `${fileNamePrefix}_${dateStr}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.download = `${fileNamePrefix}_${dateStr}_UltraHD.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
     } catch (e) {
         console.error('Export gagal:', e);
+        showToast("Gagal menyimpan gambar: " + e.message);
     } finally {
         // Kembalikan styling original
         scrollWrappers.forEach((w, i) => {
@@ -1007,40 +1009,134 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
 window.exportElementToImage = exportElementToImage;
 
 function exportTableToExcel(tableId, fileNamePrefix) {
-    const tableElement = document.getElementById(tableId);
-    
-    // Menggunakan library SheetJS (XLSX) yang ada di header
     try {
-        const wb = XLSX.utils.book_new();
-        let exported = false;
+        // Setup template HTML/XML khusus untuk Excel agar membaca format CSS Inline
+        let excelHtml = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8" />
+                <style>
+                    table { border-collapse: collapse; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; white-space: nowrap; }
+                    td, th { border: 1px solid #cbd5e1; padding: 6px; vertical-align: middle; }
+                    th { font-weight: bold; background-color: #0f172a; color: #f8fafc; }
+                </style>
+            </head>
+            <body>
+        `;
 
-        // Tabel pertama (Matriks Utama)
-        const mainTable = document.getElementById(tableId);
-        if (mainTable) {
-            const ws1 = XLSX.utils.table_to_sheet(mainTable);
-            XLSX.utils.book_append_sheet(wb, ws1, "Laporan Utama");
-            exported = true;
-        }
-        
-        // Tabel kedua (Tabel Khusus Underspec jika sedang di Dashboard All Tiket)
-        const underspecTable = document.getElementById(tableId + '_Underspec');
-        if (underspecTable) {
-            const ws2 = XLSX.utils.table_to_sheet(underspecTable);
-            XLSX.utils.book_append_sheet(wb, ws2, "Underspec");
-            exported = true;
+        const tablesToExport = [tableId];
+        // Jika berada di dashboard All Tiket, ekspor juga matriks Underspec
+        if (ticketTypeMode === 'ALL_TIKET' && tableId === 'matrixTableExport') {
+            tablesToExport.push('matrixTableExport_Underspec');
         }
 
-        if (!exported) {
+        let hasData = false;
+
+        tablesToExport.forEach(id => {
+            const tbl = document.getElementById(id);
+            if (!tbl) return;
+            hasData = true;
+
+            // Tambahkan judul tabel
+            let titleText = id === 'matrixTableExport_Underspec' ? 'Laporan Progres Tiket Underspec' : 'Laporan Progres Tiket Gangguan';
+            excelHtml += `<h2 style="font-family: sans-serif; color: #1e293b;">${titleText}</h2>`;
+
+            // Buat Clone Tabel untuk dimanipulasi tanpa merusak UI asli
+            const clone = tbl.cloneNode(true);
+            const originalRows = tbl.rows;
+            const clonedRows = clone.rows;
+
+            for (let i = 0; i < originalRows.length; i++) {
+                const origRow = originalRows[i];
+                const cloneRow = clonedRows[i];
+
+                // Lewati baris yang disembunyikan
+                if (window.getComputedStyle(origRow).display === 'none') {
+                    cloneRow.style.display = 'none';
+                    continue;
+                }
+
+                for (let j = 0; j < origRow.cells.length; j++) {
+                    const origCell = origRow.cells[j];
+                    const cloneCell = cloneRow.cells[j];
+                    
+                    // Ekstrak computed styles dari UI asli
+                    const compStyle = window.getComputedStyle(origCell);
+                    let bgColor = compStyle.backgroundColor;
+                    let color = compStyle.color;
+                    let fw = compStyle.fontWeight;
+                    let ta = compStyle.textAlign;
+
+                    // Telusuri elemen di dalam sel untuk mendapatkan warna badge (misalnya div kotak di matriks)
+                    const innerElements = origCell.querySelectorAll('div, span');
+                    if (innerElements.length > 0) {
+                        for(let el of innerElements) {
+                            let innerStyle = window.getComputedStyle(el);
+                            // Jika ada warna spesifik, gunakan warna tersebut (abaikan transparan)
+                            if (innerStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && innerStyle.backgroundColor !== 'transparent') {
+                                bgColor = innerStyle.backgroundColor;
+                            }
+                            if (innerStyle.color && innerStyle.color !== 'rgb(0, 0, 0)' && origCell.tagName !== 'TH') {
+                                color = innerStyle.color;
+                            }
+                            if (innerStyle.fontWeight && parseInt(innerStyle.fontWeight) > 400) {
+                                fw = 'bold';
+                            }
+                        }
+                    }
+
+                    // Mapping style khusus untuk header utama
+                    if (origCell.tagName === 'TH') {
+                        if (bgColor === 'rgba(0, 0, 0, 0)' || bgColor === 'transparent') bgColor = '#1e293b'; // default slate-800
+                        if (color === 'rgb(0, 0, 0)') color = '#f8fafc';
+                        fw = 'bold';
+                    }
+
+                    // Terapkan inline style ke clone
+                    cloneCell.style.backgroundColor = bgColor;
+                    cloneCell.style.color = color;
+                    cloneCell.style.fontWeight = fw;
+                    cloneCell.style.textAlign = ta;
+                    
+                    // Bersihkan HTML inner (hapus SVG, sisakan teks saja agar Excel bersih)
+                    let text = origCell.innerText.trim();
+                    if(origCell.tagName === 'TH') {
+                        // Pertahankan baris baru pada header
+                        text = text.replace(/\n/g, '<br>');
+                    }
+                    cloneCell.innerHTML = text;
+                }
+            }
+            excelHtml += clone.outerHTML;
+            excelHtml += "<br><br>";
+        });
+
+        if (!hasData) {
             showToast("Tabel belum termuat atau data kosong.");
             return;
         }
-        
+
+        excelHtml += `</body></html>`;
+
+        // Proses download menggunakan Blob (Native HTML ke Excel)
+        const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
         const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/[\/\s:]/g, '');
-        XLSX.writeFile(wb, `${fileNamePrefix}_${dateStr}.xlsx`);
-        showToast("File Excel berhasil di-download.");
+        
+        a.href = url;
+        a.download = `${fileNamePrefix}_Styled_${dateStr}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Cleanup
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast("File Excel (Beserta Warna) berhasil di-download.");
     } catch (e) {
         console.error("Gagal export excel: ", e);
-        showToast("Gagal meng-export Excel. Pastikan data sudah termuat penuh.");
+        showToast("Gagal meng-export Excel. " + e.message);
     }
 }
 window.exportTableToExcel = exportTableToExcel;
