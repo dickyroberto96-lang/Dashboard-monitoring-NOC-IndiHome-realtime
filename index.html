@@ -440,13 +440,13 @@ const SA_MAP = {
 };
 
 const categoryConfigs = [
-    { id: 'HVC DIAMOND', label: 'DIAMOND (3 JAM)', bg: 'bg-pink-100/70', text: 'text-pink-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'> 3 Jam', max:Infinity}] },
-    { id: 'HVC PLATINUM', label: 'PLATINUM (6 JAM)', bg: 'bg-purple-100/70', text: 'text-purple-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'> 6 Jam', max:Infinity}] },
-    { id: 'MANJA', label: 'MANJA (3 JAM)', bg: 'bg-teal-100/70', text: 'text-teal-900', ranges: [
+    { id: 'HVC DIAMOND', label: 'DIAMOND (3 JAM)', bg: 'bg-[#0B3C5D]', text: 'text-white', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'> 3 Jam', max:Infinity}] },
+    { id: 'HVC PLATINUM', label: 'PLATINUM (6 JAM)', bg: 'bg-[#A6A6A6]', text: 'text-slate-900', ranges: [{l:'< 1 Jam', max:1}, {l:'1-2 Jam', max:2}, {l:'2-3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'> 6 Jam', max:Infinity}] },
+    { id: 'MANJA', label: 'MANJA (3 JAM)', bg: 'bg-[#F4D03F]', text: 'text-slate-900', ranges: [
         {l:'8:00', h:8}, {l:'9:00', h:9}, {l:'10:00', h:10}, {l:'11:00', h:11}, {l:'12:00', h:12}, 
         {l:'13:00', h:13}, {l:'14:00', h:14}, {l:'15:00', h:15}, {l:'16:00', h:16}, {l:'17:00', h:17}
     ]},
-    { id: 'NON_HVC', label: 'NON HVC (36 JAM)', bg: 'bg-emerald-100/70', text: 'text-emerald-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
+    { id: 'NON_HVC', label: 'NON HVC (36 JAM)', bg: 'bg-[#5DADE2]', text: 'text-slate-900', ranges: [{l:'< 3 JAM', max:3}, {l:'3-6 JAM', max:6}, {l:'6-12 JAM', max:12}, {l:'12-24 JAM', max:24}, {l:'24-36 JAM', max:36}, {l:'36-48 JAM', max:48}, {l:'48-72 JAM', max:72}, {l:'> 72 JAM', max:Infinity}] },
     { id: 'SQM', label: 'SQM', bg: 'bg-rose-100/70', text: 'text-rose-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] },
     { id: 'Z_PERMINTAAN', label: 'Z PERMINTAAN', bg: 'bg-indigo-100/70', text: 'text-indigo-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] },
     { id: 'UNDERSPEC', label: 'UNDERSPEC', bg: 'bg-slate-200/70', text: 'text-slate-900', ranges: [{l:'< 3 Jam', max:3}, {l:'3-6 Jam', max:6}, {l:'6-12 Jam', max:12}, {l:'12-24 Jam', max:24}, {l:'24-48 Jam', max:48}, {l:'> 48 Jam', max:Infinity}] }
@@ -463,13 +463,13 @@ const menuItems = [
 ];
 
 const distClassMap = {
-    'HVC PLATINUM': 'from-purple-50 to-purple-100 border-purple-200 text-purple-800',
-    'HVC DIAMOND': 'from-blue-50 to-blue-100 border-blue-200 text-blue-800',
-    'NON_HVC': 'from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-800',
+    'HVC PLATINUM': 'from-[#A6A6A6] to-[#C0C0C0] border-[#A6A6A6] text-slate-900',
+    'HVC DIAMOND': 'from-[#0B3C5D] to-[#0F52BA] border-[#0B3C5D] text-white',
+    'NON_HVC': 'from-[#5DADE2] to-[#7FB3D5] border-[#5DADE2] text-slate-900',
     'SQM': 'from-rose-50 to-rose-100 border-rose-200 text-rose-800',
     'Z_PERMINTAAN': 'from-indigo-50 to-indigo-100 border-indigo-200 text-indigo-800',
     'UNDERSPEC': 'from-slate-50 to-slate-100 border-slate-200 text-slate-800',
-    'MANJA': 'from-teal-50 to-teal-100 border-teal-200 text-teal-800'
+    'MANJA': 'from-[#F4D03F] to-[#F5B041] border-[#F4D03F] text-slate-900'
 };
 
 // Global State
