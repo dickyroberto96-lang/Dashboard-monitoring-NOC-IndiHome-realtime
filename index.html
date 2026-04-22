@@ -50,6 +50,21 @@
         .sticky-header th.sticky-col {
             z-index: 60 !important;
         }
+
+        /* Animasi Melayang & Glow untuk Logo */
+        @keyframes float-glow {
+            0%, 100% {
+                transform: translateY(0);
+                box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4), 0 8px 10px -6px rgba(14, 165, 233, 0.3);
+            }
+            50% {
+                transform: translateY(-12px);
+                box-shadow: 0 25px 35px -5px rgba(14, 165, 233, 0.7), 0 15px 15px -5px rgba(14, 165, 233, 0.4);
+            }
+        }
+        .animate-float-glow {
+            animation: float-glow 3.5s ease-in-out infinite;
+        }
     </style>
 </head>
 
@@ -59,12 +74,12 @@
     
     <!-- SIDEBAR KIRI -->
     <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col md:h-screen md:sticky md:top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 flex-shrink-0">
-        <div class="p-6 flex justify-center items-center border-b border-slate-100 relative overflow-hidden pb-6">
-            <div class="w-52 h-52 relative z-10 flex-shrink-0 rounded-[2rem] overflow-hidden shadow-[0_12px_24px_-6px_rgba(14,165,233,0.5),0_8px_12px_-4px_rgba(14,165,233,0.3)] border-t border-l border-white border-b-2 border-r-2 border-slate-200 transform transition-all duration-300 hover:scale-105 hover:-rotate-2 hover:shadow-[0_20px_30px_-6px_rgba(14,165,233,0.6)] group">
+        <div class="p-6 flex justify-center items-center border-b border-slate-100 relative overflow-hidden pb-8 pt-8">
+            <div class="animate-float-glow w-52 h-52 relative z-10 flex-shrink-0 rounded-[2rem] overflow-hidden border-t border-l border-white border-b-2 border-r-2 border-slate-200 group cursor-pointer">
                 <!-- Logo menggunakan gambar perisai (sesuai kotak merah di Sheet13). Ditambahkan id="appLogo" -->
-                <img id="appLogo" src="https://i.ibb.co.com/wh3Zzs46/235ae26e-367a-461e-a0c2-5e9ed2c6e123.jpg" alt="Logo Kawal Assurance" class="w-full h-full object-cover scale-[1.02]" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e40af/ffffff?text=KA';">
+                <img id="appLogo" src="https://i.ibb.co.com/wh3Zzs46/235ae26e-367a-461e-a0c2-5e9ed2c6e123.jpg" alt="Logo Kawal Assurance" class="w-full h-full object-cover scale-[1.05] transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e40af/ffffff?text=KA';">
                 <!-- Efek Kaca/Glossy 3D -->
-                <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/40 pointer-events-none group-hover:to-white/60 transition-colors"></div>
+                <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/40 pointer-events-none group-hover:to-white/60 transition-colors duration-500"></div>
             </div>
         </div>
         <div class="flex-1 overflow-y-auto py-5 px-4">
@@ -378,7 +393,12 @@
 <div id="modal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-50 p-4 md:p-8 backdrop-blur-sm transition-opacity">
     <div class="bg-white w-full max-w-[90rem] rounded-3xl shadow-2xl flex flex-col h-full max-h-[95vh] overflow-hidden border border-slate-200">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 border-b border-slate-100 bg-white sticky top-0 z-20 shadow-sm gap-4">
-            <h3 id="modalTitle" class="font-black text-xl md:text-2xl text-slate-800">Detail Tiket</h3>
+            <div class="flex items-center gap-3">
+                <button id="btnModalBack" onclick="goBackModal()" class="hidden items-center justify-center p-2 rounded-xl text-slate-500 hover:text-blue-700 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all group" title="Kembali ke Menu Kategori">
+                    <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </button>
+                <h3 id="modalTitle" class="font-black text-xl md:text-2xl text-slate-800">Detail Tiket</h3>
+            </div>
             <div class="flex items-center gap-3 self-end md:self-auto">
                 <div id="modalDownloadGroup" class="flex gap-2">
                     <button onclick="exportElementToImage('tableView', 'Detail_Tiket', this)" class="flex items-center justify-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
@@ -821,6 +841,8 @@ function openLocation(ln, sf, bc) {
     activeModal = { type: 'LOCATION', locName: ln, specificFilter: sf, bucketCat: bc };
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modalDownloadGroup').classList.remove('hidden');
+    document.getElementById('btnModalBack').classList.add('hidden');
+    document.getElementById('btnModalBack').classList.remove('flex');
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
     
@@ -873,6 +895,8 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
     activeModal = { type: 'MATRIX', loc, catId, rowType, agingIdx };
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modalDownloadGroup').classList.remove('hidden');
+    document.getElementById('btnModalBack').classList.add('hidden');
+    document.getElementById('btnModalBack').classList.remove('flex');
     document.getElementById('hvcView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
     let titleStr = `Laporan Detail ➔ <span class="text-blue-600">${loc}</span>`;
@@ -1765,6 +1789,8 @@ function filterKPI(f) {
     activeModal = { type: 'KPI', f }; 
     document.getElementById('modal').classList.remove("hidden");
     document.getElementById('modalDownloadGroup').classList.add('hidden');
+    document.getElementById('btnModalBack').classList.add('hidden');
+    document.getElementById('btnModalBack').classList.remove('flex');
     document.getElementById('hvcView').classList.remove('hidden'); 
     document.getElementById('tableView').classList.add('hidden');
     
@@ -1819,6 +1845,8 @@ function openDistribution(f, c) {
     activeModal = { type: 'DISTRIBUTION_MODAL', filter:f, cat:c }; 
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modalDownloadGroup').classList.remove('hidden');
+    document.getElementById('btnModalBack').classList.remove('hidden');
+    document.getElementById('btnModalBack').classList.add('flex');
     document.getElementById('hvcView').classList.add('hidden'); 
     document.getElementById('tableView').classList.remove('hidden');
     
@@ -2419,6 +2447,8 @@ function openTeknisi(tekName) {
     activeModal = { type: 'TEKNISI', tekName }; 
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modalDownloadGroup').classList.remove('hidden');
+    document.getElementById('btnModalBack').classList.add('hidden');
+    document.getElementById('btnModalBack').classList.remove('flex');
     document.getElementById('hvcView').classList.add('hidden'); 
     document.getElementById('tableView').classList.remove('hidden');
     document.getElementById('modalTitle').innerHTML = `Teknisi: <span class="text-blue-600">${extractName(tekName)}</span>`;
@@ -2428,6 +2458,13 @@ window.openTeknisi = openTeknisi;
 
 function closeModal() { activeModal = null; document.getElementById('modal').classList.add('hidden'); }
 window.closeModal = closeModal;
+
+function goBackModal() {
+    if (activeModal && activeModal.type === 'DISTRIBUTION_MODAL') {
+        filterKPI(activeModal.filter);
+    }
+}
+window.goBackModal = goBackModal;
 
 // Auto Refresh & Durasi Realtime
 setInterval(() => {
