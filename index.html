@@ -1528,14 +1528,14 @@ function renderReportTable() {
         });
 
         // TOTAL OPEN
-        html += `<tr class="bg-rose-50/40 border-b border-rose-100 transition-colors hover:bg-rose-100/50 group">
-            <td class="px-4 py-2 text-left sticky-col bg-rose-50/90 group-hover:bg-rose-100/90 border-r border-rose-200 font-black text-rose-800 text-[10px] shadow-[2px_0_5px_rgba(244,63,94,0.05)]">TOTAL OPEN</td>`;
+        html += `<tr class="bg-indigo-50/40 border-b border-indigo-100 transition-colors hover:bg-indigo-100/50 group">
+            <td class="px-4 py-2 text-left sticky-col bg-indigo-50/90 group-hover:bg-indigo-100/90 border-r border-indigo-200 font-black text-indigo-800 text-[10px] shadow-[2px_0_5px_rgba(99,102,241,0.05)]">TOTAL OPEN</td>`;
         tableColumns.forEach(col => {
             let v = reportData[col].cats[c.id].open;
-            html += getCell(v, `openMatrixDetail('${col}', '${c.id}', 'OPEN')`, 'text-rose-800', 'bg-rose-200');
+            html += getCell(v, `openMatrixDetail('${col}', '${c.id}', 'OPEN')`, 'text-indigo-800', 'bg-indigo-200');
         });
         let totO = reportData['TOTAL'].cats[c.id].open;
-        html += getTotalCell(totO, `openMatrixDetail('TOTAL', '${c.id}', 'OPEN')`, 'text-rose-700');
+        html += getTotalCell(totO, `openMatrixDetail('TOTAL', '${c.id}', 'OPEN')`, 'text-indigo-700');
         html += `</tr>`;
 
         if (!isNoSLA) {
