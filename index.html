@@ -1527,14 +1527,28 @@ function renderReportTable() {
                  </tr>`;
         
         c.ranges.forEach((rng, idx) => {
+            let rowActiveText = 'text-amber-800';
+            let rowActiveBg = 'bg-amber-100';
+
+            if (c.id === 'HVC DIAMOND') {
+                if (idx <= 2) { rowActiveText = 'text-emerald-800'; rowActiveBg = 'bg-emerald-200'; } // <= 3 Jam (Comply)
+                else { rowActiveText = 'text-rose-800'; rowActiveBg = 'bg-rose-200'; } // > 3 Jam (Not Comply)
+            } else if (c.id === 'HVC PLATINUM') {
+                if (idx <= 3) { rowActiveText = 'text-emerald-800'; rowActiveBg = 'bg-emerald-200'; } // <= 6 Jam (Comply)
+                else { rowActiveText = 'text-rose-800'; rowActiveBg = 'bg-rose-200'; } // > 6 Jam (Not Comply)
+            } else if (c.id === 'NON_HVC') {
+                if (idx <= 4) { rowActiveText = 'text-emerald-800'; rowActiveBg = 'bg-emerald-200'; } // <= 36 Jam (Comply)
+                else { rowActiveText = 'text-rose-800'; rowActiveBg = 'bg-rose-200'; } // > 36 Jam (Not Comply)
+            }
+
             html += `<tr class="border-b border-slate-100 hover:bg-blue-50/50 transition-colors group">
                 <td class="px-4 py-1.5 font-bold text-left sticky-col bg-white group-hover:bg-blue-50/50 border-r border-slate-200 text-slate-600 text-[10px] whitespace-nowrap shadow-[2px_0_5px_rgba(0,0,0,0.02)]">${rng.l}</td>`;
             tableColumns.forEach(col => {
                 let v = reportData[col].cats[c.id].aging[idx];
-                html += getCell(v, `openMatrixDetail('${col}', '${c.id}', 'AGING', ${idx})`, 'text-amber-800', 'bg-amber-100');
+                html += getCell(v, `openMatrixDetail('${col}', '${c.id}', 'AGING', ${idx})`, rowActiveText, rowActiveBg);
             });
             let totalV = reportData['TOTAL'].cats[c.id].aging[idx];
-            html += getTotalCell(totalV, `openMatrixDetail('TOTAL', '${c.id}', 'AGING', ${idx})`, 'text-slate-800');
+            html += getTotalCell(totalV, `openMatrixDetail('TOTAL', '${c.id}', 'AGING', ${idx})`, rowActiveText);
             html += `</tr>`;
         });
 
