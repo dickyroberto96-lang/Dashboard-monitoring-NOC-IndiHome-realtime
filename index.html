@@ -495,6 +495,7 @@ const distClassMap = {
 // Global State
 let rawData = [];
 let rawKehadiranData = [];
+let rawBelumOrderData = [];
 let dateKeyMap = {}; // Penyimpanan mapping tanggal ke json key otomatis
 let mode = "STO";
 let ticketTypeMode = "ALL_TIKET";
@@ -518,6 +519,23 @@ function showToast(msg) {
 window.showToast = showToast;
 
 // ===== 2. DATA PROCESSING HELPERS =====
+function getLooseVal(row, keywords) {
+    if (!row || typeof row !== 'object') return "";
+    let keys = Object.keys(row);
+    for (let kw of keywords) {
+        let cleanKw = kw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        for (let key of keys) {
+            let cleanKey = key.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (cleanKey === cleanKw || cleanKey.includes(cleanKw)) {
+                if (row[key] !== null && row[key] !== undefined && row[key] !== "") {
+                    return row[key];
+                }
+            }
+        }
+    }
+    return "";
+}
+
 function getVal(row, possibleKeys) {
     if (!row) return "";
     let keys = Object.keys(row);
@@ -711,6 +729,10 @@ function getDurasi(r) {
 }
 
 function getBaseData() {
+    if (ticketTypeMode === 'BELUM_ORDER') {
+        return rawBelumOrderData;
+    }
+    
     return rawData.filter(r => {
         const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
         const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
@@ -722,11 +744,6 @@ function getBaseData() {
         const isUnderspec = c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC");
         
         if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER' || ticketTypeMode === 'KEHADIRAN_TEKNISI') return true; 
-        
-        if (ticketTypeMode === 'BELUM_ORDER') {
-            let tek1 = (r["TEKNISI 1"] || "").toString().trim();
-            return isTicketOpen(r) && (tek1 === "" || tek1 === "-");
-        }
         
         if (ticketTypeMode === 'REGULER') {
             return !isSqm && !isZPerm && !isUnderspec; 
@@ -1416,6 +1433,79 @@ function renderReportTable() {
         titleEl.innerHTML = `PROGRESS TIKET UNDERSPEC RIDAR <span class="text-xs text-slate-500 font-bold ml-3 px-2.5 py-1 bg-slate-100 rounded-md border border-slate-200 font-mono tracking-tight">${new Date().toLocaleString('id-ID')}</span>`;
         reportEl.innerHTML = getUnderspecMatrixHTML();
         return;
+    } else if (ticketTypeMode === 'BELUM_ORDER') {
+        titleEl.innerHTML = `Laporan Tiket Belum Order (Warning) <span class="text-xs text-rose-500 font-bold ml-3 px-2.5 py-1 bg-rose-100 rounded-md border border-rose-200 font-mono tracking-tight">${new Date().toLocaleString('id-ID')}</span>`;
+        
+        let html = `<table id="matrixTableExport" class="w-full text-sm text-left border-collapse bg-white shadow-sm ring-1 ring-slate-200/50">`;
+        html += `<thead class="sticky-header shadow-sm bg-rose-500 text-white font-bold uppercase tracking-wider text-[10px]">
+            <tr>
+                <th class="px-4 py-3 border-r border-rose-400">NO TIKET</th>
+                <th class="px-4 py-3 border-r border-rose-400">SEKTOR</th>
+                <th class="px-4 py-3 border-r border-rose-400">STO</th>
+                <th class="px-4 py-3 border-r border-rose-400">CUST ASSIGN</th>
+                <th class="px-4 py-3 border-r border-rose-400">FLAG HVC</th>
+                <th class="px-4 py-3 border-r border-rose-400">DATEK</th>
+                <th class="px-4 py-3 border-r border-rose-400">NO JASTEL</th>
+                <th class="px-4 py-3 border-r border-rose-400">TEKNISI 1</th>
+                <th class="px-4 py-3 border-r border-rose-400">TEKNISI 2</th>
+                <th class="px-4 py-3 text-center">AKSI</th>
+            </tr>
+        </thead><tbody class="divide-y divide-slate-100 bg-white">`;
+
+        let data = getActiveData();
+        
+        // Siapkan opsi dropdown teknisi (Otomatis dibaca dari Data Kehadiran)
+        let tekOptions = `<option value="">-- Pilih Teknisi --</option>`;
+        if (rawKehadiranData && rawKehadiranData.length > 0) {
+            let listTeknisi = [...new Set(rawKehadiranData.map(r => getVal(r, ['NAMA', 'NAMA TEKNISI'])).filter(n => n && n.trim() !== ''))].sort();
+            tekOptions += listTeknisi.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        if (data.length === 0) {
+            html += `<tr><td colspan="10" class="px-4 py-8 text-center text-slate-500 font-bold">Semua tiket telah di-order / Data kosong.</td></tr>`;
+        } else {
+            data.forEach((r, index) => {
+                // Pencarian data agresif mengabaikan spasi dan huruf besar kecil
+                let noTiket = getLooseVal(r, ["NOTIKET", "INCIDENT", "IN", "TIKET"]);
+                let sektor = getLooseVal(r, ["SEKTOR", "SECTOR"]);
+                let sto = getLooseVal(r, ["STO", "LOKASI"]);
+                let custAssign = getLooseVal(r, ["CUSTASSIGN", "CUSTOMERASSIGN", "ASSIGN", "KETERANGAN"]);
+                let flagHvc = getLooseVal(r, ["FLAGHVC", "HVC", "PRIORITAS"]);
+                let datek = getLooseVal(r, ["DATEK", "REPORTDATE", "TGLLAPOR", "TANGGAL", "WAKTU"]);
+                let noJastel = getLooseVal(r, ["NOJASTEL", "INET", "NOMORINET", "SPEEDY", "POTS"]);
+                let tek1 = getLooseVal(r, ["TEKNISI1", "TEKNISIUTAMA", "TEKNISI"]);
+                let tek2 = getLooseVal(r, ["TEKNISI2", "PENDAMPING"]);
+
+                html += `<tr class="hover:bg-rose-50 transition-colors">
+                    <td class="px-4 py-3 border-r border-slate-100 font-bold text-slate-800">${noTiket || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs">${sektor || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs font-bold text-indigo-700">${sto || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs">${custAssign || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs font-bold text-rose-600">${flagHvc || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs whitespace-nowrap">${datek || "-"}</td>
+                    <td class="px-4 py-3 border-r border-slate-100 text-xs font-mono text-blue-600">${noJastel || "-"}</td>
+                    <td class="px-2 py-2 border-r border-slate-100">
+                        <select id="selTek1_${index}" class="w-full min-w-[120px] bg-white border border-slate-300 text-slate-700 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 font-bold">
+                            ${tekOptions}
+                        </select>
+                    </td>
+                    <td class="px-2 py-2 border-r border-slate-100">
+                        <select id="selTek2_${index}" class="w-full min-w-[120px] bg-white border border-slate-300 text-slate-700 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 font-bold">
+                            ${tekOptions}
+                        </select>
+                    </td>
+                    <td class="px-2 py-2 text-center align-middle">
+                        <button id="btnAssign_${index}" onclick="submitAssign(${index}, '${noTiket}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black hover:bg-blue-700 hover:scale-105 transition-all shadow-sm flex items-center justify-center gap-1 mx-auto w-20">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            Order
+                        </button>
+                    </td>
+                </tr>`;
+            });
+        }
+        html += `</tbody></table>`;
+        reportEl.innerHTML = html;
+        return;
     } else {
         titleEl.innerHTML = 'Laporan Progres Tiket Gangguan (Matriks)';
     }
@@ -1700,9 +1790,10 @@ window.renderReportTable = renderReportTable;
 async function load() {
     const sUI = document.getElementById('syncStatus');
     try {
-        const [resDB, resTeknisi] = await Promise.all([
+        const [resDB, resTeknisi, resBelumOrder] = await Promise.all([
             fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB").catch(() => null),
-            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null)
+            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null),
+            fetch("https://script.google.com/macros/s/AKfycbwnTYqoeYpnM2Op8Up5fIXQ6cReuGGtAQmoCouyzDZOsalDQkLsdxQcPA8TWVSP2rwr/exec").catch(() => null)
         ]);
         
         if (resDB) {
@@ -1714,6 +1805,30 @@ async function load() {
             rawKehadiranData = Array.isArray(jsonTeknisi) ? jsonTeknisi : [];
             // Jalankan Smart Mapper Tanggal
             buildDateMap(rawKehadiranData); 
+        }
+        if (resBelumOrder) {
+            const jsonBelumOrder = await resBelumOrder.json().catch(() => []);
+            let rawBelum = Array.isArray(jsonBelumOrder) ? jsonBelumOrder : (jsonBelumOrder.data || []);
+            
+            // Format Array of Arrays (Google Sheet Script standar) menjadi Array of Objects
+            if (rawBelum.length > 0 && Array.isArray(rawBelum[0])) {
+                let headers = rawBelum[0].map(h => h ? h.toString().trim() : "");
+                rawBelum = rawBelum.slice(1).map(row => {
+                    let obj = {};
+                    headers.forEach((h, i) => obj[h] = row[i]);
+                    return obj;
+                });
+            }
+            
+            // Normalisasi key agar filter Dashboard tetap berfungsi sempurna
+            rawBelumOrderData = rawBelum.map(r => {
+                return {
+                    ...r,
+                    STO: getLooseVal(r, ["STO", "LOKASI"]) || r.STO || r.LOKASI,
+                    SEKTOR: getLooseVal(r, ["SEKTOR", "SECTOR"]) || r.SEKTOR || r.SECTOR,
+                    "SERVICE AREA": getLooseVal(r, ["SERVICEAREA", "SA"]) || r["SERVICE AREA"] || r.SA
+                };
+            });
         }
 
         renderSidebar(); updateDashboard();
@@ -2493,6 +2608,60 @@ setInterval(() => {
         }
     });
 }, 1000);
+
+// Fungsi untuk mengirim data Assign Teknisi ke Google Script
+async function submitAssign(rowIndex, noTiket) {
+    const selTek1 = document.getElementById(`selTek1_${rowIndex}`);
+    const selTek2 = document.getElementById(`selTek2_${rowIndex}`);
+    const btn = document.getElementById(`btnAssign_${rowIndex}`);
+    
+    const tek1 = selTek1.value;
+    const tek2 = selTek2.value;
+
+    if (!tek1 && !tek2) {
+        showToast("Silakan pilih minimal 1 Teknisi (Teknisi 1).");
+        return;
+    }
+
+    // Tampilan Loading di Tombol
+    const originalBtnHTML = btn.innerHTML;
+    btn.innerHTML = `<span class="animate-spin text-sm">⏳</span>`;
+    btn.disabled = true;
+    selTek1.disabled = true;
+    selTek2.disabled = true;
+
+    try {
+        const url = "https://script.google.com/macros/s/AKfycbwnTYqoeYpnM2Op8Up5fIXQ6cReuGGtAQmoCouyzDZOsalDQkLsdxQcPA8TWVSP2rwr/exec";
+        
+        // Data yang akan dipush ke Apps Script
+        const formData = new URLSearchParams();
+        formData.append("action", "assign_teknisi");
+        formData.append("no_tiket", noTiket);
+        formData.append("teknisi_1", tek1);
+        formData.append("teknisi_2", tek2);
+
+        // Menggunakan mode no-cors agar tidak di-block oleh browser saat menembak URL Script eksternal
+        await fetch(url, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors' 
+        });
+
+        // Tampilkan Sukses!
+        showToast(`Tiket ${noTiket} berhasil di-Order!`);
+        btn.innerHTML = `✅ OK`;
+        btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+        btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-700');
+        
+    } catch (e) {
+        showToast("Terjadi kesalahan koneksi. Gagal Assign.");
+        btn.innerHTML = originalBtnHTML;
+        btn.disabled = false;
+        selTek1.disabled = false;
+        selTek2.disabled = false;
+    }
+}
+window.submitAssign = submitAssign;
 
 // Initialize system
 load(); setInterval(load, 60000);
