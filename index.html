@@ -1790,10 +1790,9 @@ window.renderReportTable = renderReportTable;
 async function load() {
     const sUI = document.getElementById('syncStatus');
     try {
-        const [resDB, resTeknisi, resBelumOrder] = await Promise.all([
+        const [resDB, resTeknisi] = await Promise.all([
             fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB").catch(() => null),
-            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null),
-            fetch("https://script.google.com/macros/s/AKfycbwnTYqoeYpnM2Op8Up5fIXQ6cReuGGtAQmoCouyzDZOsalDQkLsdxQcPA8TWVSP2rwr/exec").catch(() => null)
+            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null)
         ]);
         
         if (resDB) {
@@ -1806,30 +1805,9 @@ async function load() {
             // Jalankan Smart Mapper Tanggal
             buildDateMap(rawKehadiranData); 
         }
-        if (resBelumOrder) {
-            const jsonBelumOrder = await resBelumOrder.json().catch(() => []);
-            let rawBelum = Array.isArray(jsonBelumOrder) ? jsonBelumOrder : (jsonBelumOrder.data || []);
-            
-            // Format Array of Arrays (Google Sheet Script standar) menjadi Array of Objects
-            if (rawBelum.length > 0 && Array.isArray(rawBelum[0])) {
-                let headers = rawBelum[0].map(h => h ? h.toString().trim() : "");
-                rawBelum = rawBelum.slice(1).map(row => {
-                    let obj = {};
-                    headers.forEach((h, i) => obj[h] = row[i]);
-                    return obj;
-                });
-            }
-            
-            // Normalisasi key agar filter Dashboard tetap berfungsi sempurna
-            rawBelumOrderData = rawBelum.map(r => {
-                return {
-                    ...r,
-                    STO: getLooseVal(r, ["STO", "LOKASI"]) || r.STO || r.LOKASI,
-                    SEKTOR: getLooseVal(r, ["SEKTOR", "SECTOR"]) || r.SEKTOR || r.SECTOR,
-                    "SERVICE AREA": getLooseVal(r, ["SERVICEAREA", "SA"]) || r["SERVICE AREA"] || r.SA
-                };
-            });
-        }
+        
+        // Hapus fetch Google Script yang membuat lambat, data dikosongkan secara default
+        rawBelumOrderData = [];
 
         renderSidebar(); updateDashboard();
         if(sUI) {
@@ -2631,21 +2609,8 @@ async function submitAssign(rowIndex, noTiket) {
     selTek2.disabled = true;
 
     try {
-        const url = "https://script.google.com/macros/s/AKfycbwnTYqoeYpnM2Op8Up5fIXQ6cReuGGtAQmoCouyzDZOsalDQkLsdxQcPA8TWVSP2rwr/exec";
-        
-        // Data yang akan dipush ke Apps Script
-        const formData = new URLSearchParams();
-        formData.append("action", "assign_teknisi");
-        formData.append("no_tiket", noTiket);
-        formData.append("teknisi_1", tek1);
-        formData.append("teknisi_2", tek2);
-
-        // Menggunakan mode no-cors agar tidak di-block oleh browser saat menembak URL Script eksternal
-        await fetch(url, {
-            method: 'POST',
-            body: formData,
-            mode: 'no-cors' 
-        });
+        // Simulasi delay sementara sebagai pengganti Google Script yang sudah dihapus
+        await new Promise(r => setTimeout(r, 400));
 
         // Tampilkan Sukses!
         showToast(`Tiket ${noTiket} berhasil di-Order!`);
@@ -2654,7 +2619,7 @@ async function submitAssign(rowIndex, noTiket) {
         btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-700');
         
     } catch (e) {
-        showToast("Terjadi kesalahan koneksi. Gagal Assign.");
+        showToast("Terjadi kesalahan. Gagal Assign.");
         btn.innerHTML = originalBtnHTML;
         btn.disabled = false;
         selTek1.disabled = false;
