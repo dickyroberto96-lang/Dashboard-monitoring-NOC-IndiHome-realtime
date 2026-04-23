@@ -2797,6 +2797,22 @@ load(); setInterval(load, 60000);
                         </label>
                     </div>
 
+                    <!-- DROPDOWN FILTER AREA -->
+                    <div class="flex items-center gap-2 bg-white px-3 py-2.5 rounded-lg border border-slate-200 shadow-sm flex-shrink-0">
+                        <i class="fas fa-filter text-slate-400"></i>
+                        <select id="sheetFilter" onchange="applyFilter()" class="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer pr-2">
+                            <option value="ALL">Semua Area</option>
+                            <option value="ARENGKA-1">ARENGKA-1</option>
+                            <option value="ARENGKA-2">ARENGKA-2</option>
+                            <option value="BKR & OUTER-2">BKR & OUTER-2</option>
+                            <option value="OUTER-1">OUTER-1</option>
+                            <option value="DUM DRI">DUM DRI</option>
+                            <option value="INDRAGIRI">INDRAGIRI</option>
+                            <option value="PBR-3 & 4">PBR-3 & 4</option>
+                            <option value="PBR-1 & 2">PBR-1 & 2</option>
+                        </select>
+                    </div>
+
                     <div id="mainLoader" class="loader hidden"></div>
                     <span id="statusText" class="text-sm font-medium text-slate-500 hidden"></span>
                     <span id="bgSyncText" class="text-xs font-bold text-blue-500 hidden animate-pulse"><i class="fas fa-cloud-download-alt mr-1"></i>Menyinkronkan...</span>
@@ -2930,6 +2946,7 @@ load(); setInterval(load, 60000);
         // --- OPTIMASI BARU (ANTI-LELET) ---
         let isFetching = false; // Mencegah penumpukan request
         let lastDataHash = "";  // Menyimpan jejak data untuk mencegah render ulang sia-sia
+        let allTicketsData = []; // Simpan semua tiket asli dari server
 
         function setStatus(text, isError = false) {
             statusText.textContent = text;
@@ -2971,9 +2988,21 @@ load(); setInterval(load, 60000);
                 }
 
                 if (result.status === 'success') {
+                    // === FILTER DATA: HANYA NO TIKET ADA & TEKNISI 1 KOSONG ===
+                    const validTickets = result.data.filter(tiket => {
+                        const rawNoTiket = tiket.NO_TIKET || tiket['NO TIKET'] || tiket.NOTIKET || tiket.INCIDENT || tiket['NO INCIDENT'] || '';
+                        const hasNoTiket = rawNoTiket.toString().trim() !== '';
+                        
+                        const rawTeknisi1 = tiket['TEKNISI 1'] || tiket.TEKNISI_1 || tiket.TEKNISI1 || tiket.TEKNISI || '';
+                        const strTeknisi = rawTeknisi1.toString().trim().toUpperCase();
+                        const teknisiKosong = strTeknisi === '' || strTeknisi === '-' || strTeknisi === '0' || strTeknisi.includes('N/A') || strTeknisi.includes('#REF');
+                        
+                        return hasNoTiket && teknisiKosong;
+                    });
+
                     // === SMART RENDER (ANTI-LAG) ===
                     // Cek apakah data benar-benar berubah sebelum merusak/merender ulang tabel
-                    const currentDataHash = JSON.stringify(result.data);
+                    const currentDataHash = JSON.stringify(validTickets);
                     
                     if (isAutoRefresh && currentDataHash === lastDataHash) {
                         // Data sama persis, abaikan proses render untuk menghemat resource browser
@@ -2981,8 +3010,9 @@ load(); setInterval(load, 60000);
                     } else {
                         // Data berbeda, simpan jejak baru lalu render tabel
                         lastDataHash = currentDataHash; 
-                        setStatus(`Berhasil memuat ${result.total} tiket.`);
-                        renderTable(result.data); 
+                        allTicketsData = validTickets; // Simpan ke global memory
+                        setStatus(`Berhasil memuat ${validTickets.length} tiket (Belum di-assign).`);
+                        applyFilter(); // Panggil fungsi filter dan render 
                     }
                 } else {
                     setStatus(`Gagal: ${result.message}`, true);
@@ -3008,6 +3038,24 @@ load(); setInterval(load, 60000);
                     bgSyncText.classList.add('hidden');
                 }
             }
+        }
+
+        // FUNGSI UNTUK MENERAPKAN FILTER AREA/SHEET
+        function applyFilter() {
+            const selectedFilter = document.getElementById('sheetFilter').value;
+            let dataToRender = allTicketsData;
+            
+            if (selectedFilter !== 'ALL') {
+                dataToRender = allTicketsData.filter(tiket => {
+                    const sheetName = (tiket.NAMA_SHEET || '').toUpperCase();
+                    // Hapus spasi dan tanda '&' agar pencocokan lebih fleksibel/kebal terhadap salah ketik nama sheet
+                    const filterValue = selectedFilter.toUpperCase().replace(/&/g, '').replace(/\s+/g, '');
+                    const sheetNameClean = sheetName.replace(/&/g, '').replace(/\s+/g, '');
+                    return sheetNameClean.includes(filterValue);
+                });
+            }
+            
+            renderTable(dataToRender);
         }
 
         // 2. OPTIMASI RENDER: MENGGUNAKAN BATCH HTML STRING (Jauh lebih cepat dari DOM appendChild satu-satu)
@@ -3061,9 +3109,12 @@ load(); setInterval(load, 60000);
                 const idSelect2 = `t2_${index}`;
                 const idBtnSubmit = `btn_${index}`;
 
+                // Ambil field No Tiket dengan aman agar bisa dirender meskipun nama kolomnya "NO TIKET" (pakai spasi)
+                const displayNoTiket = tiket.NO_TIKET || tiket['NO TIKET'] || tiket.NOTIKET || tiket.INCIDENT || '-';
+
                 rowsHtmlContent += `
                     <tr class="hover:bg-blue-50/50 transition-colors group ${bgClass}">
-                        <td class="px-4 py-3 font-bold text-slate-800 align-top pt-4">${tiket.NO_TIKET || '-'}${priorityBadge}</td>
+                        <td class="px-4 py-3 font-bold text-slate-800 align-top pt-4">${displayNoTiket}${priorityBadge}</td>
                         <td class="px-4 py-3 text-xs font-semibold text-blue-600 bg-blue-50/30 align-top pt-4">${tiket.NAMA_SHEET || '-'}</td>
                         <td class="px-4 py-3 align-top pt-4">${tiket.SEKTOR || '-'}</td>
                         <td class="px-4 py-3 align-top pt-4">${tiket.STO || '-'}</td>
