@@ -1,4 +1,82 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FULL GABUNGAN ANTI LELET</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow: hidden;
+    }
+    .topbar {
+      background: linear-gradient(90deg, #1d4ed8, #2563eb, #4f46e5);
+      color: white;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, .12);
+    }
+    .tab-btn {
+      position: relative;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1;
+      transition: all .18s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { transform: translateY(-1px); }
+    .tab-btn.active {
+      background: rgba(255,255,255,.96);
+      color: #1d4ed8;
+      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+    }
+    .frame-wrap {
+      height: calc(100vh - 72px);
+      background: #e2e8f0;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: white;
+    }
+    .hidden { display: none; }
+    .badge {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.25);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar px-4 md:px-6 h-[72px] flex items-center justify-end gap-4">
+    <div class="flex items-center gap-2 overflow-x-auto">
+      <button id="btnApp1" class="tab-btn active" onclick="switchTab('app1')">
+        Dashboard Tiket Gangguan
+      </button>
+      <button id="btnApp2" class="tab-btn" onclick="switchTab('app2')">
+        Warning !!! Belum Order
+      </button>
+    </div>
+  </div>
+
+  <div class="frame-wrap">
+    <div id="panel1" class="w-full h-full">
+      <iframe id="frame1" title="Dashboard Tiket Gangguan"></iframe>
+    </div>
+    <div id="panel2" class="w-full h-full hidden">
+      <iframe id="frame2" title="Warning !!! Belum Order"></iframe>
+    </div>
+  </div>
+
+  <template id="tpl1">
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2631,5 +2709,494 @@ window.submitAssign = submitAssign;
 // Initialize system
 load(); setInterval(load, 60000);
 </script>
+</body>
+</html>
+  </template>
+
+  <template id="tpl2">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warning !!! Belum Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        .loader-sm { width: 16px; height: 16px; border-width: 2px; border-top-color: #fff; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        input::-webkit-calendar-picker-indicator { opacity: 100; cursor: pointer; color: #64748b; }
+        .tab-content { transition: opacity 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
+
+    <!-- === MENU NAVIGASI (TABS) === -->
+    <nav class="bg-blue-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-[1400px] mx-auto px-4 md:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2 font-bold text-xl">
+                    <i class="fas fa-network-wired"></i> Warning !!! Belum Order
+                </div>
+                <div class="flex space-x-1">
+                    <button onclick="switchTab('tab1')" id="btnTab1" class="px-4 py-2 rounded-md font-medium bg-blue-800 text-white transition-colors">
+                        <i class="fas fa-satellite-dish mr-1"></i> Monitoring Tiket
+                    </button>
+                    <button onclick="switchTab('tab2')" id="btnTab2" class="px-4 py-2 rounded-md font-medium text-blue-100 hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-folder-open mr-1"></i> Aplikasi Lainnya
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-[1400px] mx-auto p-4 md:p-8 space-y-6">
+        
+        <!-- ========================================== -->
+        <!-- TAB 1: MONITORING TIKET (Spreadsheet 1)    -->
+        <!-- ========================================== -->
+        <div id="tab1" class="tab-content block space-y-6">
+            <!-- Header & Config Tab 1 -->
+            <div class="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-blue-700 flex items-center gap-2">
+                            API Monitoring Tiket
+                            <span id="totalBadge" class="bg-red-500 text-white text-sm font-bold px-3 py-0.5 rounded-full ml-2 hidden shadow-sm" title="Total Tiket Terbuka">0</span>
+                        </h1>
+                        <p class="text-sm text-slate-500 mt-1">Versi Ringan (Optimized) - Assign Teknisi Otomatis</p>
+                    </div>
+                    <div class="w-full md:w-1/3">
+                        <label class="text-xs font-semibold text-slate-500 mb-1 block">URL Web App (Spreadsheet 1)</label>
+                        <input type="text" id="apiUrl" 
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50"
+                            value="https://script.google.com/macros/s/AKfycbwnTYqoeYpnM2Op8Up5fIXQ6cReuGGtAQmoCouyzDZOsalDQkLsdxQcPA8TWVSP2rwr/exec">
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex items-center gap-4">
+                    <button onclick="fetchTickets()" id="btnFetch" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-sync-alt"></i> Ambil Tiket
+                    </button>
+                    
+                    <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-lg border border-slate-200 shadow-sm">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="realtimeToggle" class="sr-only peer" onchange="toggleRealTime()">
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            <span class="ml-3 text-sm font-bold text-slate-700">Auto Refresh <span id="countdownText" class="text-xs text-green-600 font-bold ml-1"></span></span>
+                        </label>
+                    </div>
+
+                    <div id="mainLoader" class="loader hidden"></div>
+                    <span id="statusText" class="text-sm font-medium text-slate-500 hidden"></span>
+                    <span id="bgSyncText" class="text-xs font-bold text-blue-500 hidden animate-pulse"><i class="fas fa-cloud-download-alt mr-1"></i>Menyinkronkan...</span>
+                </div>
+            </div>
+
+            <div id="emptyState" class="glass-panel p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
+                <div class="text-slate-300 mb-4"><i class="fas fa-inbox text-6xl"></i></div>
+                <h3 class="text-lg font-semibold text-slate-600">Belum ada data</h3>
+                <p class="text-slate-500 text-sm mt-1">Klik "Ambil Tiket Terbuka" untuk memuat data dari Spreadsheet.</p>
+            </div>
+
+            <!-- TABEL DATA -->
+            <div id="tableContainer" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hidden">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-sm text-left text-slate-600 whitespace-nowrap">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 font-semibold">NO TIKET</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">SHEET</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">SEKTOR</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">STO</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">CUST ASSIGN</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">FLAG HVC</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">DATEK</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">NO JASTEL</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">TEKNISI 1</th>
+                                <th scope="col" class="px-4 py-3 font-semibold">TEKNISI 2</th>
+                                <th scope="col" class="px-4 py-3 font-semibold text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_rgba(0,0,0,0.02)]">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketsTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tempat Penampungan Datalist Global (Tersembunyi) -->
+            <div id="datalistsContainer" class="hidden"></div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: APLIKASI LAIN (Spreadsheet 2)       -->
+        <!-- ========================================== -->
+        <div id="tab2" class="tab-content hidden space-y-6">
+            <div class="glass-panel p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800">Ruang Aplikasi Kedua Anda</h2>
+                <p class="text-slate-500 mt-2">Anda dapat memasukkan kode HTML dan URL Web App Spreadsheet kedua Anda di bagian ini.</p>
+                
+                <div class="mt-6 p-8 border-2 border-dashed border-slate-300 rounded-xl text-center bg-slate-50">
+                    <i class="fas fa-code text-4xl text-slate-400 mb-3"></i>
+                    <p class="font-medium text-slate-600">-- TEMPEL HTML APLIKASI KEDUA ANDA DI SINI --</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // === FUNGSI PINDAH TAB ===
+        function switchTab(tabId) {
+            document.getElementById('tab1').classList.add('hidden');
+            document.getElementById('tab1').classList.remove('block');
+            document.getElementById('tab2').classList.add('hidden');
+            document.getElementById('tab2').classList.remove('block');
+            
+            document.getElementById('btnTab1').className = "px-4 py-2 rounded-md font-medium text-blue-100 hover:bg-blue-600 transition-colors";
+            document.getElementById('btnTab2').className = "px-4 py-2 rounded-md font-medium text-blue-100 hover:bg-blue-600 transition-colors";
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            if(tabId === 'tab1') {
+                document.getElementById('btnTab1').className = "px-4 py-2 rounded-md font-medium bg-blue-800 text-white transition-colors";
+            } else {
+                document.getElementById('btnTab2').className = "px-4 py-2 rounded-md font-medium bg-blue-800 text-white transition-colors";
+            }
+        }
+
+        // ========================================================
+        // SCRIPT UNTUK TAB 1 (MONITORING TIKET) - OPTIMIZED
+        // ========================================================
+        
+        const DB_TEKNISI = {
+            "INDRAGIRI": ["25820015-HENDRI SASMITO", "25020116-ENGKI PURNAMA", "25820014-MUSLIM PASARIBU", "25970088-FERLI HARIANTO", "25630001-A.GAPUR", "25900047-M BIMA ERLANGGA", "25990085-SURYA ANUGRAH", "25020100-RIPALDI", "25010095-AGUNG BUDI PANGESTU", "25990084-RANGGA SYAHPUTRA", "25910056-TEJA LASMANA", "25860027-FERRY SOFIAN", "25860026-DEDY IRAWAN", "25990095-ROBY SYAPUTRA", "25060072-IRVAN SETIAWAN", "26020030-ANDRE RUDIANTO", "16810482-MAYDEDI EVENDI", "0-WINDI", "0-FERDI ARDINATA", "0-FANDI PRADIPTA", "16023372 -CAHYOZI", "0-ADRIAN DWI C", "0-MAULANA MAGRIBI", "26040053-SAHRUL GUNAWAN", "0-HAYKAL", "26040054-IQBAL NURHIDAYATULLAH"],
+            "PBR": ["16910812 -MUHAMMAD SHANTO", "16023256 - IRVAN HADI PERDANA", "16953497 -RENDY VONDIKA", "16013277 -FEDRO GIANSYAH", "16984713 -AIDIL FITRA", "16070160 -RIKI ARTO PULUNGAN", "15889777 -ELVIS", "15890745 -DENI RAMADHANI", "15899136 -MAZHAR ARIF", "16963737 -HERI KURNIAWAN", "16850279 -HARJANI AKBAR", "16840144 -WENNI HANDOKO", "16941841 -AFIF SULTAN", "16004301 -TAUFIK SYAEFULLAH", "16974664 -GUSTI PRATAMA", "0-HARY NURSYAHPUTRA", "16005386 -ARIO AGUSTAF", "16030850 -ARIF FATURHAMAN", "16943161 -DON YUAN", "0-RAMA ANSI ADI WILAGA", "16890089 -ENDRO ERMANDA PUTRA", "16974665 -ILHAM FAHRUZI", "25970218 - HUSEIN HAMID", "25970220 - RANDA HARYADI", "25010240 - RYAN MUHAIMIN NUR", "25000266 - ANDREAS RICARDO NABABAN", "25960192 - JIMI SUPRIYANTO", "25970219 - M SABIL HIDAYAT", "25990253 - WAHYU PRADANA", "25990255 - ANANDA RIZKY RIANTO", "25990252 - SALMAN ALFARISI", "25030262 - SATRIO RAMADHAN", "25020256 - PURNAMA HIDAYATULLAH", "25030261 - DHIO AWAL FADJRY", "25980294 - MUHAMMAD ANDRE JULIAN", "25900094 - HENDRO RANOVMI", "25010241 - ZHAFRAN SANDY RAMADHAN", "25010242 - FARHAN ZAIMIN", "25960191 - JONI EFFENDI", "25950192 - NOVRI HARMIKO N", "25020259 - ALDI SEPTIAN YUZA", "25000267 - MUHAMMAD FEBRIANDI", "16964429 - RICART PANGERAN", "16032051-  HUSAIN", "16984296 - RESKY NELSON", "16023358- PACU ROHIMAN SUSILO", "16911757 - IMAM SAPUTRA"],
+            "DUMAI_DURI": ["0-ABDUL MARUF", "26020007 - JORDAN NOVRI NANDA", "25900127 - DODI ENDY", "26020006 - JEFRINALDI MUSLIM", "26930002 - NOPI ERMANTO", "26030004 - BANI APRILIADI", "26020008-  ALDI SANJAYA", "26060002 - MUHAMMAD ILHAM", "25030259 - RAMADHAN EKA PUTRA", "26040004 - M NURUL RESTU", "25950191 - RAMADANI", "26030003 - DICKY ARDIANSYAH", "25740016 - M. RAMLAN", "26990019 - ILHAM KURNIAWAN", "16911355-  ADITYA", "26040011-  SURYA DHARMA", "0-IMRON", "0-ALDO", "16004376-VERY", "0-SALMAN", "26010024 - DELI", "26030018 - M.SHAIK SHAFIQ", "26060003 - NAUFAL ANDIKA RAMADHAN", "26040003 - AHMAD MUZAKIR", "26070004 - FAREL NOFRI NANDA", "25000357 - ELWANANDA NAIBAHO", "25950190 - ARDIANSYAH PUTRA", "25030258 - WENDY TIMOTEUS DORKAS SILAEN"],
+            "BKR_OUTER2": ["26000023-ALDI MAULANA", "16023030-HERI FERNANDA", "15889224-SUTRISNO", "16000271-MUHAMMAD SOBIRIN", "16022252-SULAIMAN AKBAR NST", "16000583-YUDHA MA'ARIF", "15882476-GUSDI NOFRI", "16021809-SYARIF NURMAN", "16840056-MARDANI", "15882487-IMAM SYAHRUDI", "16004302-FARHAN ATTARIK", "16003360-IHSAN SUHERMAN", "16984180-IRWAN SAPUTRA", "16983517-REZA ANANDA PRATAMA", "16002122-WAHYU KOMARA SAKTI", "16021824-YABES FERNANDO PANJAITAN", "16010737-YANUAR BIMANTARA", "16010569-SAMUEL SIHOMBING", "16994872-GUSFANI", "16991080-MAGRIBI FAHYOGI HABIB", "16992062-IKHSAN", "26030022-RIVAL", "26020078-RENDRA JUNAIDI", "0-FADLI", "26000026-DANIEL SITANGGANG", "DICKY"],
+            "ARENGKA": ["16941545 - BAHTERA TAUFIK", "15891712 - DEDEN MAULANA", "16860421 - RIKI BUDIMAN", "16984072 - ANTON WAHYUDI", "16973124 - SEPTI ANDRE", "16953692 - M. ZULJALALI WAL IKRAM", "16014115 - DIMAS PERDANA", "15891924 - MAS AGUS USMAN", "15887388 - SYAHRAL RAZI", "16961349 - AGUNG DAVIDSON", "16984101 - JHON WESLY SIREGAR", "MUHAMMAD RIDO", "16991818 - ANDRE SETIAWAN", "16995601 - RIZALDI PUTRA", "16973984 - EDO SUGANDA", "16022321 - RIZKI", "16013597 - YASSER M.HANIF ALKAHFI", "16004557 - EEN PRAYOGA", "16003652 - MUHAMMAD RIDHO", "16820347 - ALEXIS RAIMON", "16994626 - FERIDO HARTIAN", "16963752 - RIYANDA WAHYUDI", "16002120 - YOSEP OKTAVIANUS S", "15891917 - YILL BUDIMAN", "15882482 - HENDRA FRENGKY S", "16050076 - DODI FEBI YADI", "16001008 - BUDI KURNIAWAN", "16023181 - FADLI JULIZAR", "16060003 - Rendra Junaidi", "15882493 - M FADLIL", "16010737 - YANUAR BIMANTARA", "16004302 - FARHAN ATTARIK", "16984180 - IRWAN SAPUTRA", "16003360 - IHSAN SUHERMAN", "16002122 - WAHYU KOMARA SAKTI", "16983517-REZA ANANDA PRATAMA", "16030485-ILHAM PAUZI"],
+            "OUTER1": ["16901601 - SATIAR YUSRI YUSRO", "16013190 - SYAHRAN ANGGAPUTRA RIJAYA", "16953768 - KHAIRUL SABRI", "16953623 - DIO PUTRA HIDAYAT", "16911585 - DICO ARDILLA PRANENDA", "16001241 - ARIF HAYAT", "15882489 - IWAN SANTOSO", "16031323 - AKBAR", "16031733 - HAERI YANDA", "16950489 - RAHMADANI ALBI", "16060594 - FATURRAHMAN", "26040015 - RENDY YOGA SAPUTRA", "16964249 - ZULFADLI", "16031398 - MHD ALAIDDIN AQTHORY", "20921018 - RAHMAT FAJRI", "20980878 - ROMA ANANDA PUTRA", "16022623 - ARIF RAHMAN HAKIM", "0 - MUHAMMAD RIZKI", "26960010 - RAZAK GUNAWAN", "0 - ARIF FATUR RAHMAN", "16005387 - SINEMA ARO HULU", "15887382 - ERIZAL", "16005210 - NASRUL", "0 - ILYAS", "0 - FADRI FAHLEVI", "16032051-  HUSAIN", "0 - OBY", "16963737 -HERI KURNIAWAN", "16964429 - RICART PANGERAN", "16974665 -ILHAM FAHRUZI", "16023358- PACU ROHIMAN SUSILO", "0- SURIADI", "16911757 - IMAM SAPUTRA"]
+        };
+
+        // 1. OPTIMASI: PRE-RENDER DATALIST SECARA GLOBAL (Dibuat sekali saja saat awal buka)
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById('datalistsContainer');
+            let datalistsHTML = '';
+            for (const [sektorId, listNama] of Object.entries(DB_TEKNISI)) {
+                let optionsHtml = '';
+                listNama.forEach(nama => optionsHtml += `<option value="${nama}"></option>`);
+                datalistsHTML += `<datalist id="dl_${sektorId}">${optionsHtml}</datalist>`;
+            }
+            container.innerHTML = datalistsHTML;
+        });
+
+        // Mapping sheet name ke ID datalist yang sudah dibuat di atas
+        function getDatalistId(sheetName) {
+            const name = sheetName.toUpperCase();
+            if (name.includes("INDRAGIRI")) return "dl_INDRAGIRI";
+            if (name.includes("PBR")) return "dl_PBR";
+            if (name.includes("DUM") || name.includes("DRI")) return "dl_DUMAI_DURI";
+            if (name.includes("BKR") || name.includes("OUTER-2")) return "dl_BKR_OUTER2";
+            if (name.includes("ARENGKA")) return "dl_ARENGKA";
+            if (name.includes("OUTER-1")) return "dl_OUTER1";
+            return null;
+        }
+
+        const apiUrlInput = document.getElementById('apiUrl');
+        const btnFetch = document.getElementById('btnFetch');
+        const mainLoader = document.getElementById('mainLoader');
+        const bgSyncText = document.getElementById('bgSyncText');
+        const statusText = document.getElementById('statusText');
+        const emptyState = document.getElementById('emptyState');
+        const tableContainer = document.getElementById('tableContainer');
+        const tableBody = document.getElementById('ticketsTableBody');
+        const totalBadge = document.getElementById('totalBadge'); 
+        
+        let isRealTime = false;
+        let countdownId = null;
+        let secondsLeft = 15; 
+        let isEditingTableRow = false; 
+        
+        // --- OPTIMASI BARU (ANTI-LELET) ---
+        let isFetching = false; // Mencegah penumpukan request
+        let lastDataHash = "";  // Menyimpan jejak data untuk mencegah render ulang sia-sia
+
+        function setStatus(text, isError = false) {
+            statusText.textContent = text;
+            statusText.className = `text-sm font-medium ${isError ? 'text-red-600' : 'text-green-600'}`;
+            statusText.classList.remove('hidden');
+        }
+
+        async function fetchTickets(isAutoRefresh = false) {
+            const url = apiUrlInput.value.trim();
+            if (!url) { if(!isAutoRefresh) alert('URL Web App tidak boleh kosong!'); return; }
+            
+            // Cegah sinkronisasi jika user sedang mengetik/memilih teknisi, ATAU jika masih ada proses fetch yang belum selesai
+            if ((isAutoRefresh && isEditingTableRow) || isFetching) return; 
+
+            isFetching = true; // Kunci: Tandai bahwa sistem sedang mengambil data
+
+            // UI State loading (Lebih halus untuk auto refresh)
+            if (!isAutoRefresh) {
+                btnFetch.disabled = true;
+                btnFetch.classList.add('opacity-70');
+                mainLoader.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                emptyState.classList.add('hidden');
+                totalBadge.classList.add('hidden');
+            } else {
+                bgSyncText.classList.remove('hidden'); // Indikator halus
+            }
+            statusText.classList.add('hidden');
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                // Double check memastikan user belum mulai mengetik saat proses fetch berlangsung
+                if (isAutoRefresh && isEditingTableRow) {
+                    bgSyncText.classList.add('hidden');
+                    isFetching = false; // Lepas kunci
+                    return; 
+                }
+
+                if (result.status === 'success') {
+                    // === SMART RENDER (ANTI-LAG) ===
+                    // Cek apakah data benar-benar berubah sebelum merusak/merender ulang tabel
+                    const currentDataHash = JSON.stringify(result.data);
+                    
+                    if (isAutoRefresh && currentDataHash === lastDataHash) {
+                        // Data sama persis, abaikan proses render untuk menghemat resource browser
+                        bgSyncText.classList.add('hidden');
+                    } else {
+                        // Data berbeda, simpan jejak baru lalu render tabel
+                        lastDataHash = currentDataHash; 
+                        setStatus(`Berhasil memuat ${result.total} tiket.`);
+                        renderTable(result.data); 
+                    }
+                } else {
+                    setStatus(`Gagal: ${result.message}`, true);
+                    if (!isAutoRefresh) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.querySelector('h3').textContent = "Terjadi Kesalahan";
+                        emptyState.querySelector('p').textContent = result.message;
+                    }
+                }
+            } catch (error) {
+                setStatus(`Network Error.`, true);
+                if (!isAutoRefresh) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.querySelector('h3').textContent = "Gagal Terhubung";
+                }
+            } finally {
+                isFetching = false; // Wajib dilepas agar Auto-Refresh berikutnya bisa jalan
+                if (!isAutoRefresh) {
+                    btnFetch.disabled = false;
+                    btnFetch.classList.remove('opacity-70');
+                    mainLoader.classList.add('hidden');
+                } else {
+                    bgSyncText.classList.add('hidden');
+                }
+            }
+        }
+
+        // 2. OPTIMASI RENDER: MENGGUNAKAN BATCH HTML STRING (Jauh lebih cepat dari DOM appendChild satu-satu)
+        function renderTable(tickets) {
+            if (!tickets || tickets.length === 0) {
+                emptyState.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                totalBadge.classList.add('hidden');
+                tableBody.innerHTML = '';
+                return;
+            }
+
+            tableContainer.classList.remove('hidden');
+            totalBadge.textContent = tickets.length;
+            totalBadge.classList.remove('hidden');
+
+            const PRIORITAS_TOP = ["TTR 3 JD", "TTR 6 JP", "TTR 3 JM", "TTR 12 JG", "TTR 36 J", "SQM", "Z_PERMINTAAN", "MANUAL"];
+
+            tickets.sort((a, b) => {
+                const textA = Object.values(a).join(" ").toUpperCase();
+                const textB = Object.values(b).join(" ").toUpperCase();
+                let scoreA = 999; let scoreB = 999;
+                for (let i = 0; i < PRIORITAS_TOP.length; i++) {
+                    if (scoreA === 999 && textA.includes(PRIORITAS_TOP[i])) scoreA = i;
+                    if (scoreB === 999 && textB.includes(PRIORITAS_TOP[i])) scoreB = i;
+                }
+                return scoreA - scoreB;
+            });
+
+            // Merakit HTML ke dalam variabel text terlebih dahulu (SUPER CEPAT)
+            let rowsHtmlContent = '';
+
+            tickets.forEach((tiket, index) => {
+                const isHvc = tiket.FLAG_HVC && tiket.FLAG_HVC.toString().toUpperCase() === 'YES';
+                const hvcBadge = isHvc ? `<span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded border border-amber-200">YES</span>` : `<span class="text-slate-400">-</span>`;
+                
+                const ticketText = Object.values(tiket).join(" ").toUpperCase();
+                let matchedPriority = "";
+                for (let p of PRIORITAS_TOP) { if (ticketText.includes(p)) { matchedPriority = p; break; } }
+                
+                const priorityBadge = matchedPriority ? `<div class="mt-1.5"><span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded shadow-sm whitespace-nowrap"><i class="fas fa-arrow-up mr-1"></i>${matchedPriority}</span></div>` : '';
+                const bgClass = matchedPriority ? "bg-purple-50/20" : "";
+
+                // Ambil referensi ke Datalist yang sudah di-pre-render
+                const datalistId = getDatalistId(tiket.NAMA_SHEET);
+                const hasTeknisi = datalistId !== null;
+                const inputState = hasTeknisi ? "" : "disabled";
+                const inputPlaceholder = hasTeknisi ? "Ketik/Pilih Teknisi..." : "Tidak ada data";
+
+                const idSelect1 = `t1_${index}`;
+                const idSelect2 = `t2_${index}`;
+                const idBtnSubmit = `btn_${index}`;
+
+                rowsHtmlContent += `
+                    <tr class="hover:bg-blue-50/50 transition-colors group ${bgClass}">
+                        <td class="px-4 py-3 font-bold text-slate-800 align-top pt-4">${tiket.NO_TIKET || '-'}${priorityBadge}</td>
+                        <td class="px-4 py-3 text-xs font-semibold text-blue-600 bg-blue-50/30 align-top pt-4">${tiket.NAMA_SHEET || '-'}</td>
+                        <td class="px-4 py-3 align-top pt-4">${tiket.SEKTOR || '-'}</td>
+                        <td class="px-4 py-3 align-top pt-4">${tiket.STO || '-'}</td>
+                        <td class="px-4 py-3 truncate max-w-[150px] align-top pt-4" title="${tiket.CUST_ASSIGN || ''}">${tiket.CUST_ASSIGN || '-'}</td>
+                        <td class="px-4 py-3 align-top pt-4">${hvcBadge}</td>
+                        <td class="px-4 py-3 truncate max-w-[150px] align-top pt-4" title="${tiket.DATEK || ''}">${tiket.DATEK || '-'}</td>
+                        <td class="px-4 py-3 align-top pt-4">${tiket.NO_JASTEL || '-'}</td>
+                        <td class="px-4 py-2 align-top pt-3"><input type="text" id="${idSelect1}" list="${datalistId || ''}" ${inputState} placeholder="${inputPlaceholder}" autocomplete="off" oninput="markEditing()" onfocus="markEditing()" class="w-56 text-xs px-2 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white shadow-sm disabled:bg-slate-100"></td>
+                        <td class="px-4 py-2 align-top pt-3"><input type="text" id="${idSelect2}" list="${datalistId || ''}" ${inputState} placeholder="${inputPlaceholder} (Opsional)" autocomplete="off" oninput="markEditing()" onfocus="markEditing()" class="w-56 text-xs px-2 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white shadow-sm disabled:bg-slate-100"></td>
+                        <td class="px-4 py-2 text-center sticky right-0 bg-white group-hover:bg-blue-50/90 shadow-[-4px_0_6px_rgba(0,0,0,0.02)] border-l border-slate-100 align-top pt-3">
+                            <button id="${idBtnSubmit}" onclick="submitRowUpdate('${tiket.NAMA_SHEET}', ${tiket.ROW_NUMBER}, '${idSelect1}', '${idSelect2}', '${idBtnSubmit}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded flex items-center gap-1 mx-auto whitespace-nowrap shadow-sm"><i class="fas fa-save"></i> Simpan</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Masukkan seluruh baris ke HTML secara instan (1 kali operasi DOM)
+            tableBody.innerHTML = rowsHtmlContent;
+        }
+
+        async function submitRowUpdate(sheet, rowNum, select1Id, select2Id, btnId) {
+            const valT1 = document.getElementById(select1Id).value.trim();
+            const valT2 = document.getElementById(select2Id).value.trim();
+            if (!valT1) { alert('Silakan ketik/pilih Teknisi 1 terlebih dahulu!'); return; }
+
+            const datalistId = getDatalistId(sheet);
+            const validTeknisiList = DB_TEKNISI[datalistId ? datalistId.replace('dl_', '') : ""] || [];
+            
+            if (validTeknisiList.length > 0) {
+                if (!validTeknisiList.includes(valT1)) { alert('Nama Teknisi 1 tidak valid!'); document.getElementById(select1Id).focus(); return; }
+                if (valT2 && !validTeknisiList.includes(valT2)) { alert('Nama Teknisi 2 tidak valid!'); document.getElementById(select2Id).focus(); return; }
+            }
+
+            const url = apiUrlInput.value.trim();
+            const btn = document.getElementById(btnId);
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<div class="loader loader-sm mr-1"></div> Menyimpan...`;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            const payload = { namaSheet: sheet, rowNumber: parseInt(rowNum), teknisi1: valT1, teknisi2: valT2 };
+
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    btn.classList.replace('bg-blue-600', 'bg-green-500');
+                    btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
+                    btn.innerHTML = `<i class="fas fa-check"></i> Sukses`;
+                    clearEditingState();
+                    setTimeout(() => fetchTickets(true), 1000); 
+                } else {
+                    alert('Gagal menyimpan: ' + result.message); resetButton(btn, originalBtnHtml);
+                }
+            } catch (error) { alert('Terjadi kesalahan jaringan.'); resetButton(btn, originalBtnHtml); }
+        }
+
+        function resetButton(btn, originalHtml) { btn.disabled = false; btn.innerHTML = originalHtml; btn.classList.remove('opacity-75', 'cursor-not-allowed'); }
+        function markEditing() { isEditingTableRow = true; updateCountdownText(); }
+        function clearEditingState() { isEditingTableRow = false; updateCountdownText(); }
+        
+        // Deteksi jika user klik di luar form input, matikan mode editing
+        document.addEventListener('click', function(event) { 
+            if (!tableContainer.contains(event.target) && isEditingTableRow) clearEditingState(); 
+        });
+
+        function toggleRealTime() {
+            isRealTime = document.getElementById('realtimeToggle').checked;
+            if(isRealTime) { startPolling(); if(tableBody.innerHTML === '') fetchTickets(); } else { stopPolling(); }
+        }
+
+        function startPolling() {
+            secondsLeft = 15; updateCountdownText();
+            countdownId = setInterval(() => {
+                if (!isEditingTableRow) { 
+                    secondsLeft--;
+                    if(secondsLeft <= 0) { fetchTickets(true); secondsLeft = 15; }
+                    updateCountdownText();
+                }
+            }, 1000);
+        }
+
+        function stopPolling() { clearInterval(countdownId); document.getElementById('countdownText').textContent = ""; }
+        function updateCountdownText() { document.getElementById('countdownText').textContent = isEditingTableRow ? "(Menunggu Anda)" : `(${secondsLeft}s)`; }
+
+    </script>
+</body>
+</html>
+  </template>
+
+  <script>
+    const loaded = { app1: false, app2: false };
+
+    function injectSrcDoc(frameId, tplId) {
+      const frame = document.getElementById(frameId);
+      const tpl = document.getElementById(tplId);
+      if (!frame || !tpl) return;
+      frame.srcdoc = tpl.innerHTML;
+    }
+
+    function setActiveButton(activeId) {
+      const btn1 = document.getElementById('btnApp1');
+      const btn2 = document.getElementById('btnApp2');
+      if (activeId === 'app1') {
+        btn1.classList.add('active');
+        btn2.classList.remove('active');
+      } else {
+        btn2.classList.add('active');
+        btn1.classList.remove('active');
+      }
+    }
+
+    function switchTab(id) {
+      const panel1 = document.getElementById('panel1');
+      const panel2 = document.getElementById('panel2');
+      if (id === 'app1') {
+        panel1.classList.remove('hidden');
+        panel2.classList.add('hidden');
+        setActiveButton('app1');
+        if (!loaded.app1) {
+          injectSrcDoc('frame1', 'tpl1');
+          loaded.app1 = true;
+        }
+      } else {
+        panel1.classList.add('hidden');
+        panel2.classList.remove('hidden');
+        setActiveButton('app2');
+        if (!loaded.app2) {
+          injectSrcDoc('frame2', 'tpl2');
+          loaded.app2 = true;
+        }
+      }
+    }
+
+    // Load first app by default.
+    switchTab('app1');
+  </script>
 </body>
 </html>
