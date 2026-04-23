@@ -478,7 +478,8 @@ const menuItems = [
     { id: 'UNDERSPEC', label: '4. Tiket Underspec', shortLabel: 'Tiket Underspec', icon: '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' },
     { id: 'Z_PERMINTAAN', label: '5. Tiket Permintaan', shortLabel: 'Tiket Permintaan', icon: '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>' },
     { id: 'MONITORING_ORDER', label: '6. Monitoring Teknisi', shortLabel: 'Monitoring Teknisi', icon: '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' },
-    { id: 'KEHADIRAN_TEKNISI', label: '7. Kehadiran Teknisi', shortLabel: 'Kehadiran Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>' }
+    { id: 'KEHADIRAN_TEKNISI', label: '7. Kehadiran Teknisi', shortLabel: 'Kehadiran Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>' },
+    { id: 'BELUM_ORDER', label: '8. Warning !!! Belum Order', shortLabel: 'Tiket Belum Order', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' }
 ];
 
 const distClassMap = {
@@ -722,6 +723,11 @@ function getBaseData() {
         
         if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'MONITORING_ORDER' || ticketTypeMode === 'KEHADIRAN_TEKNISI') return true; 
         
+        if (ticketTypeMode === 'BELUM_ORDER') {
+            let tek1 = (r["TEKNISI 1"] || "").toString().trim();
+            return isTicketOpen(r) && (tek1 === "" || tek1 === "-");
+        }
+        
         if (ticketTypeMode === 'REGULER') {
             return !isSqm && !isZPerm && !isUnderspec; 
         }
@@ -775,14 +781,22 @@ function renderSidebar() {
     const nav = document.getElementById('sidebarNav'); if(!nav) return;
     nav.innerHTML = menuItems.map(item => {
         const act = item.id === ticketTypeMode;
-        const bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
-        const iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
+        let bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
+        let iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
+        let labelCls = "text-left tracking-wide leading-tight";
+        
+        if (item.id === 'BELUM_ORDER') {
+            bgCls = act ? "bg-rose-50 text-rose-700 shadow-sm border border-rose-100 ring-1 ring-rose-500/10" : "text-rose-600 hover:bg-rose-50 hover:text-rose-800 border border-transparent";
+            iconCls = act ? "text-rose-600 scale-110" : "text-rose-500";
+            labelCls += " font-black";
+        }
+        
         return `
         <button onclick="setTicketType('${item.id}', '${item.shortLabel}')" class="w-full flex items-center px-4 py-3 mb-1.5 rounded-[12px] text-sm font-extrabold transition-all duration-300 ${bgCls}">
             <div class="flex-shrink-0 w-8 flex justify-start items-center transition-transform ${iconCls}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">${item.icon}</svg>
             </div>
-            <span class="text-left tracking-wide leading-tight">${item.label}</span>
+            <span class="${labelCls}">${item.label}</span>
         </button>`;
     }).join("");
 }
@@ -1517,7 +1531,7 @@ function renderReportTable() {
     }
     else if(ticketTypeMode==='SQM') displayCats = categoryConfigs.filter(x => x.id === 'SQM');
     else if(ticketTypeMode==='Z_PERMINTAAN') displayCats = categoryConfigs.filter(x => x.id === 'Z_PERMINTAAN');
-    else if(ticketTypeMode==='ALL_TIKET') {
+    else if(ticketTypeMode==='ALL_TIKET' || ticketTypeMode==='BELUM_ORDER') {
         // Hapus UNDERSPEC dari matriks standar agar tidak dobel karena memiliki format tabel yang berbeda
         displayCats = categoryConfigs.filter(x => x.id !== 'UNDERSPEC');
     }
@@ -1668,7 +1682,7 @@ function renderReportTable() {
     html += `</tbody></table>`;
     
     // Tambahkan format tabel khusus Underspec jika sedang di Dashboard All Tiket
-    if (ticketTypeMode === 'ALL_TIKET') {
+    if (ticketTypeMode === 'ALL_TIKET' || ticketTypeMode === 'BELUM_ORDER') {
         html += `<div class="mt-12 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h3 class="font-black text-slate-800 flex items-center gap-2">
                         <span class="p-1.5 bg-slate-800 text-white rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-width="2"></path></svg></span>
