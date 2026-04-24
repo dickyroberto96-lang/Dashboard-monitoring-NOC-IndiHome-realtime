@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FULL GABUNGAN ANTI LELET</title>
+  <title>Dashboard Monitoring</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     html, body { height: 100%; }
@@ -76,6 +76,12 @@
     </div>
     <div id="panel2" class="w-full h-full hidden">
       <iframe id="frame2" title="Warning !!! Belum Order"></iframe>
+    </div>
+    <div id="panel3" class="w-full h-full hidden">
+      <iframe id="frame3" title="Analisa Penyebab Gangguan"></iframe>
+    </div>
+    <div id="panel4" class="w-full h-full hidden">
+      <iframe id="frame4" title="Produktifitas Teknisi Assurance Ridar"></iframe>
     </div>
   </div>
 
@@ -165,7 +171,7 @@
             </div>
         </div>
         <div class="flex-1 overflow-y-auto py-5 px-4">
-            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 px-3">Jenis Tiket</div>
+            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 px-3">MAIN MENU</div>
             <nav class="space-y-1" id="sidebarNav"></nav>
         </div>
     </aside>
@@ -559,9 +565,10 @@ const menuItems = [
     { id: 'SQM', label: '3. Tiket SQM', shortLabel: 'Tiket SQM', icon: '<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>' },
     { id: 'UNDERSPEC', label: '4. Tiket Underspec', shortLabel: 'Tiket Underspec', icon: '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' },
     { id: 'Z_PERMINTAAN', label: '5. Tiket Permintaan', shortLabel: 'Tiket Permintaan', icon: '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>' },
-    { id: 'MONITORING_ORDER', label: '6. Monitoring Teknisi', shortLabel: 'Monitoring Teknisi', icon: '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' },
-    { id: 'KEHADIRAN_TEKNISI', label: '7. Kehadiran Teknisi', shortLabel: 'Kehadiran Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>' },
-    { id: 'BELUM_ORDER', label: '8. Warning !!! Belum Order', shortLabel: 'Tiket Belum Order', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>' }
+    { id: 'ANALISA_PENYEBAB_GANGGUAN', label: '6. Analisa Penyebab Gangguan', shortLabel: 'Analisa Penyebab Gangguan', icon: '<path d="M9 19V6l12 6-12 7Zm0 0L3 13l6-7"></path>' },
+    { id: 'MONITORING_ORDER', label: '1. Monitoring Teknisi', shortLabel: 'Monitoring Teknisi', icon: '<path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>' },
+    { id: 'PRODUKTIFITAS_TEKNISI', label: '2. Produktivitas Teknisi', shortLabel: 'Produktivitas Teknisi', icon: '<path d="M13 16h-1v-4h-1m1-4h.01M12 20h9"></path>' },
+    { id: 'KEHADIRAN_TEKNISI', label: '3. Kehadiran Teknisi', shortLabel: 'Kehadiran Teknisi', icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>' }
 ];
 
 const distClassMap = {
@@ -585,6 +592,7 @@ let expandedSektors = new Set();
 let activeModal = null;
 let chartDailyAreaInst = null;
 let chartMonitoringInst = null;
+let sidebarGroupOpen = { tiket: true, teknisi: true };
 
 // Helper: Custom Toast to replace alert()
 function showToast(msg) {
@@ -876,20 +884,30 @@ function getActiveKehadiranData() {
 }
 
 // ===== 3. COMPONENT RENDERERS =====
+function toggleSidebarGroup(key) {
+    sidebarGroupOpen[key] = !sidebarGroupOpen[key];
+    renderSidebar();
+}
+window.toggleSidebarGroup = toggleSidebarGroup;
+
 function renderSidebar() {
     const nav = document.getElementById('sidebarNav'); if(!nav) return;
-    nav.innerHTML = menuItems.map(item => {
+    const grouped = {
+        tiket: menuItems.filter(item => ['ALL_TIKET', 'REGULER', 'SQM', 'UNDERSPEC', 'Z_PERMINTAAN', 'ANALISA_PENYEBAB_GANGGUAN'].includes(item.id)),
+        teknisi: menuItems.filter(item => ['MONITORING_ORDER', 'PRODUKTIFITAS_TEKNISI', 'KEHADIRAN_TEKNISI'].includes(item.id))
+    };
+
+    const renderItem = (item) => {
         const act = item.id === ticketTypeMode;
+        const isSpecial = item.id === 'ANALISA_PENYEBAB_GANGGUAN' || item.id === 'PRODUKTIFITAS_TEKNISI';
         let bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
         let iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
         let labelCls = "text-left tracking-wide leading-tight";
-        
-        if (item.id === 'BELUM_ORDER') {
-            bgCls = act ? "bg-rose-50 text-rose-700 shadow-sm border border-rose-100 ring-1 ring-rose-500/10" : "text-rose-600 hover:bg-rose-50 hover:text-rose-800 border border-transparent";
-            iconCls = act ? "text-rose-600 scale-110" : "text-rose-500";
+        if (isSpecial) {
+            bgCls = act ? "bg-violet-50 text-violet-700 shadow-sm border border-violet-100 ring-1 ring-violet-500/10" : "text-violet-600 hover:bg-violet-50 hover:text-violet-800 border border-transparent";
+            iconCls = act ? "text-violet-600 scale-110" : "text-violet-500";
             labelCls += " font-black";
         }
-        
         return `
         <button onclick="setTicketType('${item.id}', '${item.shortLabel}')" class="w-full flex items-center px-4 py-3 mb-1.5 rounded-[12px] text-sm font-extrabold transition-all duration-300 ${bgCls}">
             <div class="flex-shrink-0 w-8 flex justify-start items-center transition-transform ${iconCls}">
@@ -897,7 +915,28 @@ function renderSidebar() {
             </div>
             <span class="${labelCls}">${item.label}</span>
         </button>`;
-    }).join("");
+    };
+
+    nav.innerHTML = `
+        <div class="mb-4">
+            <button onclick="toggleSidebarGroup('tiket')" class="w-full flex items-center justify-between px-4 py-3 rounded-[14px] bg-slate-900 text-white font-black text-xs tracking-[0.22em] uppercase shadow-md">
+                <span>Kawal Tiket</span>
+                <span class="text-[10px] opacity-90">${sidebarGroupOpen.tiket ? '−' : '+'}</span>
+            </button>
+            <div class="${sidebarGroupOpen.tiket ? '' : 'hidden'} mt-2 space-y-1">
+                ${grouped.tiket.map(renderItem).join('')}
+            </div>
+        </div>
+        <div class="mb-2">
+            <button onclick="toggleSidebarGroup('teknisi')" class="w-full flex items-center justify-between px-4 py-3 rounded-[14px] bg-slate-900 text-white font-black text-xs tracking-[0.22em] uppercase shadow-md">
+                <span>Kawal Teknisi</span>
+                <span class="text-[10px] opacity-90">${sidebarGroupOpen.teknisi ? '−' : '+'}</span>
+            </button>
+            <div class="${sidebarGroupOpen.teknisi ? '' : 'hidden'} mt-2 space-y-1">
+                ${grouped.teknisi.map(renderItem).join('')}
+            </div>
+        </div>
+    `;
 }
 window.renderSidebar = renderSidebar;
 
@@ -941,7 +980,20 @@ function renderTable(data) {
 window.renderTable = renderTable;
 
 // ===== 4. ACTION HANDLERS =====
-function setTicketType(id, label) { ticketTypeMode = id; document.getElementById('mainDashboardTitle').innerText = label; renderSidebar(); updateDashboard(); }
+function setTicketType(id, label) {
+    if (id === 'ANALISA_PENYEBAB_GANGGUAN' && parent && parent.switchTab) {
+        parent.switchTab('app3');
+        return;
+    }
+    if (id === 'PRODUKTIFITAS_TEKNISI' && parent && parent.switchTab) {
+        parent.switchTab('app4');
+        return;
+    }
+    ticketTypeMode = id;
+    document.getElementById('mainDashboardTitle').innerText = label;
+    renderSidebar();
+    updateDashboard();
+}
 window.setTicketType = setTicketType;
 
 function setMode(newMode) { mode = newMode; updateDashboard(); }
@@ -3206,8 +3258,1018 @@ load(); setInterval(load, 60000);
 </html>
   </template>
 
+  <template id="tpl3">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard NOC - Analisa Penyebab Gangguan</title>
+    <style>
+        /* CSS Murni - Tanpa dependensi eksternal untuk loading super cepat */
+        :root {
+            --bg-main: #008B8B;
+            --text-light: #ffffff;
+            --border-color: #cbd5e1;
+            --row-dark: #475569;
+            --row-gray: #64748b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f1f5f9;
+            padding: 20px;
+        }
+
+        .table-container {
+            width: 100%;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            background-clip: padding-box; /* Membantu menjaga border tetap rapi saat elemen sticky */
+        }
+
+        /* ===== BEKUKAN SELURUH AREA KEPALA TABEL ===== */
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background-color: white; /* Mencegah baris bawah terlihat tembus pandang */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); /* Bayangan pemisah saat discroll */
+        }
+        
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background-color: white;
+            text-align: left;
+            z-index: 20;
+            font-weight: bold;
+            min-width: 200px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        thead .sticky-col {
+            z-index: 50; /* Harus paling atas di sudut kiri pertemuan scroll x dan y */
+            background-color: var(--bg-main);
+            color: var(--text-light);
+        }
+
+        .header-title {
+            background-color: var(--bg-main);
+            color: var(--text-light);
+            font-size: 16px;
+            padding: 12px;
+            letter-spacing: 1px;
+        }
+
+        .area-header {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            height: 180px;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+
+        .header-top-left {
+            vertical-align: middle !important;
+            text-align: center !important;
+            padding: 0 !important;
+        }
+        
+        .top-left-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 180px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .top-left-wrapper hr {
+            width: 85%;
+            border: none;
+            border-top: 1px solid var(--text-light);
+            margin: 20px 0;
+        }
+        
+        .top-left-text {
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* Warna Area */
+        .bg-arengka { background-color: #bfdbfe; }
+        .bg-bukitraya { background-color: #e2e8f0; }
+        .bg-dumai { background-color: #bbf7d0; }
+        .bg-rengat { background-color: #fecdd3; }
+        .bg-kerinci { background-color: #fef08a; }
+        .bg-pbr-barat { background-color: #e9d5ff; }
+        .bg-pbr-timur { background-color: #d8b4fe; }
+        .bg-grandtotal { background-color: #a16207; color: white; }
+
+        .sto-header {
+            background-color: #f8fafc;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .row-total-sto { background-color: var(--row-dark); color: white; font-weight: bold; }
+        .row-total-area { background-color: var(--row-gray); color: white; font-weight: bold; }
+
+        /* Heatmap Colors */
+        .heat-1 { background-color: #fee2e2; }
+        .heat-2 { background-color: #fca5a5; }
+        .heat-3 { background-color: #ef4444; color: white; font-weight: bold; }
+        
+        tbody tr:hover td:not(.sticky-col) {
+            background-color: #f1f5f9;
+        }
+
+        /* Loading indicator */
+        .loading-text {
+            color: #fef08a;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="parent.switchTab('app1')" style="position:fixed;top:12px;right:12px;z-index:9999;padding:10px 14px;border-radius:14px;border:0;background:#0f172a;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(15,23,42,.18)">← Kembali ke Dashboard</button>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th colspan="34" class="header-title" id="real-time-header">ANALISA PENYEBAB GANGGUAN | Memuat Dashboard...</th>
+            </tr>
+            <tr>
+                <th class="sticky-col header-top-left">
+                    <div class="top-left-wrapper">
+                        <span class="top-left-text">SERVICE AREA</span>
+                        <hr>
+                        <span class="top-left-text">PENYEBAB GANGGUAN</span>
+                    </div>
+                </th>
+                <th class="area-header bg-arengka">ARENGKA</th>
+                <th colspan="7" class="area-header bg-bukitraya">BUKIT RAYA</th>
+                <th colspan="7" class="area-header bg-dumai">DUMAI</th> 
+                <th colspan="8" class="area-header bg-rengat">RENGAT</th>
+                <th colspan="5" class="area-header bg-kerinci">PANGKALAN KERINCI</th>
+                <th colspan="2" class="area-header bg-pbr-barat">PEKANBARU BARAT</th>
+                <th colspan="2" class="area-header bg-pbr-timur">PEKANBARU TIMUR</th>
+                <th class="area-header bg-grandtotal">GRANDTOTAL</th>
+            </tr>
+            <tr class="sto-header" id="sto-headers">
+                <th class="sticky-col" rowspan="2" style="background-color: #008B8B; color: white; text-align: center; vertical-align: middle;">TOTAL / STO</th>
+                <!-- Dibuat statis agar struktur tabel terjaga, nilainya akan diinjeksi via JS -->
+                <th>ARK</th><th>UBT</th><th>BKN</th><th>PPN</th><th>BKR</th><th>SEA</th><th>SAK</th><th>SGP</th>
+                <th>DUM</th><th>BGU</th><th>DRI</th><th>BAG</th><th>BAS</th><th>UJT</th><th>SLJ</th>
+                <th>TAK</th><th>RGT</th><th>AMK</th><th>TBH</th><th>PMB</th><th>KLE</th><th>PNP</th><th>BLS</th>
+                <th>PKR</th><th>MIS</th><th>SOK</th><th>PWG</th><th>RBI</th>
+                <th>PBRC 1</th><th>PBRC 2</th><th>PBRC 3</th><th>PBRC 4</th>
+                <th style="background-color: #a16207; color: white;">TOTAL</th>
+            </tr>
+            <tr class="row-total-sto" id="row-total-sto">
+                <!-- Data ini akan dirender otomatis oleh JavaScript -->
+            </tr>
+            <tr class="row-total-area" id="row-total-area">
+                <!-- Data ini akan dirender otomatis oleh JavaScript -->
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <tr>
+                <td colspan="34" style="padding: 30px; font-size: 14px; background: white;">
+                    Sedang mengambil data real-time dari Google Sheets... <br>
+                    <small>Pastikan Sheet 'ALL TIKET' sudah di-Publish to the Web (CSV).</small>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Konfigurasi Google Sheets
+    const sheetId = '1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go';
+    const sheetName = 'ALL TIKET';
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+
+    // Urutan STO untuk mapping
+    const stoOrder = [
+        'ARK', 'UBT', 'BKN', 'PPN', 'BKR', 'SEA', 'SAK', 'SGP',
+        'DUM', 'BGU', 'DRI', 'BAG', 'BAS', 'UJT', 'SLJ',
+        'TAK', 'RGT', 'AMK', 'TBH', 'PMB', 'KLE', 'PNP', 'BLS',
+        'PKR', 'MIS', 'SOK', 'PWG', 'RBI',
+        'PBRC 1', 'PBRC 2', 'PBRC 3', 'PBRC 4'
+    ];
+
+    // Mapping STO ke Area
+    const areas = {
+        'arengka': { span: 1, stos: ['ARK'] },
+        'bukitraya': { span: 7, stos: ['UBT', 'BKN', 'PPN', 'BKR', 'SEA', 'SAK', 'SGP'] },
+        'dumai': { span: 7, stos: ['DUM', 'BGU', 'DRI', 'BAG', 'BAS', 'UJT', 'SLJ'] },
+        'rengat': { span: 8, stos: ['TAK', 'RGT', 'AMK', 'TBH', 'PMB', 'KLE', 'PNP', 'BLS'] },
+        'kerinci': { span: 5, stos: ['PKR', 'MIS', 'SOK', 'PWG', 'RBI'] },
+        'pbr_barat': { span: 2, stos: ['PBRC 1', 'PBRC 2'] },
+        'pbr_timur': { span: 2, stos: ['PBRC 3', 'PBRC 4'] }
+    };
+
+    // Waktu Realtime
+    let clockInterval;
+    function updateClock(statusText = "") {
+        const now = new Date();
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const day = now.getDate();
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const timeString = `ANALISA PENYEBAB GANGGUAN | ${day} ${month} ${year} | ${hours}:${minutes}:${seconds} WIB`;
+        
+        if (statusText) {
+            document.getElementById('real-time-header').innerHTML = `${timeString} <span class="loading-text">(${statusText})</span>`;
+        } else {
+            document.getElementById('real-time-header').textContent = timeString;
+        }
+    }
+
+    // CSV Parser sederhana
+    function parseCSV(str) {
+        const arr = [];
+        let quote = false;
+        for (let row = 0, col = 0, c = 0; c < str.length; c++) {
+            let cc = str[c], nc = str[c+1];
+            arr[row] = arr[row] || [];
+            arr[row][col] = arr[row][col] || '';
+            if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+            if (cc == '"') { quote = !quote; continue; }
+            if (cc == ',' && !quote) { ++col; continue; }
+            if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+            if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+            if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+            arr[row][col] += cc;
+        }
+        return arr;
+    }
+
+    let isLoadingData = false;
+    let lastSuccessLoad = 0;
+
+    async function loadDataFromGoogleSheets(force = false) {
+        // PERBAIKAN: Ubah pengecekan aktif tab menjadi app3 (Analisa Penyebab Gangguan)
+        if (window.parent && window.parent.__activeTab && window.parent.__activeTab !== 'app3') return;
+        if (isLoadingData) return;
+        if (!force && lastSuccessLoad && (Date.now() - lastSuccessLoad) < 15000) return;
+
+        isLoadingData = true;
+        clearInterval(clockInterval);
+        updateClock("Sinkronisasi Data...");
+
+        try {
+            const response = await fetch(csvUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const csvText = await response.text();
+            
+            // Periksa jika dokumen HTML Login Google yang dikembalikan (artinya belum di-publish)
+            if(csvText.includes('<!DOCTYPE html>')) {
+                 throw new Error("Sheet belum di Publikasikan (Publish to the web)");
+            }
+
+            const data = parseCSV(csvText);
+            processData(data);
+
+            // Menjalankan jam kembali setelah sukses
+            lastSuccessLoad = Date.now();
+            clockInterval = setInterval(() => updateClock(), 1000);
+            updateClock(); 
+
+        } catch (error) {
+            console.error("Gagal mengambil data:", error);
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="34" style="padding: 30px; color: red; background: #fee2e2;"><b>Gagal menghubungkan ke Google Sheets.</b><br>Pastikan Anda sudah melakukan: File > Bagikan > Publikasikan ke web > Pilih Sheet "ALL TIKET" > Pilih Format "CSV".</td></tr>`;
+        } finally {
+            isLoadingData = false;
+        }
+    }
+
+    function processData(data) {
+        const counts = {}; // Menyimpan hitungan penyebab -> STO
+        const stoTotals = {}; // Total per STO
+        let grandTotal = 0;
+
+        // Inisialisasi STO
+        stoOrder.forEach(sto => stoTotals[sto] = 0);
+
+        // Parsing baris per baris (mulai dari 1 untuk melewati header)
+        for(let i = 1; i < data.length; i++) {
+            const row = data[i];
+            
+            // Kolom B (index 1) = SEKTOR, Kolom C (index 2) = STO, Kolom AA (index 26) = ANALISA
+            if(!row || row.length < 27) continue; 
+            
+            let stoRaw = row[2] ? row[2].trim().toUpperCase() : "";
+            const sektorRaw = row[1] ? row[1].trim().toUpperCase() : "";
+            const penyebab = row[26] ? row[26].trim().toUpperCase() : "";
+
+            // LOGIKA KHUSUS PEKANBARU (PBRC 1 - 4): Ambil dari Kolom SEKTOR
+            if (sektorRaw.includes('PBRC 1') || sektorRaw === 'PBRC1') stoRaw = 'PBRC 1';
+            else if (sektorRaw.includes('PBRC 2') || sektorRaw === 'PBRC2') stoRaw = 'PBRC 2';
+            else if (sektorRaw.includes('PBRC 3') || sektorRaw === 'PBRC3') stoRaw = 'PBRC 3';
+            else if (sektorRaw.includes('PBRC 4') || sektorRaw === 'PBRC4') stoRaw = 'PBRC 4';
+
+            if(stoRaw && penyebab) {
+                // Catat ke dalam matrix jika STO dikenali di kolom kita
+                if (stoTotals[stoRaw] !== undefined) {
+                    if(!counts[penyebab]) counts[penyebab] = {};
+                    if(!counts[penyebab][stoRaw]) counts[penyebab][stoRaw] = 0;
+                    
+                    counts[penyebab][stoRaw]++;
+                    stoTotals[stoRaw]++;
+                    grandTotal++;
+                }
+            }
+        }
+
+        renderDashboard(counts, stoTotals, grandTotal);
+    }
+
+    function renderDashboard(counts, stoTotals, grandTotal) {
+        // 1. Render Baris Total STO
+        const rowTotalSto = document.getElementById('row-total-sto');
+        rowTotalSto.innerHTML = '';
+        stoOrder.forEach(sto => {
+            const td = document.createElement('td');
+            td.textContent = stoTotals[sto];
+            rowTotalSto.appendChild(td);
+        });
+        const tdGrandSto = document.createElement('td');
+        tdGrandSto.textContent = grandTotal;
+        rowTotalSto.appendChild(tdGrandSto);
+
+        // 2. Render Baris Total AREA
+        const rowTotalArea = document.getElementById('row-total-area');
+        rowTotalArea.innerHTML = '<td class="sticky-col" style="background-color: #64748b; color: white;">TOTAL / AREA</td>';
+        
+        for (const [areaName, areaData] of Object.entries(areas)) {
+            let sumArea = 0;
+            areaData.stos.forEach(s => sumArea += stoTotals[s]);
+            
+            const td = document.createElement('td');
+            td.colSpan = areaData.span;
+            td.textContent = sumArea;
+            rowTotalArea.appendChild(td);
+        }
+        const tdGrandArea = document.createElement('td');
+        tdGrandArea.textContent = grandTotal;
+        rowTotalArea.appendChild(tdGrandArea);
+
+        // 3. Render Body Penyebab
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        // Urutkan alfabetis penyebabnya
+        const causes = Object.keys(counts).sort();
+
+        causes.forEach(cause => {
+            const tr = document.createElement('tr');
+            
+            // Kolom Nama Penyebab
+            const tdCause = document.createElement('td');
+            tdCause.className = 'sticky-col';
+            tdCause.textContent = cause;
+            tr.appendChild(tdCause);
+
+            let rowTotal = 0;
+
+            // Kolom per STO
+            stoOrder.forEach(sto => {
+                const td = document.createElement('td');
+                const val = counts[cause][sto] || 0;
+                
+                if(val > 0) {
+                    td.textContent = val;
+                    rowTotal += val;
+                    // Logic Heatmap CSS
+                    if(val >= 10) td.className = 'heat-3';
+                    else if(val >= 4) td.className = 'heat-2';
+                    else td.className = 'heat-1';
+                }
+                tr.appendChild(td);
+            });
+
+            // Kolom Total Baris tersebut
+            const tdTotal = document.createElement('td');
+            tdTotal.textContent = rowTotal;
+            tdTotal.style.fontWeight = 'bold';
+            
+            // Heatmap untuk kolom total
+            if(rowTotal >= 20) tdTotal.className = 'heat-3';
+            else if(rowTotal >= 10) tdTotal.className = 'heat-2';
+            else if(rowTotal > 0) tdTotal.className = 'heat-1';
+            
+            tr.appendChild(tdTotal);
+            tbody.appendChild(tr);
+        });
+
+        // Baris "Kehadiran Teknisi" manual telah dihapus dari sini
+    }
+
+    // Inisialisasi awal
+    updateClock("Memulai...");
+    
+    // Jalankan fungsi fetch data pertama kali
+    loadDataFromGoogleSheets();
+
+    // Auto-refresh data dari GDocs setiap 1 menit (60000 ms)
+    setInterval(() => loadDataFromGoogleSheets(false), 60000);
+
+</script>
+
+</body>
+</html>
+  </template>
+
+  <template id="tpl4">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produktifitas Teknisi Assurance Ridar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for specific precise table borders and tight padding */
+        table {
+            border-spacing: 0;
+        }
+        th, td {
+            border: 1px solid #9ca3af; /* gray-400 */
+        }
+        .text-xxs {
+            font-size: 0.65rem;
+            line-height: 0.8rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 font-sans">
+    <button onclick="parent.switchTab('app1')" style="position:fixed;top:12px;right:12px;z-index:9999;padding:10px 14px;border-radius:14px;border:0;background:#0f172a;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(15,23,42,.18)">← Kembali ke Dashboard</button>
+
+    <div class="w-full max-w-[100vw] overflow-x-auto shadow-xl rounded-lg bg-white">
+        <table class="w-full text-xxs whitespace-nowrap text-center border-collapse">
+            <thead>
+                <!-- Main Header -->
+                <tr>
+                    <th colspan="25" class="bg-[#2f5597] text-white py-2 text-lg font-bold tracking-wide">
+                        PRODUKTIFITAS TEKNISI ASSURANCE RIDAR<br>
+                        <span id="current-time" class="text-xs font-normal text-gray-200">Memuat waktu...</span>
+                    </th>
+                </tr>
+                
+                <!-- Sub Header Level 1 -->
+                <tr class="text-white">
+                    <th rowspan="2" class="bg-[#8faadc] px-2 py-1 text-black">SERVICE AREA</th>
+                    <th rowspan="2" class="bg-[#8faadc] px-2 py-1 text-black">SEKTOR</th>
+                    <th rowspan="2" class="bg-[#8faadc] px-2 py-1 text-black">STO</th>
+                    <th rowspan="2" class="bg-[#8faadc] px-4 py-1 text-black">TEKNISI 1</th>
+                    <th rowspan="2" class="bg-[#8faadc] px-4 py-1 text-black">TEKNISI 2</th>
+                    <th rowspan="2" class="bg-[#2f5597] px-1 py-1">JLH<br>TEK</th>
+                    
+                    <!-- Categories -->
+                    <th colspan="2" class="bg-[#5b9bd5] px-2 py-1">DIAMOND</th>
+                    <th colspan="2" class="bg-[#7030a0] px-2 py-1">PLATINUM</th>
+                    <th colspan="2" class="bg-[#ed7d31] px-2 py-1">MANJA</th>
+                    <th colspan="2" class="bg-[#70ad47] px-2 py-1">NON HVC</th>
+                    <th colspan="2" class="bg-[#9bc2e6] px-2 py-1 text-black">SQM</th>
+                    <th colspan="2" class="bg-[#a6a6a6] px-2 py-1">UNDERSPEC</th>
+                    <th colspan="2" class="bg-[#f8cbad] px-2 py-1 text-black">Z_PERMINTAAN</th>
+                    
+                    <!-- Right Totals -->
+                    <th rowspan="2" class="bg-[#2f5597] px-2 py-1">TOTAL<br>OPEN</th>
+                    <th rowspan="2" class="bg-[#548235] px-2 py-1">TOTAL<br>CLOSE</th>
+                    <th rowspan="2" class="bg-[#2f5597] px-2 py-1">TGT<br>PROD</th>
+                    <th rowspan="2" class="bg-[#c65911] px-2 py-1">PROD<br>TEKNISI</th>
+                    <th rowspan="2" class="bg-[#548235] px-2 py-1">ACH<br>PROD</th>
+                </tr>
+
+                <!-- Sub Header Level 2 (TO / TC) -->
+                <tr class="text-black font-semibold">
+                    <th class="bg-[#5b9bd5] text-white px-1">TO</th><th class="bg-[#5b9bd5] text-white px-1">TC</th>
+                    <th class="bg-[#7030a0] text-white px-1">TO</th><th class="bg-[#7030a0] text-white px-1">TC</th>
+                    <th class="bg-[#ed7d31] text-white px-1">TO</th><th class="bg-[#ed7d31] text-white px-1">TC</th>
+                    <th class="bg-[#70ad47] text-white px-1">TO</th><th class="bg-[#70ad47] text-white px-1">TC</th>
+                    <th class="bg-[#9bc2e6] px-1">TO</th><th class="bg-[#9bc2e6] px-1">TC</th>
+                    <th class="bg-[#a6a6a6] px-1">TO</th><th class="bg-[#a6a6a6] px-1">TC</th>
+                    <th class="bg-[#f8cbad] px-1">TO</th><th class="bg-[#f8cbad] px-1">TC</th>
+                </tr>
+
+                <!-- Grand Total Row -->
+                <tr class="bg-[#d9e1f2] font-bold italic text-black">
+                    <td colspan="5" class="text-right pr-4 py-1">Grand total</td>
+                    <td id="gt-jlh" class="bg-white text-black">0</td>
+                    
+                    <td id="gt-dia-to" class="bg-white text-black">0</td><td id="gt-dia-tc" class="bg-white text-black">0</td>
+                    <td id="gt-pla-to" class="bg-white text-black">0</td><td id="gt-pla-tc" class="bg-white text-black">0</td>
+                    <td id="gt-man-to" class="bg-white text-black">0</td><td id="gt-man-tc" class="bg-white text-black">0</td>
+                    <td id="gt-non-to" class="bg-white text-black">0</td><td id="gt-non-tc" class="bg-white text-black">0</td>
+                    <td id="gt-sqm-to" class="bg-white text-black">0</td><td id="gt-sqm-tc" class="bg-white text-black">0</td>
+                    <td id="gt-und-to" class="bg-white text-black">0</td><td id="gt-und-tc" class="bg-white text-black">0</td>
+                    <td id="gt-zpe-to" class="bg-white text-black">0</td><td id="gt-zpe-tc" class="bg-white text-black">0</td>
+                    
+                    <td id="gt-open" class="bg-white text-black">0</td>
+                    <td id="gt-close" class="bg-white text-black">0</td>
+                    <td id="gt-tgt" class="bg-white text-black">0</td>
+                    <td id="gt-prod-tek" class="bg-white text-black">0</td>
+                    <td id="ach-grand-total" class="bg-white text-black">0%</td>
+                </tr>
+            </thead>
+            
+            <tbody id="table-body" class="bg-white text-black">
+                <!-- Data will be injected here via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Fungsi Jam Berdetak secara Live
+        function startLiveClock() {
+            setInterval(() => {
+                if (window.parent && window.parent.__activeTab && window.parent.__activeTab !== 'app4') return;
+                document.getElementById('current-time').innerText = "Live: " + new Date().toLocaleString('id-ID') + " | Auto-Refresh Aktif";
+            }, 1000);
+        }
+
+        // Fungsi parsing CSV sederhana namun kuat (menangani koma di dalam tanda kutip)
+        function parseCSV(text) {
+            let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+            for (let l of text) {
+                if ('"' === l) {
+                    if (s && l === p) row[i] += l;
+                    s = !s;
+                } else if (',' === l && s) l = row[++i] = '';
+                else if ('\n' === l && s) {
+                    if ('\r' === p) row[i] = row[i].slice(0, -1);
+                    row = ret[++r] = [l = '']; i = 0;
+                } else row[i] += l;
+                p = l;
+            }
+            return ret;
+        }
+
+        // Fetch data langsung dari GDocs dengan parameter isFirstLoad agar tidak berkedip saat auto-refresh
+        let isLoadingTeknik = false;
+        let lastTeknikLoad = 0;
+
+        async function loadData(isFirstLoad = false) {
+            if (window.parent && window.parent.__activeTab && window.parent.__activeTab !== 'app4') return;
+            if (isLoadingTeknik) return;
+            if (!isFirstLoad && lastTeknikLoad && (Date.now() - lastTeknikLoad) < 15000) return;
+
+            isLoadingTeknik = true;
+            const tbody = document.getElementById('table-body');
+            
+            // Tampilkan pesan loading hanya saat pertama kali halaman dibuka
+            if (isFirstLoad) {
+                tbody.innerHTML = '<tr><td colspan="25" class="py-6 text-center font-bold text-gray-500">Membaca data secara langsung dari Google Sheets...</td></tr>';
+            }
+
+            const sheetId = '1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go';
+            
+            // Fungsi pembantu agar jika satu sheet tidak ada, sheet lain tetap termuat dengan aman
+            const fetchSheet = async (sheetName, sourceLabel) => {
+                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const csv = await res.text();
+                        return parseCSV(csv).slice(1).map(row => ({ row, source: sourceLabel }));
+                    }
+                } catch (e) {
+                    console.warn(`Gagal memuat sheet: ${sheetName}`);
+                }
+                return [];
+            };
+
+            try {
+                // Fetch seluruh sheet secara paralel tanpa saling menggagalkan
+                const [allData, underspecData, zperData] = await Promise.all([
+                    fetchSheet('ALL TIKET', 'ALL'),
+                    fetchSheet('UNDERSPEC', 'UNDERSPEC'),
+                    fetchSheet('Z_PERMINTAAN', 'Z_PERMINTAAN')
+                ]);
+
+                let combinedData = [...allData, ...underspecData, ...zperData];
+                
+                if (combinedData.length === 0) throw new Error('Semua data kosong');
+
+                processData(combinedData);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                if (isFirstLoad) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="25" class="py-6 text-center font-bold text-red-600 bg-red-50">
+                                Gagal memuat data dari Google Sheets.<br>
+                                <span class="text-sm font-normal text-black">Pastikan opsi Berbagi (Share) di Google Sheet Anda telah diatur menjadi <b>"Siapa saja yang memiliki link" (Anyone with the link can view)</b> agar data dapat dibaca.</span>
+                            </td>
+                        </tr>`;
+                }
+            } finally {
+                isLoadingTeknik = false;
+            }
+        }
+
+        // Memproses baris mentah CSV ke dalam objek kelompok Data (Berdasarkan Teknisi)
+        function processData(combinedData) {
+            const groups = {};
+            
+            // Loop melewati gabungan data.
+            for (let i = 0; i < combinedData.length; i++) {
+                const item = combinedData[i];
+                const row = item.row;
+                const source = item.source;
+
+                let sektor, sto, noInternet, teknisi1Raw, teknisi2Raw, jamClose, isClose;
+                let catIndex = 3; // Default NON HVC
+
+                if (source === 'UNDERSPEC') {
+                    // Struktur kolom khusus untuk sheet UNDERSPEC
+                    sektor = (row[24] || '').trim();       // Kolom Y
+                    sto = (row[6] || '').trim();           // Kolom G
+                    noInternet = (row[10] || '').trim();   // Kolom K (ND)
+                    teknisi1Raw = (row[25] || '').trim();  // Kolom Z
+                    teknisi2Raw = (row[26] || '').trim();  // Kolom AA
+                    jamClose = (row[28] || '').trim();     // Kolom AC (Berdasarkan instruksi UNDERSPEC sebelumnya)
+                    
+                    catIndex = 5; // Masuk ke kolom UNDERSPEC
+                } else if (source === 'Z_PERMINTAAN') {
+                    // Struktur kolom untuk sheet Z_PERMINTAAN (Asumsi standar seperti ALL TIKET)
+                    sektor = (row[1] || '').trim();        // Kolom B
+                    sto = (row[2] || '').trim();           // Kolom C
+                    noInternet = (row[10] || '').trim();   // Kolom K
+                    teknisi1Raw = (row[15] || '').trim();  // Kolom P
+                    teknisi2Raw = (row[16] || '').trim();  // Kolom Q
+                    jamClose = (row[23] || '').trim();     // Kolom X (TECH CLOSED)
+                    
+                    catIndex = 6; // Masuk ke kolom Z_PERMINTAAN
+                } else {
+                    // Struktur kolom standar untuk sheet ALL TIKET
+                    sektor = (row[1] || '').trim();        // Kolom B
+                    sto = (row[2] || '').trim();           // Kolom C
+                    noInternet = (row[10] || '').trim();   // Kolom K (No Internet)
+                    teknisi1Raw = (row[15] || '').trim();  // Kolom P
+                    teknisi2Raw = (row[16] || '').trim();  // Kolom Q
+                    jamClose = (row[23] || '').trim();     // Kolom X (TECH CLOSED)
+
+                    // Mengambil parameter klasifikasi
+                    const manja = (row[4] || '').toUpperCase().trim();      // Kolom E (Ket Manja)
+                    const custAssign = (row[6] || '').toUpperCase().trim(); // Kolom G (Cust Assign)
+                    const flagHvc = (row[7] || '').toUpperCase().trim();    // Kolom H (Flag HVC)
+                    const summary = (row[9] || '').toUpperCase().trim();    // Kolom J (Summary)
+
+                    // --- LOGIKA KATEGORI PRIORITAS BERDASARKAN CUST ASSIGN & FLAG HVC ---
+                    if (custAssign.includes('Z_PERMINTAAN') || custAssign.includes('Z PERMINTAAN') || summary.includes('Z_PERMINTAAN')) {
+                        catIndex = 6; // Z_PERMINTAAN (Prioritas Utama, mengabaikan Flag HVC)
+                    } else if (custAssign.includes('SQM')) {
+                        catIndex = 4; // SQM (Prioritas Kedua, mengabaikan Flag HVC)
+                    } else if (custAssign.includes('TTR 3 JM') || custAssign.includes('TTR 3JM') || (manja.includes('MANJA') && !manja.includes('BUKAN'))) {
+                        catIndex = 2; // MANJA (Prioritas Ketiga, mengabaikan Flag HVC)
+                    } else if (custAssign.includes('TTR 3 JD') || flagHvc.includes('DIAMOND')) {
+                        catIndex = 0; // DIAMOND
+                    } else if (custAssign.includes('TTR 6 JP') || flagHvc.includes('PLATINUM')) {
+                        catIndex = 1; // PLATINUM
+                    } else {
+                        // TTR 12 JG (HVC GOLD), TTR 36 J (REGULER), dll
+                        catIndex = 3; // NON HVC
+                    }
+                }
+                
+                // 1. LOGIKA CLOSE: Jika Kolom X (atau AC untuk underspec) berisi karakter valid = CLOSE (TC). Jika kosong = OPEN (TO).
+                isClose = (jamClose !== '' && jamClose !== '0' && jamClose !== '-');
+
+                // 2. LOGIKA SALDO: Wajib ada Nomor Internet (Kolom K) agar tiket dihitung.
+                if (!noInternet || noInternet.toUpperCase() === 'NO INTERNET' || noInternet.toUpperCase() === 'ND' || noInternet === '0' || noInternet === '-') {
+                    continue; // Skip baris ini jika Nomor Internet kosong/tidak valid
+                }
+
+                // 3. Wajib ada Sektor agar bisa di-mapping
+                if (!sektor || sektor.toUpperCase() === 'SEKTOR' || sektor === 'min') {
+                    continue; 
+                }
+
+                // --- 4. PEMETAAN SEKTOR & STO (BACA PINTAR / SMART NORMALIZE) ---
+                let serviceArea = sektor.toUpperCase();
+                let finalSektor = sektor.toUpperCase();
+                let finalSto = sto.toUpperCase();
+                
+                const sUpper = sektor.toUpperCase();
+                const stoUpper = sto.toUpperCase();
+
+                // 1. ARENGKA
+                if (sUpper.includes('ARK') || stoUpper.includes('ARK')) {
+                    serviceArea = 'ARENGKA';
+                    finalSektor = 'ARENGKA';
+                    finalSto = 'ARK'; // Memaksa semua ARK-1, ARK-2, atau STO aneh (seperti -1, 10003) menjadi ARK
+                }
+                // 2. BUKIT RAYA - BUKIT RAYA
+                else if (stoUpper === 'BKR' || sUpper.includes('BUKIT RAYA')) {
+                    serviceArea = 'BUKIT RAYA';
+                    finalSektor = 'BUKIT RAYA';
+                    finalSto = 'BKR';
+                }
+                // 3. BUKIT RAYA - OUTER 2
+                else if (['BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'SRN', 'UBT'].includes(stoUpper) || sUpper.includes('OUTER 2')) {
+                    serviceArea = 'BUKIT RAYA';
+                    finalSektor = 'OUTER 2';
+                    if (!['BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'SRN', 'UBT'].includes(stoUpper)) finalSto = '-'; 
+                }
+                // 4. DUMAI - DUMAI
+                else if (['BAG', 'BAS', 'DUM', 'SLJ'].includes(stoUpper) || (sUpper.includes('DUMAI') && !sUpper.includes('DURI'))) {
+                    serviceArea = 'DUMAI';
+                    finalSektor = 'DUMAI';
+                    if (!['BAG', 'BAS', 'DUM', 'SLJ'].includes(stoUpper)) finalSto = '-';
+                }
+                // 5. DUMAI - DURI
+                else if (['BGU', 'DRI'].includes(stoUpper) || sUpper.includes('DURI')) {
+                    serviceArea = 'DUMAI';
+                    finalSektor = 'DURI';
+                    if (!['BGU', 'DRI'].includes(stoUpper)) finalSto = '-';
+                }
+                // 6. PANGKALAN KERINCI - OUTER 1
+                else if (['KDS', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK'].includes(stoUpper) || sUpper.includes('OUTER 1')) {
+                    serviceArea = 'PANGKALAN KERINCI';
+                    finalSektor = 'OUTER 1';
+                    if (!['KDS', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK'].includes(stoUpper)) finalSto = '-';
+                }
+                // 7. PEKANBARU BARAT (PBRC 1 & PBRC 2)
+                else if (sUpper.includes('PBRC 1')) {
+                    serviceArea = 'PEKANBARU BARAT';
+                    finalSektor = 'PBRC 1';
+                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
+                }
+                else if (sUpper.includes('PBRC 2')) {
+                    serviceArea = 'PEKANBARU BARAT';
+                    finalSektor = 'PBRC 2';
+                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
+                }
+                // 8. PEKANBARU TIMUR (PBRC 3 & PBRC 4)
+                else if (sUpper.includes('PBRC 3')) {
+                    serviceArea = 'PEKANBARU TIMUR';
+                    finalSektor = 'PBRC 3';
+                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
+                }
+                else if (sUpper.includes('PBRC 4')) {
+                    serviceArea = 'PEKANBARU TIMUR';
+                    finalSektor = 'PBRC 4';
+                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
+                }
+                // Fallback jika STO-nya PBB/PBR tapi Sektornya aneh
+                else if (['PBB', 'PBR'].includes(stoUpper)) {
+                    serviceArea = 'PEKANBARU BARAT'; 
+                    finalSektor = 'PBRC 1'; // Default
+                }
+                // 9. RENGAT
+                else if (['AMK', 'KLE', 'PMB', 'PNP', 'RGT', 'TAK', 'TBH'].includes(stoUpper) || sUpper.includes('RENGAT')) {
+                    serviceArea = 'RENGAT';
+                    finalSektor = 'RENGAT';
+                    if (!['AMK', 'KLE', 'PMB', 'PNP', 'RGT', 'TAK', 'TBH'].includes(stoUpper)) finalSto = '-';
+                }
+
+                // --- 5. VALIDASI TEKNISI (BACA PINTAR DOBEL & STO KOSONG) ---
+                let teknisi1 = (teknisi1Raw === '0' || teknisi1Raw === '-') ? '' : teknisi1Raw;
+                let teknisi2 = (teknisi2Raw === '0' || teknisi2Raw === '-') ? '' : teknisi2Raw;
+                
+                // BACA PINTAR 1: Jika nama teknisi 1 dan 2 sama persis (input dobel), jadikan 1 orang saja
+                if (teknisi1 === teknisi2) {
+                    teknisi2 = '';
+                }
+
+                // BACA PINTAR 2: Jika Teknisi 1 kosong (misal diisi '-') tapi Teknisi 2 ada, geser Teknisi 2 ke kolom Teknisi 1
+                if (!teknisi1 && teknisi2) {
+                    teknisi1 = teknisi2;
+                    teknisi2 = '';
+                }
+
+                // JIKA TEKNISI KOSONG (BELUM ASSIGN), SKIP TIKET INI (TIDAK DITAMPILKAN)
+                if (!teknisi1 && !teknisi2) {
+                    continue; 
+                }
+
+                let jlhTek = (teknisi1 && teknisi2) ? 2 : 1;
+                
+                // BACA PINTAR: Urutkan teknisi! 
+                // Jika Tek 1 & Tek 2 posisinya tertukar, mereka akan digabung paksa jadi 1 tim. TIDAK ADA LAGI DOBEL!
+                let arrTech = [teknisi1, teknisi2].filter(t => t !== '').sort();
+                let key = arrTech.join('|');
+
+                if (!groups[key]) {
+                    // Buat wadah baru untuk tim ini
+                    groups[key] = {
+                        area: serviceArea, 
+                        sektor: finalSektor,
+                        sto: finalSto,
+                        teknisi1: teknisi1, // Simpan urutan tampilan asli saat pertama ketemu
+                        teknisi2: teknisi2,
+                        jlh: jlhTek, 
+                        categories: Array(7).fill(null).map(() => ({to: 0, tc: 0}))
+                    };
+                } else {
+                    // BACA PINTAR STO AUTO-MERGE:
+                    // Jika tim ini sebelumnya numpang di STO '-' (kosong), tapi tiket barusan punya STO valid, 
+                    // timpa lokasi mereka agar masuk secara otomatis ke STO yang benar (seperti ditarik magnet).
+                    if (groups[key].sto === '-' && finalSto !== '-') {
+                        groups[key].area = serviceArea;
+                        groups[key].sektor = finalSektor;
+                        groups[key].sto = finalSto;
+                    }
+                }
+                
+                // Tambahkan perhitungan tiketnya
+                if (isClose) {
+                    groups[key].categories[catIndex].tc++;
+                } else {
+                    groups[key].categories[catIndex].to++;
+                }
+            }
+
+            // Ubah objek Grup menjadi Array, dan hitung formula produktifitas
+            const dataRows = Object.values(groups).map(group => {
+                let totalOpen = 0;
+                let totalClose = 0;
+                group.categories.forEach(cat => {
+                    totalOpen += cat.to;
+                    totalClose += cat.tc;
+                });
+                
+                let tgtProd = group.jlh * 4; // TGT = 8 untuk 2 orang, 4 untuk 1 orang, 0 untuk teknisi kosong
+                let prodTeknisi = group.jlh > 0 ? (totalClose / group.jlh) : 0; // Hindari pembagian 0
+                let achProd = tgtProd > 0 ? (totalClose / tgtProd) * 100 : 0;
+
+                return {
+                    ...group,
+                    totalOpen,
+                    totalClose,
+                    tgtProd,
+                    prodTeknisi: prodTeknisi.toLocaleString('id-ID', {maximumFractionDigits: 2}),
+                    achProd: achProd.toLocaleString('id-ID', {maximumFractionDigits: 2}) + '%'
+                };
+            });
+
+            // Urutkan berdasarkan Service Area, kemudian SEKTOR, kemudian STO, kemudian Teknisi 1
+            dataRows.sort((a, b) => {
+                if (a.area !== b.area) return a.area.localeCompare(b.area);
+                if (a.sektor !== b.sektor) return a.sektor.localeCompare(b.sektor);
+                if (a.sto !== b.sto) return a.sto.localeCompare(b.sto);
+                return a.teknisi1.localeCompare(b.teknisi1);
+            });
+
+            renderTable(dataRows);
+            updateGrandTotal(dataRows);
+        }
+
+        // Render data ke dalam HTML
+        function renderTable(dataRows) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ''; 
+
+            dataRows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-100";
+
+                let htmlContent = `
+                    <td class="text-left px-2 py-1">${row.area}</td>
+                    <td class="px-2 py-1">${row.sektor}</td>
+                    <td class="px-2 py-1">${row.sto}</td>
+                    <td class="text-left px-2 py-1">${row.teknisi1}</td>
+                    <td class="text-left px-2 py-1">${row.teknisi2}</td>
+                    <td class="bg-[#d9e1f2] font-semibold">${row.jlh}</td>
+                `;
+
+                row.categories.forEach(cat => {
+                    const toBg = cat.to > 0 ? 'bg-yellow-50' : ''; 
+                    const tcBg = cat.tc > 0 ? 'bg-red-50' : '';
+                    htmlContent += `
+                        <td class="${toBg}">${cat.to}</td>
+                        <td class="${tcBg}">${cat.tc}</td>
+                    `;
+                });
+
+                // Set warna ACH PROD persis seperti ketentuan sebelumnya
+                let achStr = row.achProd.replace('%', '').replace(',', '.');
+                let achValue = parseFloat(achStr);
+                let achBgColor = "font-semibold ";
+
+                if (achValue >= 0 && achValue <= 50) {
+                    achBgColor += "bg-red-600 text-white"; // Merah
+                } else if (achValue > 50 && achValue <= 75) {
+                    achBgColor += "bg-orange-500 text-white"; // Oren
+                } else if (achValue > 75 && achValue <= 99.99) {
+                    achBgColor += "bg-green-400 text-black"; // Hijau Muda
+                } else if (achValue >= 100) {
+                    achBgColor += "bg-green-700 text-white"; // Hijau Pekat
+                } else {
+                    achBgColor += "bg-gray-500 text-white";
+                }
+
+                htmlContent += `
+                    <td class="bg-gray-100 font-semibold">${row.totalOpen}</td>
+                    <td class="bg-gray-100 font-semibold">${row.totalClose}</td>
+                    <td>${row.tgtProd}</td>
+                    <td>${row.prodTeknisi}</td>
+                    <td class="${achBgColor}">${row.achProd}</td>
+                `;
+
+                tr.innerHTML = htmlContent;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update Grand Total secara Dinamis berdasarkan data fetch
+        function updateGrandTotal(dataRows) {
+            let gtJlh = 0, gtOpen = 0, gtClose = 0, gtTgt = 0;
+            let gtCat = Array(7).fill(null).map(() => ({to: 0, tc: 0}));
+
+            dataRows.forEach(row => {
+                gtJlh += row.jlh;
+                row.categories.forEach((cat, i) => {
+                    gtCat[i].to += cat.to;
+                    gtCat[i].tc += cat.tc;
+                });
+                gtOpen += row.totalOpen;
+                gtClose += row.totalClose;
+                gtTgt += row.tgtProd;
+            });
+
+            let gtProdTeknisi = gtJlh > 0 ? (gtClose / gtJlh) : 0;
+            let gtAchProd = gtTgt > 0 ? ((gtClose / gtTgt) * 100) : 0;
+
+            document.getElementById('gt-jlh').innerText = gtJlh;
+            
+            const catIds = ['dia', 'pla', 'man', 'non', 'sqm', 'und', 'zpe'];
+            catIds.forEach((id, i) => {
+                document.getElementById(`gt-${id}-to`).innerText = gtCat[i].to;
+                document.getElementById(`gt-${id}-tc`).innerText = gtCat[i].tc;
+            });
+
+            document.getElementById('gt-open').innerText = gtOpen;
+            document.getElementById('gt-close').innerText = gtClose;
+            document.getElementById('gt-tgt').innerText = gtTgt;
+            document.getElementById('gt-prod-tek').innerText = gtProdTeknisi.toLocaleString('id-ID', {maximumFractionDigits: 2});
+            
+            const gtAchEl = document.getElementById('ach-grand-total');
+            gtAchEl.innerText = gtAchProd.toLocaleString('id-ID', {maximumFractionDigits: 2}) + '%';
+
+            // Memberikan warna dinamis pada ACH PROD Grand Total
+            let achBgColorGT = "font-semibold py-1 ";
+            if (gtAchProd >= 0 && gtAchProd <= 50) {
+                achBgColorGT += "bg-red-600 text-white";
+            } else if (gtAchProd > 50 && gtAchProd <= 75) {
+                achBgColorGT += "bg-orange-500 text-white";
+            } else if (gtAchProd > 75 && gtAchProd <= 99.99) {
+                achBgColorGT += "bg-green-400 text-black";
+            } else if (gtAchProd >= 100) {
+                achBgColorGT += "bg-green-700 text-white";
+            } else {
+                achBgColorGT += "bg-gray-500 text-white";
+            }
+            gtAchEl.className = achBgColorGT;
+        }
+
+        // Panggil saat halaman pertama kali diload
+        loadData(true);
+        startLiveClock();
+
+        // Interval untuk melakukan Auto Refresh setiap 30 detik (30000 milidetik)
+        setInterval(() => {
+            if (window.parent && window.parent.__activeTab && window.parent.__activeTab !== 'app4') return;
+            loadData(false);
+        }, 30000);
+
+    </script>
+</body>
+</html>
+  </template>
+
   <script>
-    const loaded = { app1: false, app2: false };
+    const loaded = { app1: false, app2: false, app3: false, app4: false };
+    window.__activeTab = 'app1';
 
     function injectSrcDoc(frameId, tplId) {
       const frame = document.getElementById(frameId);
@@ -3219,40 +4281,47 @@ load(); setInterval(load, 60000);
     function setActiveButton(activeId) {
       const btn1 = document.getElementById('btnApp1');
       const btn2 = document.getElementById('btnApp2');
-      if (activeId === 'app1') {
-        btn1.classList.add('active');
-        btn2.classList.remove('active');
-      } else {
-        btn2.classList.add('active');
-        btn1.classList.remove('active');
+      if (btn1 && btn2) {
+        if (activeId === 'app1') {
+          btn1.classList.add('active');
+          btn2.classList.remove('active');
+        } else {
+          btn2.classList.add('active');
+          btn1.classList.remove('active');
+        }
       }
     }
 
     function switchTab(id) {
       const panel1 = document.getElementById('panel1');
       const panel2 = document.getElementById('panel2');
-      if (id === 'app1') {
-        panel1.classList.remove('hidden');
-        panel2.classList.add('hidden');
-        setActiveButton('app1');
-        if (!loaded.app1) {
-          injectSrcDoc('frame1', 'tpl1');
-          loaded.app1 = true;
-        }
-      } else {
-        panel1.classList.add('hidden');
-        panel2.classList.remove('hidden');
-        setActiveButton('app2');
-        if (!loaded.app2) {
-          injectSrcDoc('frame2', 'tpl2');
-          loaded.app2 = true;
-        }
+      const panel3 = document.getElementById('panel3');
+      const panel4 = document.getElementById('panel4');
+
+      const panels = { app1: panel1, app2: panel2, app3: panel3, app4: panel4 };
+
+      Object.values(panels).forEach(panel => {
+        if (panel) panel.classList.add('hidden');
+      });
+
+      const activePanel = panels[id];
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      setActiveButton(id);
+      window.__activeTab = id;
+
+      if (!loaded[id]) {
+        if (id === 'app1') injectSrcDoc('frame1', 'tpl1');
+        if (id === 'app2') injectSrcDoc('frame2', 'tpl2');
+        if (id === 'app3') injectSrcDoc('frame3', 'tpl3');
+        if (id === 'app4') injectSrcDoc('frame4', 'tpl4');
+        loaded[id] = true;
       }
     }
-    
 
-    // Load first app by default.
-    switchTab('app1');
+
+    // Load first app by default setelah browser sempat menggambar UI.
+    setTimeout(() => switchTab('app1'), 50);
   </script>
 </body>
 </html>
