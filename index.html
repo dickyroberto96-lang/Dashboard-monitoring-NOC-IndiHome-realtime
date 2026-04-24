@@ -126,32 +126,21 @@
             top: 0;
             z-index: 50 !important;
         }
-        
-        /* Menghindari border tabel tembus pandang saat di-scroll */
-        #reportTableWrapper thead th,
-        .sticky-header th {
-            background-clip: padding-box;
+        @keyframes icon-float-pulse {
+            0%, 100% { transform: translateY(0); filter: drop-shadow(0 0 2px rgba(52, 211, 153, 0.4)); color: #a7f3d0; }
+            50% { transform: translateY(-3px) scale(1.1); filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.9)); color: #ffffff; }
+        }
+        .anim-icon-float {
+            animation: icon-float-pulse 2.5s ease-in-out infinite;
         }
 
-        /* Mengunci sudut kiri-atas tabel (Service Area/STO) saat scroll horizontal dan vertikal */
-        #reportTableWrapper thead th.sticky-col,
-        .sticky-header th.sticky-col {
-            z-index: 60 !important;
+        /* Animasi Floating untuk Logo */
+        @keyframes float-logo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
-
-        /* Animasi Melayang & Glow untuk Logo */
-        @keyframes float-glow {
-            0%, 100% {
-                transform: translateY(0);
-                box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4), 0 8px 10px -6px rgba(14, 165, 233, 0.3);
-            }
-            50% {
-                transform: translateY(-12px);
-                box-shadow: 0 25px 35px -5px rgba(14, 165, 233, 0.7), 0 15px 15px -5px rgba(14, 165, 233, 0.4);
-            }
-        }
-        .animate-float-glow {
-            animation: float-glow 3.5s ease-in-out infinite;
+        .animate-float-logo {
+            animation: float-logo 3.5s ease-in-out infinite;
         }
     </style>
 </head>
@@ -160,24 +149,36 @@
 
 <div class="flex flex-col md:flex-row min-h-screen relative z-10">
     
-    <!-- SIDEBAR KIRI -->
-    <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col md:h-screen md:sticky md:top-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 flex-shrink-0">
-        <div class="p-6 flex justify-center items-center border-b border-slate-100 relative overflow-hidden pb-8 pt-8">
-            <div class="animate-float-glow w-52 h-52 relative z-10 flex-shrink-0 rounded-[2rem] overflow-hidden border-t border-l border-white border-b-2 border-r-2 border-slate-200 group cursor-pointer">
-                <!-- Logo menggunakan gambar perisai (sesuai kotak merah di Sheet13). Ditambahkan id="appLogo" -->
-                <img id="appLogo" src="https://i.ibb.co.com/xt5qkBGX/Gemini-Generated-Image-vq6l4avq6l4avq6l.png" alt="Logo Kawal Assurance" class="w-full h-full object-cover scale-[1.05] transition-transform duration-500 group-hover:scale-110" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e40af/ffffff?text=KA';">
-                <!-- Efek Kaca/Glossy 3D -->
-                <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/40 pointer-events-none group-hover:to-white/60 transition-colors duration-500"></div>
+    <!-- SIDEBAR KIRI (FLEX SPACER + FIXED ASIDE) -->
+    <div class="w-full md:w-[84px] md:hover:w-[280px] flex-shrink-0 transition-[width] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group/sidebar relative z-50">
+        
+        <!-- The Clean Figma Sidebar (Fixed untuk mencegah scroll ganda, tapi mengikuti lebar spacer di atasnya) -->
+        <aside class="w-full md:w-[84px] md:group-hover/sidebar:w-[280px] bg-white border-r border-slate-200 flex flex-col h-full md:fixed md:left-0 md:top-0 md:h-screen shadow-[10px_0_30px_-15px_rgba(0,0,0,0.1)] transition-[width] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] overflow-hidden">
+            
+            <!-- Lebar container di dalam dipaksa 280px agar layout logo tidak gepeng saat animasi diciutkan -->
+            <div class="p-4 md:p-6 flex justify-center items-center relative pb-2 pt-8 w-full md:w-[280px] flex-shrink-0">
+                <!-- Soft Glow behind logo matching Figma -->
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:group-hover/sidebar:w-40 md:group-hover/sidebar:h-40 bg-blue-400/20 rounded-full blur-3xl pointer-events-none transition-all duration-500"></div>
+                
+                <!-- DITAMBAHKAN CLASS: animate-float-logo dan group/logo -->
+                <div class="animate-float-logo w-12 h-12 md:group-hover/sidebar:w-44 md:group-hover/sidebar:h-44 relative z-10 flex-shrink-0 rounded-2xl md:group-hover/sidebar:rounded-[2rem] overflow-hidden border border-white shadow-sm bg-white/50 backdrop-blur-sm transition-all duration-500 mx-auto group/logo">
+                    <!-- Logo menggunakan gambar perisai (DITAMBAHKAN transition-transform dan scale) -->
+                    <img id="appLogo" src="https://i.ibb.co.com/xt5qkBGX/Gemini-Generated-Image-vq6l4avq6l4avq6l.png" alt="Logo Kawal Assurance" class="w-full h-full object-cover scale-[1.05] transition-transform duration-700 group-hover/logo:scale-110" onerror="this.onerror=null; this.src='https://placehold.co/200x200/1e40af/ffffff?text=KA';">
+                </div>
             </div>
-        </div>
-        <div class="flex-1 overflow-y-auto py-5 px-4">
-            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 px-3">MAIN MENU</div>
-            <nav class="space-y-1" id="sidebarNav"></nav>
-        </div>
-    </aside>
+            
+            <!-- Memaksa area nav tetap 280px dan hanya terpotong (overflow) sehingga teks tulisan tidak rusak -->
+            <div class="flex-1 overflow-y-auto py-5 px-3 md:px-4 md:group-hover/sidebar:px-6 sidebar-scroll relative z-10 w-full md:w-[280px] flex-shrink-0 transition-all duration-500">
+                <div class="text-sm font-black text-slate-500 uppercase tracking-widest mb-4 px-1 text-center md:group-hover/sidebar:text-left transition-all">
+                    <span class="md:hidden md:group-hover/sidebar:inline whitespace-nowrap">MAIN MENU</span>
+                    <span class="hidden md:inline md:group-hover/sidebar:hidden">...</span>
+                </div>
+                <nav class="space-y-3" id="sidebarNav"></nav>
+            </div>
+        </aside>
+    </div>
 
-    <!-- KONTEN UTAMA -->
-    <main class="flex-1 w-full max-w-[100vw] md:max-w-none p-4 md:p-8 overflow-y-auto relative z-10">
+    <!-- KONTEN UTAMA (min-w-0 agar tabel mau mengecil otomatis) -->
         <div class="max-w-[90rem] mx-auto">
             
             <!-- HEADER & AREA FILTER -->
@@ -899,19 +900,21 @@ function renderSidebar() {
 
     const renderItem = (item) => {
         const act = item.id === ticketTypeMode;
+        
+        let bgCls = act ? "bg-blue-50 text-blue-700 border border-blue-200" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 border border-transparent";
+        let iconCls = act ? "text-blue-600" : "text-slate-400";
+        let labelCls = "text-left font-bold text-[13px] tracking-wide whitespace-nowrap opacity-100 md:opacity-0 md:group-hover/sidebar:opacity-100 transition-opacity duration-300";
+        
         const isSpecial = item.id === 'ANALISA_PENYEBAB_GANGGUAN' || item.id === 'PRODUKTIFITAS_TEKNISI';
-        let bgCls = act ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-100 ring-1 ring-blue-500/10" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 border border-transparent";
-        let iconCls = act ? "text-blue-600 scale-110" : "text-slate-400";
-        let labelCls = "text-left tracking-wide leading-tight";
         if (isSpecial) {
-            bgCls = act ? "bg-violet-50 text-violet-700 shadow-sm border border-violet-100 ring-1 ring-violet-500/10" : "text-violet-600 hover:bg-violet-50 hover:text-violet-800 border border-transparent";
-            iconCls = act ? "text-violet-600 scale-110" : "text-violet-500";
-            labelCls += " font-black";
+            bgCls = act ? "bg-violet-50 text-violet-700 border border-violet-200" : "text-violet-500 hover:bg-violet-50 hover:text-violet-700 border border-transparent";
+            iconCls = act ? "text-violet-600" : "text-violet-400";
         }
+
         return `
-        <button onclick="setTicketType('${item.id}', '${item.shortLabel}')" class="w-full flex items-center px-4 py-3 mb-1.5 rounded-[12px] text-sm font-extrabold transition-all duration-300 ${bgCls}">
-            <div class="flex-shrink-0 w-8 flex justify-start items-center transition-transform ${iconCls}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">${item.icon}</svg>
+        <button onclick="setTicketType('${item.id}', '${item.shortLabel}')" class="w-full flex items-center p-3 md:py-3 md:px-0 md:group-hover/sidebar:px-4 rounded-xl transition-all duration-200 ${bgCls} group/item" title="${item.label}">
+            <div class="flex-shrink-0 w-10 md:w-12 flex justify-center items-center ${iconCls} group-hover/item:scale-110 transition-transform">
+                <svg class="w-5 h-5 md:w-[22px] md:h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">${item.icon}</svg>
             </div>
             <span class="${labelCls}">${item.label}</span>
         </button>`;
@@ -919,20 +922,30 @@ function renderSidebar() {
 
     nav.innerHTML = `
         <div class="mb-4">
-            <button onclick="toggleSidebarGroup('tiket')" class="w-full flex items-center justify-between px-4 py-3 rounded-[14px] bg-slate-900 text-white font-black text-xs tracking-[0.22em] uppercase shadow-md">
-                <span>Kawal Tiket</span>
-                <span class="text-[10px] opacity-90">${sidebarGroupOpen.tiket ? '−' : '+'}</span>
+            <button onclick="toggleSidebarGroup('tiket')" class="w-full flex items-center p-3 md:py-3.5 md:px-0 md:group-hover/sidebar:px-4 rounded-xl bg-[#0f172a] text-white shadow-sm overflow-hidden transition-all duration-300" title="KAWAL TIKET">
+                <div class="flex-shrink-0 w-10 md:w-12 flex justify-center items-center">
+                    <svg class="w-5 h-5 md:w-[22px] md:h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                </div>
+                <div class="flex-1 flex justify-between items-center opacity-100 md:opacity-0 md:group-hover/sidebar:opacity-100 transition-opacity duration-300 pr-1">
+                    <span class="font-bold text-[13px] tracking-wide whitespace-nowrap">KAWAL TIKET</span>
+                    <span class="text-lg font-normal leading-none">${sidebarGroupOpen.tiket ? '−' : '+'}</span>
+                </div>
             </button>
-            <div class="${sidebarGroupOpen.tiket ? '' : 'hidden'} mt-2 space-y-1">
+            <div class="${sidebarGroupOpen.tiket ? '' : 'hidden'} mt-3 space-y-1">
                 ${grouped.tiket.map(renderItem).join('')}
             </div>
         </div>
         <div class="mb-2">
-            <button onclick="toggleSidebarGroup('teknisi')" class="w-full flex items-center justify-between px-4 py-3 rounded-[14px] bg-slate-900 text-white font-black text-xs tracking-[0.22em] uppercase shadow-md">
-                <span>Kawal Teknisi</span>
-                <span class="text-[10px] opacity-90">${sidebarGroupOpen.teknisi ? '−' : '+'}</span>
+            <button onclick="toggleSidebarGroup('teknisi')" class="w-full flex items-center p-3 md:py-3.5 md:px-0 md:group-hover/sidebar:px-4 rounded-xl bg-[#0f172a] text-white shadow-sm overflow-hidden transition-all duration-300" title="KAWAL TEKNISI">
+                <div class="flex-shrink-0 w-10 md:w-12 flex justify-center items-center">
+                    <svg class="w-5 h-5 md:w-[22px] md:h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <div class="flex-1 flex justify-between items-center opacity-100 md:opacity-0 md:group-hover/sidebar:opacity-100 transition-opacity duration-300 pr-1">
+                    <span class="font-bold text-[13px] tracking-wide whitespace-nowrap">KAWAL TEKNISI</span>
+                    <span class="text-lg font-normal leading-none">${sidebarGroupOpen.teknisi ? '−' : '+'}</span>
+                </div>
             </button>
-            <div class="${sidebarGroupOpen.teknisi ? '' : 'hidden'} mt-2 space-y-1">
+            <div class="${sidebarGroupOpen.teknisi ? '' : 'hidden'} mt-3 space-y-1">
                 ${grouped.teknisi.map(renderItem).join('')}
             </div>
         </div>
