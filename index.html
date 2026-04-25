@@ -2669,20 +2669,33 @@ function renderCharts() {
     let isS = false;
     let isSA = false;
 
-    if (mode === 'SEKTOR') { list = SEKTOR_LIST; isS = true; }
+    // Perbaikan: Tambahkan logika filter yang sama persis seperti pada Grid untuk Grafik
+    if (mode === 'SEKTOR') { list = SEKTOR_LIST; isS = true; } 
     else if (mode === 'SA') { list = SA_LIST; isSA = true; }
-    else if (mode === 'PEKANBARU') list = PEKANBARU_LIST;
+    else if (mode === 'PEKANBARU') list = PEKANBARU_LIST; 
     else if (mode === 'DUMAI') list = DUMAI_LIST;
+    else if (mode.startsWith('SA_')) {
+        if (mode === 'SA_ARENGKA') list = SA_ARENGKA_LIST;
+        else if (mode === 'SA_PBR_BARAT') { list = SA_PBR_BARAT_LIST; isS = true; }
+        else if (mode === 'SA_PBR_TIMUR') { list = SA_PBR_TIMUR_LIST; isS = true; }
+        else if (mode === 'SA_BUKIT_RAYA') list = SA_BUKIT_RAYA_LIST;
+        else if (mode === 'SA_DUMAI') list = SA_DUMAI_LIST;
+        else if (mode === 'SA_PANGKALAN_KERINCI') list = SA_PANGKALAN_KERINCI_LIST;
+        else if (mode === 'SA_RENGAT') list = SA_RENGAT_LIST;
+    }
     
     let lbl=[], h1=[], h0=[], tc=[]; const now = new Date();
     list.forEach(item => {
         const locData = d.filter(r => {
             if (isSA) return getSA(r) === item;
             let v = (isS ? r.SEKTOR : r.STO) || r.LOKASI;
-            return v && (isS ? mapSEKTOR(v).includes(item) : mapSTO(v) === item);
+            if (!v) return false;
+            return isS ? mapSEKTOR(v).includes(item) : mapSTO(v) === item;
         });
         
-        if (locData.length === 0 && mode === 'SEKTOR') return;
+        // Jangan render tiang kosong jika filter utamanya adalah SEKTOR atau SA
+        if (locData.length === 0 && (mode === 'SEKTOR' || mode === 'SA')) return;
+        
         lbl.push(item); let s1 = 0, s0 = 0, c = 0;
         
         locData.forEach(r => { 
@@ -2690,8 +2703,8 @@ function renderCharts() {
             if(!isTicketOpen(r)) {
                 c++; 
             } else { 
-                const rd = r["REPORT DATE"]?new Date(r["REPORT DATE"]):null; 
-                if(!rd || (now-rd)/864e5 <= 1095) s0++; 
+                const rd = r["REPORT DATE"] ? new Date(r["REPORT DATE"]) : null; 
+                if(!rd || isNaN(rd.getTime()) || (now-rd)/864e5 <= 1095) s0++; 
             } 
         });
         
