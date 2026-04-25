@@ -147,6 +147,9 @@
 
 <body class="bg-slate-50 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] text-slate-800 font-sans min-h-screen selection:bg-blue-500/30 overflow-x-hidden">
 
+<!-- Secret Zone untuk Generate Export Full secara Background -->
+<div id="secretExportZone" style="position: absolute; left: -10000px; top: 0; width: 1920px; visibility: hidden; z-index: -100;"></div>
+
 <div class="flex flex-col md:flex-row min-h-screen relative z-10">
     
     <!-- SIDEBAR KIRI (FLEX SPACER + FIXED ASIDE) -->
@@ -187,7 +190,15 @@
                     <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight" id="mainDashboardTitle">Dashboard All Tiket</h2>
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Monitoring Harian Progres Tiket & Pergerakan Teknisi</p>
                 </div>
-                <div class="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+                
+                <div class="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto flex-wrap justify-end">
+                    
+                    <!-- NEW EXPORT FULL BUTTON -->
+                    <button onclick="exportSuperAll(this)" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-black px-5 py-2.5 rounded-xl shadow-[0_4px_15px_rgba(147,51,234,0.4)] hover:scale-105 hover:shadow-[0_6px_20px_rgba(147,51,234,0.6)] transition-all border border-white/20 whitespace-nowrap text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                        EXPORT FULL REKAPAN (ALL MENU)
+                    </button>
+
                     <div class="w-full sm:w-auto flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-inner">
                         <label for="areaFilter" class="font-extrabold text-slate-500 text-[10px] uppercase tracking-widest px-2">Filter Area:</label>
                         <div class="relative w-full sm:w-56">
@@ -364,7 +375,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                 PNG HD
                             </button>
-                            <button onclick="exportTableToExcel('matrixTableExport', 'Laporan_Matriks_Excel')" class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                            <button onclick="exportTableToExcel([{id: 'matrixTableExport', title: 'Laporan Progres Tiket Gangguan (Matriks)'}], 'Laporan_Matriks_Excel')" class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                                 Excel
                             </button>
@@ -449,7 +460,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     PNG HD
                                 </button>
-                                <button onclick="exportTableToExcel('kehadiranTableExport', 'Laporan_Kehadiran_Excel')" class="flex-1 sm:flex-none items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                                <button onclick="exportTableToExcel([{id: 'kehadiranTableExport', title: 'Laporan Kehadiran Teknisi'}], 'Laporan_Kehadiran_Excel')" class="flex-1 sm:flex-none items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                                     Excel
                                 </button>
@@ -494,7 +505,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         PNG HD
                     </button>
-                    <button onclick="exportTableToExcel('modalTableExport', 'Detail_Tiket_Excel')" class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
+                    <button onclick="exportTableToExcel([{id: 'modalTableExport', title: document.getElementById('modalTitle').innerText}], 'Detail_Tiket_Excel')" class="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 px-3 py-2 rounded-xl transition-all shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                         Excel
                     </button>
@@ -1186,12 +1197,11 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
 }
 window.openMatrixDetail = openMatrixDetail;
 
-// ===== 4. EXPORT GAMBAR & EXCEL =====
+// ===== 4. EXPORT GAMBAR & EXCEL (TERMASUK FITUR BARU EXPORT SUPER FULL) =====
 async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
     const el = document.getElementById(elementId);
     if(!el) return;
     
-    // Fix: Find scrollable elements
     const scrollWrappers = el.querySelectorAll('.overflow-y-auto, .overflow-x-auto, [class*="max-h-"]');
     const originalStyles = [];
     
@@ -1203,7 +1213,6 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
             overflowX: w.style.overflowX,
             overflowY: w.style.overflowY
         });
-        // Buka scroll agar seluruh konten tertangkap html2canvas
         w.style.maxHeight = 'none';
         w.style.overflow = 'visible';
         w.style.overflowX = 'visible';
@@ -1215,11 +1224,9 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
     btnElement.disabled = true;
 
     try {
-        // Beri sedikit jeda agar DOM sempat memperbarui ukuran tabel
         await new Promise(r => setTimeout(r, 300)); 
-        
         const canvas = await html2canvas(el, { 
-            scale: 5, // Peningkatan resolusi untuk ULTRA HD (Sangat Tajam)
+            scale: 5, 
             backgroundColor: '#ffffff',
             useCORS: true,
             logging: false
@@ -1231,10 +1238,8 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
         link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
     } catch (e) {
-        console.error('Export gagal:', e);
         showToast("Gagal menyimpan gambar: " + e.message);
     } finally {
-        // Kembalikan styling original
         scrollWrappers.forEach((w, i) => {
             w.style.maxHeight = originalStyles[i].maxHeight;
             w.style.overflow = originalStyles[i].overflow;
@@ -1247,9 +1252,8 @@ async function exportElementToImage(elementId, fileNamePrefix, btnElement) {
 }
 window.exportElementToImage = exportElementToImage;
 
-function exportTableToExcel(tableId, fileNamePrefix) {
+function exportTableToExcel(tablesArray, fileNamePrefix) {
     try {
-        // Setup template HTML/XML khusus untuk Excel agar membaca format CSS Inline
         let excelHtml = `
             <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
             <head>
@@ -1263,31 +1267,20 @@ function exportTableToExcel(tableId, fileNamePrefix) {
             <body>
         `;
 
-        const tablesToExport = [tableId];
-        // Jika berada di dashboard All Tiket, ekspor juga matriks Underspec
-        if (ticketTypeMode === 'ALL_TIKET' && tableId === 'matrixTableExport') {
-            tablesToExport.push('matrixTableExport_Underspec');
-        }
-
         let hasData = false;
 
-        tablesToExport.forEach(id => {
-            const tbl = document.getElementById(id);
+        // Modifikasi khusus untuk menambahkan matriks Underspec secara default saat klik tombol Excel di Dashboard All Tiket
+        if (tablesArray.length === 1 && tablesArray[0].id === 'matrixTableExport' && ticketTypeMode === 'ALL_TIKET') {
+            tablesArray.push({id: 'matrixTableExport_Underspec', title: 'Laporan Progres Tiket Underspec (Matriks)'});
+        }
+
+        tablesArray.forEach(item => {
+            const tbl = document.getElementById(item.id);
             if (!tbl) return;
             hasData = true;
 
-            // Tambahkan judul tabel
-            let titleText = 'Laporan';
-            if (id === 'matrixTableExport_Underspec') titleText = 'Laporan Progres Tiket Underspec';
-            else if (id === 'matrixTableExport') titleText = 'Laporan Progres Tiket Gangguan';
-            else if (id === 'kehadiranTableExport') titleText = 'Laporan Kehadiran Teknisi';
-            else if (id === 'modalTableExport') {
-                const modalTitleEl = document.getElementById('modalTitle');
-                titleText = modalTitleEl ? modalTitleEl.innerText : 'Detail Tiket';
-            }
-            excelHtml += `<h2 style="font-family: sans-serif; color: #1e293b;">${titleText}</h2>`;
+            excelHtml += `<h2 style="font-family: sans-serif; color: #1e293b; margin-top: 30px;">${item.title}</h2>`;
 
-            // Buat Clone Tabel untuk dimanipulasi tanpa merusak UI asli
             const clone = tbl.cloneNode(true);
             const originalRows = tbl.rows;
             const clonedRows = clone.rows;
@@ -1296,7 +1289,6 @@ function exportTableToExcel(tableId, fileNamePrefix) {
                 const origRow = originalRows[i];
                 const cloneRow = clonedRows[i];
 
-                // Lewati baris yang disembunyikan
                 if (window.getComputedStyle(origRow).display === 'none') {
                     cloneRow.style.display = 'none';
                     continue;
@@ -1306,19 +1298,16 @@ function exportTableToExcel(tableId, fileNamePrefix) {
                     const origCell = origRow.cells[j];
                     const cloneCell = cloneRow.cells[j];
                     
-                    // Ekstrak computed styles dari UI asli
                     const compStyle = window.getComputedStyle(origCell);
                     let bgColor = compStyle.backgroundColor;
                     let color = compStyle.color;
                     let fw = compStyle.fontWeight;
                     let ta = compStyle.textAlign;
 
-                    // Telusuri elemen di dalam sel untuk mendapatkan warna badge (misalnya div kotak di matriks)
                     const innerElements = origCell.querySelectorAll('div, span');
                     if (innerElements.length > 0) {
                         for(let el of innerElements) {
                             let innerStyle = window.getComputedStyle(el);
-                            // Jika ada warna spesifik, gunakan warna tersebut (abaikan transparan)
                             if (innerStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && innerStyle.backgroundColor !== 'transparent') {
                                 bgColor = innerStyle.backgroundColor;
                             }
@@ -1331,23 +1320,14 @@ function exportTableToExcel(tableId, fileNamePrefix) {
                         }
                     }
 
-                    // Mapping style khusus untuk header utama
-                    if (origCell.tagName === 'TH') {
-                        if (bgColor === 'rgba(0, 0, 0, 0)' || bgColor === 'transparent') bgColor = '#1e293b'; // default slate-800
-                        if (color === 'rgb(0, 0, 0)') color = '#f8fafc';
-                        fw = 'bold';
-                    }
-
                     // Terapkan inline style ke clone
                     cloneCell.style.backgroundColor = bgColor;
                     cloneCell.style.color = color;
                     cloneCell.style.fontWeight = fw;
                     cloneCell.style.textAlign = ta;
                     
-                    // Bersihkan HTML inner (hapus SVG, sisakan teks saja agar Excel bersih)
                     let text = origCell.innerText.trim();
                     if(origCell.tagName === 'TH') {
-                        // Pertahankan baris baru pada header
                         text = text.replace(/\n/g, '<br>');
                     }
                     cloneCell.innerHTML = text;
@@ -1364,7 +1344,6 @@ function exportTableToExcel(tableId, fileNamePrefix) {
 
         excelHtml += `</body></html>`;
 
-        // Proses download menggunakan Blob (Native HTML ke Excel)
         const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1375,18 +1354,388 @@ function exportTableToExcel(tableId, fileNamePrefix) {
         document.body.appendChild(a);
         a.click();
         
-        // Cleanup
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        showToast("File Excel (Beserta Warna) berhasil di-download.");
+        showToast("File Excel berhasil di-download.");
     } catch (e) {
-        console.error("Gagal export excel: ", e);
         showToast("Gagal meng-export Excel. " + e.message);
     }
 }
 window.exportTableToExcel = exportTableToExcel;
 
+// --- EXPORT SUPER FULL (ALL MENU) ---
+async function exportSuperAll(btnElement) {
+    if(!rawData || rawData.length === 0) {
+        showToast("Menunggu data dimuat sepenuhnya...");
+        return;
+    }
+    
+    const originalHtml = btnElement.innerHTML;
+    btnElement.innerHTML = `<span class="animate-spin">⏳</span> Menyusun Laporan Semua Menu...`;
+    btnElement.disabled = true;
+
+    try {
+        // 1. Pastikan tabel kehadiran ter-render (meskipun tersembunyi)
+        renderKehadiranView();
+        
+        // 2. Buat tabel rahasia untuk Analisa Penyebab, Produktivitas Teknisi, dan Monitoring Teknisi
+        let secretZone = document.getElementById('secretExportZone');
+        secretZone.innerHTML = `
+            <div id="secret_prod_wrapper">${generateProdHTML()}</div>
+            <div id="secret_analisa_wrapper">${generateAnalisaHTML()}</div>
+            <div id="secret_monitoring_wrapper">${generateMonitoringHTML()}</div>
+        `;
+        
+        // Beri waktu bagi browser untuk mengeksekusi Tailwind CSS classes di dalam secretZone
+        await new Promise(r => setTimeout(r, 500));
+        
+        const tablesToExport = [
+            {id: 'matrixTableExport', title: '1. Matriks All Tiket Gangguan'},
+            {id: 'matrixTableExport_Underspec', title: '2. Matriks Khusus Underspec'},
+            {id: 'kehadiranTableExport', title: '3. Data Kehadiran Teknisi Harian'},
+            {id: 'secret_prod_table', title: '4. Produktivitas Teknisi (Full Area)'},
+            {id: 'secret_analisa_table', title: '5. Analisa Penyebab Gangguan Terbanyak'},
+            {id: 'secret_monitoring_table', title: '6. Monitoring Pergerakan Teknisi'}
+        ];
+        
+        exportTableToExcel(tablesToExport, 'MASTER_REKAPAN_HARIAN_ALL_MENU');
+        
+    } catch(e) {
+        console.error(e);
+        showToast("Gagal export full: " + e.message);
+    } finally {
+        btnElement.innerHTML = originalHtml;
+        btnElement.disabled = false;
+    }
+}
+window.exportSuperAll = exportSuperAll;
+
+// HTML Generator Cepat untuk Tabel Analisa (Meniru layout dan warna TPL3 persis!)
+function generateAnalisaHTML() {
+    const counts = {}; const stoTotals = {}; let grandTotal = 0;
+    const stoOrder = ['ARK','UBT','BKN','PPN','BKR','SEA','SAK','SGP','DUM','BGU','DRI','BAG','BAS','UJT','SLJ','TAK','RGT','AMK','TBH','PMB','KLE','PNP','BLS','PKR','MIS','SOK','PWG','RBI','PBRC 1','PBRC 2','PBRC 3','PBRC 4'];
+    stoOrder.forEach(sto => stoTotals[sto] = 0);
+    
+    rawData.forEach(r => {
+        let stoRaw = r.STO ? r.STO.trim().toUpperCase() : "";
+        const sektorRaw = r.SEKTOR ? r.SEKTOR.trim().toUpperCase() : "";
+        const penyebabKey = Object.keys(r).find(k => k.toUpperCase().includes('ANALISA') || k.toUpperCase().includes('PENYEBAB'));
+        let penyebab = penyebabKey && r[penyebabKey] ? r[penyebabKey].trim().toUpperCase() : "";
+        if (!penyebab) return;
+
+        const cleanSek = sektorRaw.replace(/\s/g, '');
+        if (cleanSek.includes('PBRC1') || cleanSek.includes('PBB1')) stoRaw = 'PBRC 1';
+        else if (cleanSek.includes('PBRC2') || cleanSek.includes('PBB2')) stoRaw = 'PBRC 2';
+        else if (cleanSek.includes('PBRC3') || cleanSek.includes('PBB3')) stoRaw = 'PBRC 3';
+        else if (cleanSek.includes('PBRC4') || cleanSek.includes('PBB4')) stoRaw = 'PBRC 4';
+        else if (stoRaw === 'PBR') stoRaw = 'PBRC 1';
+
+        if(stoRaw && stoTotals[stoRaw] !== undefined) {
+            if(!counts[penyebab]) counts[penyebab] = {};
+            if(!counts[penyebab][stoRaw]) counts[penyebab][stoRaw] = 0;
+            counts[penyebab][stoRaw]++;
+            stoTotals[stoRaw]++;
+            grandTotal++;
+        }
+    });
+
+    let html = `<table id="secret_analisa_table" class="w-full text-xs text-center border-collapse"><thead>`;
+    html += `
+    <tr>
+        <th class="bg-[#008B8B] text-white p-3 border border-slate-300">SERVICE AREA<br>PENYEBAB</th>
+        <th class="bg-[#bfdbfe] text-black border border-slate-300">ARENGKA</th>
+        <th colspan="7" class="bg-[#e2e8f0] text-black border border-slate-300">BUKIT RAYA</th>
+        <th colspan="7" class="bg-[#bbf7d0] text-black border border-slate-300">DUMAI</th>
+        <th colspan="8" class="bg-[#fecdd3] text-black border border-slate-300">RENGAT</th>
+        <th colspan="5" class="bg-[#fef08a] text-black border border-slate-300">PANGKALAN KERINCI</th>
+        <th colspan="2" class="bg-[#e9d5ff] text-black border border-slate-300">PEKANBARU BARAT</th>
+        <th colspan="2" class="bg-[#d8b4fe] text-black border border-slate-300">PEKANBARU TIMUR</th>
+        <th class="bg-[#a16207] text-white border border-slate-300">GRANDTOTAL</th>
+    </tr>
+    <tr class="bg-[#f8fafc] text-slate-800">
+        <th class="bg-[#008B8B] text-white border border-slate-300">TOTAL / STO</th>`;
+    stoOrder.forEach(s => html += `<th class="border border-slate-300 p-2">${s}</th>`);
+    html += `<th class="bg-[#a16207] text-white border border-slate-300">TOTAL</th></tr>`;
+    
+    html += `<tr class="bg-[#475569] text-white font-bold"><td class="border border-slate-300 p-2">TOTAL / STO</td>`;
+    stoOrder.forEach(s => html += `<td class="border border-slate-300">${stoTotals[s]}</td>`);
+    html += `<td class="border border-slate-300">${grandTotal}</td></tr></thead><tbody class="bg-white">`;
+
+    Object.keys(counts).sort().forEach(cause => {
+        html += `<tr><td class="bg-[#008B8B] text-white text-left p-2 border border-slate-300 font-bold">${cause}</td>`;
+        let rowTot = 0;
+        stoOrder.forEach(sto => {
+            let v = counts[cause][sto] || 0;
+            rowTot += v;
+            let heatCls = v >= 10 ? 'bg-[#ef4444] text-white font-bold' : (v >= 4 ? 'bg-[#fca5a5] text-slate-900' : (v > 0 ? 'bg-[#fee2e2] text-slate-900' : 'text-slate-300'));
+            html += `<td class="border border-slate-300 ${heatCls}">${v > 0 ? v : 0}</td>`;
+        });
+        let totHeat = rowTot >= 20 ? 'bg-[#ef4444] text-white font-bold' : (rowTot >= 10 ? 'bg-[#fca5a5] text-slate-900 font-bold' : (rowTot > 0 ? 'bg-[#fee2e2] text-slate-900 font-bold' : 'font-bold'));
+        html += `<td class="border border-slate-300 ${totHeat}">${rowTot}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+}
+
+// HTML Generator Cepat untuk Tabel Produktivitas (Meniru layout dan warna TPL4 persis!)
+function generateProdHTML() {
+    const groups = {};
+    rawData.forEach(r => {
+        let stoRaw = r.STO ? r.STO.trim().toUpperCase() : "";
+        let sektorRaw = r.SEKTOR ? r.SEKTOR.trim().toUpperCase() : "";
+        let noInternet = r["NOMOR INET"] || r.INET || "";
+        let t1 = (r["TEKNISI 1"] || "").trim();
+        let t2 = (r["TEKNISI 2"] || "").trim();
+        let isClose = !isTicketOpen(r);
+        let bkt = getTicketBucket(r);
+
+        if (!noInternet || noInternet === '0' || noInternet === '-' || noInternet.toUpperCase() === 'NO INTERNET' || noInternet.toUpperCase() === 'ND') return;
+        if (!sektorRaw || sektorRaw === 'SEKTOR' || sektorRaw === 'min') return;
+        
+        if (t1 === '0' || t1 === '-') t1 = '';
+        if (t2 === '0' || t2 === '-') t2 = '';
+        if (t1 === t2) t2 = '';
+        if (!t1 && t2) { t1 = t2; t2 = ''; }
+        if (!t1 && !t2) return;
+
+        const sUpper = sektorRaw.replace(/\s/g, '');
+        if (sUpper.includes('PBRC1') || sUpper.includes('PBB1')) stoRaw = 'PBRC 1';
+        else if (sUpper.includes('PBRC2') || sUpper.includes('PBB2')) stoRaw = 'PBRC 2';
+        else if (sUpper.includes('PBRC3') || sUpper.includes('PBB3')) stoRaw = 'PBRC 3';
+        else if (sUpper.includes('PBRC4') || sUpper.includes('PBB4')) stoRaw = 'PBRC 4';
+        else if (stoRaw === 'PBR') stoRaw = 'PBRC 1';
+        
+        let sa = getSA(r);
+        let key = [t1, t2].filter(x => x).sort().join('|');
+        
+        if(!groups[key]) {
+            groups[key] = {
+                area: sa, sektor: sektorRaw, sto: stoRaw, t1: t1, t2: t2, jlh: (t1 && t2) ? 2 : 1,
+                dia:{to:0,tc:0}, pla:{to:0,tc:0}, man:{to:0,tc:0}, non:{to:0,tc:0}, sqm:{to:0,tc:0}, und:{to:0,tc:0}, zpe:{to:0,tc:0}
+            };
+        }
+        
+        let tgtObj = null;
+        if (bkt === 'HVC DIAMOND') tgtObj = groups[key].dia;
+        else if (bkt === 'HVC PLATINUM') tgtObj = groups[key].pla;
+        else if (bkt === 'MANJA') tgtObj = groups[key].man;
+        else if (bkt === 'NON_HVC') tgtObj = groups[key].non;
+        else if (bkt === 'SQM') tgtObj = groups[key].sqm;
+        else if (bkt === 'UNDERSPEC') tgtObj = groups[key].und;
+        else if (bkt === 'Z_PERMINTAAN') tgtObj = groups[key].zpe;
+        
+        if (tgtObj) {
+            if (isClose) tgtObj.tc++; else tgtObj.to++;
+        }
+    });
+
+    let dataRows = Object.values(groups).map(g => {
+        let totalOpen = g.dia.to + g.pla.to + g.man.to + g.non.to + g.sqm.to + g.und.to + g.zpe.to;
+        let totalClose = g.dia.tc + g.pla.tc + g.man.tc + g.non.tc + g.sqm.tc + g.und.tc + g.zpe.tc;
+        let tgtProd = g.jlh * 4;
+        let prodTeknisi = g.jlh > 0 ? (totalClose / g.jlh) : 0;
+        let achProd = tgtProd > 0 ? (totalClose / tgtProd) * 100 : 0;
+        return {...g, totalOpen, totalClose, tgtProd, prodTeknisi, achProd};
+    });
+
+    dataRows.sort((a,b) => a.area.localeCompare(b.area) || a.sektor.localeCompare(b.sektor) || a.sto.localeCompare(b.sto) || a.t1.localeCompare(b.t1));
+
+    let html = `<table id="secret_prod_table" class="w-full text-xs text-center border-collapse"><thead>`;
+    html += `
+        <tr>
+            <th rowspan="2" class="bg-[#8faadc] text-black border border-slate-300 p-2">SERVICE AREA</th>
+            <th rowspan="2" class="bg-[#8faadc] text-black border border-slate-300 p-2">SEKTOR</th>
+            <th rowspan="2" class="bg-[#8faadc] text-black border border-slate-300 p-2">STO</th>
+            <th rowspan="2" class="bg-[#8faadc] text-black border border-slate-300 p-2">TEKNISI 1</th>
+            <th rowspan="2" class="bg-[#8faadc] text-black border border-slate-300 p-2">TEKNISI 2</th>
+            <th rowspan="2" class="bg-[#2f5597] text-white border border-slate-300 p-2">JLH TEK</th>
+            <th colspan="2" class="bg-[#5b9bd5] text-white border border-slate-300">DIAMOND</th>
+            <th colspan="2" class="bg-[#7030a0] text-white border border-slate-300">PLATINUM</th>
+            <th colspan="2" class="bg-[#ed7d31] text-white border border-slate-300">MANJA</th>
+            <th colspan="2" class="bg-[#70ad47] text-white border border-slate-300">NON HVC</th>
+            <th colspan="2" class="bg-[#9bc2e6] text-black border border-slate-300">SQM</th>
+            <th colspan="2" class="bg-[#a6a6a6] text-black border border-slate-300">UNDERSPEC</th>
+            <th colspan="2" class="bg-[#f8cbad] text-black border border-slate-300">Z PERMINTAAN</th>
+            <th rowspan="2" class="bg-[#2f5597] text-white border border-slate-300 p-2">TOTAL OPEN</th>
+            <th rowspan="2" class="bg-[#548235] text-white border border-slate-300 p-2">TOTAL CLOSE</th>
+            <th rowspan="2" class="bg-[#2f5597] text-white border border-slate-300 p-2">TGT PROD</th>
+            <th rowspan="2" class="bg-[#c65911] text-white border border-slate-300 p-2">PROD TEKNISI</th>
+            <th rowspan="2" class="bg-[#548235] text-white border border-slate-300 p-2">ACH PROD</th>
+        </tr>
+        <tr class="bg-slate-100 font-bold">
+            <th class="bg-[#5b9bd5] text-white border border-slate-300">TO</th><th class="bg-[#5b9bd5] text-white border border-slate-300">TC</th>
+            <th class="bg-[#7030a0] text-white border border-slate-300">TO</th><th class="bg-[#7030a0] text-white border border-slate-300">TC</th>
+            <th class="bg-[#ed7d31] text-white border border-slate-300">TO</th><th class="bg-[#ed7d31] text-white border border-slate-300">TC</th>
+            <th class="bg-[#70ad47] text-white border border-slate-300">TO</th><th class="bg-[#70ad47] text-white border border-slate-300">TC</th>
+            <th class="bg-[#9bc2e6] border border-slate-300 text-black">TO</th><th class="bg-[#9bc2e6] border border-slate-300 text-black">TC</th>
+            <th class="bg-[#a6a6a6] border border-slate-300 text-black">TO</th><th class="bg-[#a6a6a6] border border-slate-300 text-black">TC</th>
+            <th class="bg-[#f8cbad] border border-slate-300 text-black">TO</th><th class="bg-[#f8cbad] border border-slate-300 text-black">TC</th>
+        </tr>
+    </thead><tbody class="bg-white">`;
+
+    let gt = {jlh:0, toD:0, tcD:0, toP:0, tcP:0, toM:0, tcM:0, toN:0, tcN:0, toS:0, tcS:0, toU:0, tcU:0, toZ:0, tcZ:0, op:0, cl:0, tgt:0};
+
+    dataRows.forEach(r => {
+        gt.jlh += r.jlh; gt.toD += r.dia.to; gt.tcD += r.dia.tc; gt.toP += r.pla.to; gt.tcP += r.pla.tc;
+        gt.toM += r.man.to; gt.tcM += r.man.tc; gt.toN += r.non.to; gt.tcN += r.non.tc; gt.toS += r.sqm.to; gt.tcS += r.sqm.tc;
+        gt.toU += r.und.to; gt.tcU += r.und.tc; gt.toZ += r.zpe.to; gt.tcZ += r.zpe.tc; gt.op += r.totalOpen; gt.cl += r.totalClose; gt.tgt += r.tgtProd;
+
+        let achBg = r.achProd >= 100 ? 'bg-[#15803d] text-white' : (r.achProd > 75 ? 'bg-[#4ade80] text-black' : (r.achProd > 50 ? 'bg-[#f97316] text-white' : 'bg-[#dc2626] text-white'));
+
+        html += `<tr class="border border-slate-300">
+            <td class="border border-slate-300 p-1 text-left">${r.area}</td>
+            <td class="border border-slate-300 p-1">${r.sektor}</td>
+            <td class="border border-slate-300 p-1">${r.sto}</td>
+            <td class="border border-slate-300 p-1 text-left">${r.t1}</td>
+            <td class="border border-slate-300 p-1 text-left">${r.t2}</td>
+            <td class="bg-[#d9e1f2] text-black border border-slate-300 p-1 font-bold">${r.jlh}</td>
+            
+            <td class="border border-slate-300 p-1 ${r.dia.to>0?'bg-yellow-50':''}">${r.dia.to}</td><td class="border border-slate-300 p-1 ${r.dia.tc>0?'bg-red-50':''}">${r.dia.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.pla.to>0?'bg-yellow-50':''}">${r.pla.to}</td><td class="border border-slate-300 p-1 ${r.pla.tc>0?'bg-red-50':''}">${r.pla.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.man.to>0?'bg-yellow-50':''}">${r.man.to}</td><td class="border border-slate-300 p-1 ${r.man.tc>0?'bg-red-50':''}">${r.man.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.non.to>0?'bg-yellow-50':''}">${r.non.to}</td><td class="border border-slate-300 p-1 ${r.non.tc>0?'bg-red-50':''}">${r.non.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.sqm.to>0?'bg-yellow-50':''}">${r.sqm.to}</td><td class="border border-slate-300 p-1 ${r.sqm.tc>0?'bg-red-50':''}">${r.sqm.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.und.to>0?'bg-yellow-50':''}">${r.und.to}</td><td class="border border-slate-300 p-1 ${r.und.tc>0?'bg-red-50':''}">${r.und.tc}</td>
+            <td class="border border-slate-300 p-1 ${r.zpe.to>0?'bg-yellow-50':''}">${r.zpe.to}</td><td class="border border-slate-300 p-1 ${r.zpe.tc>0?'bg-red-50':''}">${r.zpe.tc}</td>
+            
+            <td class="bg-slate-100 text-black border border-slate-300 p-1 font-bold">${r.totalOpen}</td>
+            <td class="bg-slate-100 text-black border border-slate-300 p-1 font-bold">${r.totalClose}</td>
+            <td class="border border-slate-300 p-1 text-black">${r.tgtProd}</td>
+            <td class="border border-slate-300 p-1 text-black">${r.prodTeknisi.toFixed(2)}</td>
+            <td class="border border-slate-300 p-1 font-bold ${achBg}">${r.achProd.toFixed(2)}%</td>
+        </tr>`;
+    });
+    
+    let gtAch = gt.tgt > 0 ? (gt.cl / gt.tgt) * 100 : 0;
+    let gtAchBg = gtAch >= 100 ? 'bg-[#15803d] text-white' : (gtAch > 75 ? 'bg-[#4ade80] text-black' : (gtAch > 50 ? 'bg-[#f97316] text-white' : 'bg-[#dc2626] text-white'));
+
+    html += `<tr class="bg-[#d9e1f2] font-bold text-black border-t-2 border-slate-400">
+        <td colspan="5" class="text-right p-2 border border-slate-300">Grand Total</td>
+        <td class="border border-slate-300">${gt.jlh}</td>
+        <td class="border border-slate-300">${gt.toD}</td><td class="border border-slate-300">${gt.tcD}</td>
+        <td class="border border-slate-300">${gt.toP}</td><td class="border border-slate-300">${gt.tcP}</td>
+        <td class="border border-slate-300">${gt.toM}</td><td class="border border-slate-300">${gt.tcM}</td>
+        <td class="border border-slate-300">${gt.toN}</td><td class="border border-slate-300">${gt.tcN}</td>
+        <td class="border border-slate-300">${gt.toS}</td><td class="border border-slate-300">${gt.tcS}</td>
+        <td class="border border-slate-300">${gt.toU}</td><td class="border border-slate-300">${gt.tcU}</td>
+        <td class="border border-slate-300">${gt.toZ}</td><td class="border border-slate-300">${gt.tcZ}</td>
+        <td class="border border-slate-300">${gt.op}</td>
+        <td class="border border-slate-300">${gt.cl}</td>
+        <td class="border border-slate-300">${gt.tgt}</td>
+        <td class="border border-slate-300">${(gt.jlh > 0 ? gt.cl/gt.jlh : 0).toFixed(2)}</td>
+        <td class="border border-slate-300 ${gtAchBg}">${gtAch.toFixed(2)}%</td>
+    </tr>`;
+
+    html += `</tbody></table>`;
+    return html;
+}
+
+// HTML Generator Cepat untuk Tabel Monitoring Teknisi
+function generateMonitoringHTML() {
+    let d = rawData; 
+    const gr = {}; 
+    d.forEach(r => {
+        let t1=(r["TEKNISI 1"]||"").trim(), t2=(r["TEKNISI 2"]||"").trim(); if(!t1 && !t2) return;
+        
+        let s = mapSTO(r["STO"] || r["LOKASI"] || "UNKNOWN");
+        let sek = (r["SEKTOR"] || "").toUpperCase().replace(/\s/g, '');
+        if (sek.includes("PBRC1") || sek.includes("PBB1")) s = "PBRC 1";
+        else if (sek.includes("PBRC2") || sek.includes("PBB2")) s = "PBRC 2";
+        else if (sek.includes("PBRC3") || sek.includes("PBB3")) s = "PBRC 3";
+        else if (sek.includes("PBRC4") || sek.includes("PBB4")) s = "PBRC 4";
+        else if (s === 'PBR') s = "PBRC 1";
+        
+        let k = t1 + "|||" + t2; 
+        if(!gr[s]) gr[s]={}; 
+        if(!gr[s][k]) gr[s][k]={cl:[],o:0}; 
+        
+        if(isTicketOpen(r)) {
+            gr[s][k].o++;
+        } else { 
+            const rt = r["JAM TECH CLOSED"]||r["AM TECH CLOSE"]; 
+            if(rt) { 
+                const dt=new Date(rt); 
+                if(!isNaN(dt.getTime())){ 
+                    const hr=dt.getHours(); 
+                    gr[s][k].cl.push({inc:r.NOTIKET,hr}); 
+                } 
+            } 
+        }
+    });
+
+    let html = `<table id="secret_monitoring_table" class="w-full text-xs text-center border-collapse"><thead>`;
+    html += `
+        <tr class="bg-[#2f5597] text-white font-bold uppercase">
+            <th class="p-3 border border-slate-300 min-w-[150px]">AREA / SEKTOR</th>
+            <th class="p-3 border border-slate-300 min-w-[200px]">TEKNISI UTAMA & PENDAMPING</th>
+            <th class="p-3 border border-slate-300">00-02</th><th class="p-3 border border-slate-300">02-04</th>
+            <th class="p-3 border border-slate-300">04-06</th><th class="p-3 border border-slate-300">06-08</th>
+            <th class="p-3 border border-slate-300">08-10</th><th class="p-3 border border-slate-300">10-12</th>
+            <th class="p-3 border border-slate-300">12-14</th><th class="p-3 border border-slate-300">14-16</th>
+            <th class="p-3 border border-slate-300">16-18</th><th class="p-3 border border-slate-300">18-20</th>
+            <th class="p-3 border border-slate-300">20-22</th><th class="p-3 border border-slate-300">22-00</th>
+        </tr>
+    </thead><tbody class="bg-white">`;
+
+    Object.keys(gr).sort().forEach(s => {
+        let totalCloseArea = 0;
+        let sessTotals = Array(12).fill(0);
+        Object.keys(gr[s]).forEach(tk => {
+            totalCloseArea += gr[s][tk].cl.length;
+            gr[s][tk].cl.forEach(t => {
+                let bIdx = Math.floor(t.hr / 2);
+                if (bIdx >= 0 && bIdx <= 11) sessTotals[bIdx]++;
+            });
+        });
+        
+        let sessHTML = sessTotals.map(tot => {
+            return `<td class="p-2 text-center border border-slate-300 font-bold ${tot > 0 ? 'text-[#047857] bg-[#d1fae5]' : 'text-slate-300'}">${tot > 0 ? tot : '-'}</td>`;
+        }).join('');
+        
+        html += `<tr class="bg-[#f1f5f9]">
+            <td class="p-2 font-black text-left text-[#1d4ed8] border border-slate-300">${s}</td>
+            <td class="p-2 font-bold text-left border border-slate-300 text-slate-600">${Object.keys(gr[s]).length} Tim | ${totalCloseArea} Close</td>
+            ${sessHTML}
+        </tr>`;
+
+        Object.keys(gr[s]).sort().forEach(tk => {
+            const inf = gr[s][tk]; 
+            const pts = tk.split("|||"); 
+            const getB = (h1,h2) => {
+                let tickets = inf.cl.filter(t => t.hr>=h1 && t.hr<=h2).map(t => `<div style="background-color:#eff6ff; color:#1d4ed8; padding:2px; margin-bottom:2px; border-radius:4px; border: 1px solid #bfdbfe; text-align:center; font-weight:bold; font-size:10px;">${t.inc}</div>`).join('');
+                return tickets;
+            };
+            
+            let t1Name = extractName(pts[0]);
+            let t2Name = extractName(pts[1]);
+            let dispName = t1Name;
+            if (t2Name && t2Name.toUpperCase() !== 'N/A') dispName += ' / ' + t2Name;
+            
+            let openText = inf.o > 0 ? ` <span style="color:#e11d48; font-weight:bold;">(${inf.o} Open)</span>` : '';
+
+            html += `<tr>
+                <td class="p-2 border border-slate-300 bg-white"></td>
+                <td class="p-2 font-bold text-left border border-slate-300 bg-white">${dispName}${openText}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(0,1)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(2,3)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(4,5)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(6,7)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(8,9)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(10,11)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(12,13)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(14,15)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(16,17)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(18,19)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(20,21)}</td>
+                <td class="p-1 align-top border border-slate-300 bg-white">${getB(22,23)}</td>
+            </tr>`;
+        });
+    });
+
+    html += `</tbody></table>`;
+    return html;
+}
 
 // ===== 5. MATRIX TABLE GENERATOR =====
 function getUnderspecMatrixHTML() {
