@@ -705,14 +705,19 @@ function getKehadiranStatus(r, day) {
 function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "").replace(/-/g, ""); }
 function mapSTO(val) { 
     let n = norm(val); 
-    if(n.includes("PBRC")) return "PBR"; 
+    if(n.includes("PBRC") || n === "PBB") return "PBR"; 
     let res = (val || "").toString().toUpperCase();
     if(res === "KDS" || n === "KDS") return "MIS";
+    if(res === "PBB") return "PBR";
     return res; 
 }
 function mapSEKTOR(val) { 
     let n = norm(val); 
     if(n.includes("ARENGKA")) return ["ARK-1", "ARK-2"]; 
+    if(n.includes("PBRC1") || n.includes("PBB1")) return ["PBRC 1"];
+    if(n.includes("PBRC2") || n.includes("PBB2")) return ["PBRC 2"];
+    if(n.includes("PBRC3") || n.includes("PBB3")) return ["PBRC 3"];
+    if(n.includes("PBRC4") || n.includes("PBB4")) return ["PBRC 4"];
     let res = (val || "").toString().toUpperCase();
     if(res === "KDS" || n === "KDS") return ["MIS"];
     return [res]; 
@@ -721,9 +726,10 @@ function extractName(f) { if(!f) return 'N/A'; const s = f.toString(); const i =
 
 function getSA(r) {
     let st = mapSTO(r.STO || r.LOKASI);
-    let sek = (r.SEKTOR || "").toUpperCase();
-    if (sek.includes("PBRC 1") || sek.includes("PBRC 2")) return "PBR BARAT";
-    if (sek.includes("PBRC 3") || sek.includes("PBRC 4")) return "PBR TIMUR";
+    let sek = (r.SEKTOR || "").toUpperCase().replace(/\s/g, '');
+    if (sek.includes("PBRC1") || sek.includes("PBB1") || sek.includes("PBRC2") || sek.includes("PBB2")) return "PBR BARAT";
+    if (sek.includes("PBRC3") || sek.includes("PBB3") || sek.includes("PBRC4") || sek.includes("PBB4")) return "PBR TIMUR";
+    if (st === 'PBR') return "PBR BARAT";
     if (st === 'ARK' || sek.includes("ARK")) return "ARENGKA";
     return SA_MAP[st] || "OTHER";
 }
@@ -1091,7 +1097,14 @@ function openMatrixDetail(loc, catId, rowType, agingIdx = -1) {
             if (mode === 'SA') return getSA(r) === loc;
             let s = (r["SEKTOR"] || "").toUpperCase(); let st = (r["STO"] || "").toUpperCase();
             if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) return mapSEKTOR(s).includes(loc);
-            if (loc.startsWith("PBRC")) return s.includes(loc);
+            if (loc.startsWith("PBRC")) {
+                let cleanS = s.replace(/\s/g, '');
+                let cleanLoc = loc.replace(/\s/g, '');
+                let altLoc = cleanLoc.replace("PBRC", "PBB");
+                if (cleanS.includes(cleanLoc) || cleanS.includes(altLoc)) return true;
+                if (mapSTO(st) === 'PBR' && loc === "PBRC 1") return true;
+                return false;
+            }
             return mapSTO(st) === loc;
         });
     }
@@ -1396,9 +1409,14 @@ function getUnderspecMatrixHTML() {
         
         let sto = mapSTO(r["STO"] || r["LOKASI"]);
         let sek = (r["SEKTOR"] || "").toUpperCase();
-        if (sto === 'PBR') {
-            if (sek.includes("PBRC 1")) sto = "PBRC 1"; else if (sek.includes("PBRC 2")) sto = "PBRC 2"; else if (sek.includes("PBRC 3")) sto = "PBRC 3"; else if (sek.includes("PBRC 4")) sto = "PBRC 4";
-        }
+        
+        let cleanSek = sek.replace(/\s/g, '');
+        if (cleanSek.includes("PBRC1") || cleanSek.includes("PBB1")) sto = "PBRC 1"; 
+        else if (cleanSek.includes("PBRC2") || cleanSek.includes("PBB2")) sto = "PBRC 2"; 
+        else if (cleanSek.includes("PBRC3") || cleanSek.includes("PBB3")) sto = "PBRC 3"; 
+        else if (cleanSek.includes("PBRC4") || cleanSek.includes("PBB4")) sto = "PBRC 4";
+        else if (sto === 'PBR') sto = "PBRC 1";
+        
         if(!metrics[sto]) return; 
         
         let m = metrics[sto];
@@ -1683,8 +1701,16 @@ function renderReportTable() {
         if (mode === 'SA') loc = tableColumns.find(c => getSA(r) === c);
         else if (['SEKTOR', 'SA_PBR_BARAT', 'SA_PBR_TIMUR'].includes(mode)) loc = tableColumns.find(c => mapSEKTOR(rSektor).includes(c));
         else {
-            if (rSektor.includes("PBRC 1")) loc = "PBRC 1"; else if (rSektor.includes("PBRC 2")) loc = "PBRC 2"; else if (rSektor.includes("PBRC 3")) loc = "PBRC 3"; else if (rSektor.includes("PBRC 4")) loc = "PBRC 4";
-            else { let m = mapSTO(rSTO); if (tableColumns.includes(m)) loc = m; }
+            let cleanSektor = rSektor.replace(/\s/g, '');
+            if (cleanSektor.includes("PBRC1") || cleanSektor.includes("PBB1")) loc = "PBRC 1"; 
+            else if (cleanSektor.includes("PBRC2") || cleanSektor.includes("PBB2")) loc = "PBRC 2"; 
+            else if (cleanSektor.includes("PBRC3") || cleanSektor.includes("PBB3")) loc = "PBRC 3"; 
+            else if (cleanSektor.includes("PBRC4") || cleanSektor.includes("PBB4")) loc = "PBRC 4";
+            else { 
+                let m = mapSTO(rSTO); 
+                if (m === 'PBR') loc = 'PBRC 1';
+                else if (tableColumns.includes(m)) loc = m; 
+            }
         }
         if (!loc) return;
         
@@ -2486,13 +2512,12 @@ function renderMonitoringView() {
             s = mapSEKTOR(r.SEKTOR || r.LOKASI)[0] || "UNKNOWN";
         } else {
             s = mapSTO(r["STO"] || r["LOKASI"] || "UNKNOWN");
-            if (s === 'PBR') {
-                let sek = (r["SEKTOR"] || "").toUpperCase();
-                if (sek.includes("PBRC 1")) s = "PBRC 1";
-                else if (sek.includes("PBRC 2")) s = "PBRC 2";
-                else if (sek.includes("PBRC 3")) s = "PBRC 3";
-                else if (sek.includes("PBRC 4")) s = "PBRC 4";
-            }
+            let sek = (r["SEKTOR"] || "").toUpperCase().replace(/\s/g, '');
+            if (sek.includes("PBRC1") || sek.includes("PBB1")) s = "PBRC 1";
+            else if (sek.includes("PBRC2") || sek.includes("PBB2")) s = "PBRC 2";
+            else if (sek.includes("PBRC3") || sek.includes("PBB3")) s = "PBRC 3";
+            else if (sek.includes("PBRC4") || sek.includes("PBB4")) s = "PBRC 4";
+            else if (s === 'PBR') s = "PBRC 1";
         }
         
         let k = t1 + "|||" + t2; 
@@ -3602,10 +3627,11 @@ load(); setInterval(load, 60000);
             const penyebab = row[26] ? row[26].trim().toUpperCase() : "";
 
             // LOGIKA KHUSUS PEKANBARU (PBRC 1 - 4): Ambil dari Kolom SEKTOR
-            if (sektorRaw.includes('PBRC 1') || sektorRaw === 'PBRC1') stoRaw = 'PBRC 1';
-            else if (sektorRaw.includes('PBRC 2') || sektorRaw === 'PBRC2') stoRaw = 'PBRC 2';
-            else if (sektorRaw.includes('PBRC 3') || sektorRaw === 'PBRC3') stoRaw = 'PBRC 3';
-            else if (sektorRaw.includes('PBRC 4') || sektorRaw === 'PBRC4') stoRaw = 'PBRC 4';
+            const cleanSek = sektorRaw.replace(/\s/g, '');
+            if (cleanSek.includes('PBRC1') || cleanSek.includes('PBB1')) stoRaw = 'PBRC 1';
+            else if (cleanSek.includes('PBRC2') || cleanSek.includes('PBB2')) stoRaw = 'PBRC 2';
+            else if (cleanSek.includes('PBRC3') || cleanSek.includes('PBB3')) stoRaw = 'PBRC 3';
+            else if (cleanSek.includes('PBRC4') || cleanSek.includes('PBB4')) stoRaw = 'PBRC 4';
 
             if(stoRaw && penyebab) {
                 // Catat ke dalam matrix jika STO dikenali di kolom kita
@@ -4003,6 +4029,7 @@ load(); setInterval(load, 60000);
                 
                 const sUpper = sektor.toUpperCase();
                 const stoUpper = sto.toUpperCase();
+                const cleanSek = sUpper.replace(/\s/g, '');
 
                 // 1. ARENGKA
                 if (sUpper.includes('ARK') || stoUpper.includes('ARK')) {
@@ -4041,23 +4068,23 @@ load(); setInterval(load, 60000);
                     if (!['KDS', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK'].includes(stoUpper)) finalSto = '-';
                 }
                 // 7. PEKANBARU BARAT (PBRC 1 & PBRC 2)
-                else if (sUpper.includes('PBRC 1')) {
+                else if (cleanSek.includes('PBRC1') || cleanSek.includes('PBB1')) {
                     serviceArea = 'PEKANBARU BARAT';
                     finalSektor = 'PBRC 1';
                     if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
                 }
-                else if (sUpper.includes('PBRC 2')) {
+                else if (cleanSek.includes('PBRC2') || cleanSek.includes('PBB2')) {
                     serviceArea = 'PEKANBARU BARAT';
                     finalSektor = 'PBRC 2';
                     if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
                 }
                 // 8. PEKANBARU TIMUR (PBRC 3 & PBRC 4)
-                else if (sUpper.includes('PBRC 3')) {
+                else if (cleanSek.includes('PBRC3') || cleanSek.includes('PBB3')) {
                     serviceArea = 'PEKANBARU TIMUR';
                     finalSektor = 'PBRC 3';
                     if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
                 }
-                else if (sUpper.includes('PBRC 4')) {
+                else if (cleanSek.includes('PBRC4') || cleanSek.includes('PBB4')) {
                     serviceArea = 'PEKANBARU TIMUR';
                     finalSektor = 'PBRC 4';
                     if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
