@@ -4445,6 +4445,8 @@ load(); setInterval(load, 60000);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produktifitas Teknisi Assurance Ridar</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* Custom styles for specific precise table borders and tight padding */
         table {
@@ -4466,12 +4468,72 @@ load(); setInterval(load, 60000);
             z-index: 50;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Efek bayangan saat tabel discroll */
         }
+
+        .toolbar-chip {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 10px 12px;
+            min-width: 180px;
+            font-weight: 700;
+            font-size: 12px;
+            color: #334155;
+            outline: none;
+        }
+
+        .toolbar-btn {
+            border: 0;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight: 800;
+            font-size: 12px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, .10);
+            white-space: nowrap;
+        }
+
+        .toolbar-btn:hover { transform: translateY(-1px); }
+
+        .ticket-row:hover { background: #f8fafc; }
+
+        .ticket-modal-backdrop {
+            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, .55);
+        }
+
+        .ticket-modal-card {
+            box-shadow: 0 24px 80px rgba(15, 23, 42, .28);
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4 font-sans overflow-hidden">
     <button onclick="parent.switchTab('app1')" style="position:fixed;top:12px;right:12px;z-index:9999;padding:10px 14px;border-radius:14px;border:0;background:#0f172a;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(15,23,42,.18)">← Kembali ke Dashboard</button>
 
-    <div class="w-full max-w-[100vw] h-[calc(100vh-32px)] overflow-auto shadow-xl rounded-lg bg-white">
+    <div id="prodCard" class="w-full max-w-[100vw] h-[calc(100vh-32px)] overflow-auto shadow-xl rounded-lg bg-white">
+        <div class="p-3 md:p-4 border-b border-slate-200 bg-white sticky top-0 z-20">
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <label class="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Filter Service Area</label>
+                        <select id="saFilter" class="toolbar-chip" onchange="applyTeknikFilter()">
+                            <option value="ALL">Semua Service Area</option>
+                        </select>
+                        <select id="sektorFilter" class="toolbar-chip" onchange="applyTeknikFilter()">
+                            <option value="ALL">Semua Sektor</option>
+                        </select>
+                        <select id="stoFilter" class="toolbar-chip" onchange="applyTeknikFilter()">
+                            <option value="ALL">Semua STO</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="exportTeknikToExcel()" class="toolbar-btn bg-emerald-600 hover:bg-emerald-700">Export to Excel</button>
+                        <button type="button" onclick="downloadTeknikTablePNG()" class="toolbar-btn bg-indigo-600 hover:bg-indigo-700">Download PNG Ultra HD</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <table class="w-full text-xxs whitespace-nowrap text-center border-collapse">
             <thead>
                 <!-- Main Header -->
@@ -4546,6 +4608,44 @@ load(); setInterval(load, 60000);
         </table>
     </div>
 
+
+    <div id="ticketModal" class="fixed inset-0 hidden items-center justify-center z-[9999] p-4 ticket-modal-backdrop">
+        <div class="ticket-modal-card w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-2xl bg-white border border-slate-200 flex flex-col">
+            <div class="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-200 bg-slate-50">
+                <div>
+                    <div id="ticketModalTitle" class="text-lg md:text-xl font-black text-slate-800">Detail Tiket</div>
+                    <div id="ticketModalSub" class="text-xs font-bold text-slate-500 mt-1">Klik baris untuk melihat daftar tiket</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="downloadModalTablePNG()" class="toolbar-btn bg-indigo-600 hover:bg-indigo-700">PNG Ultra HD</button>
+                    <button type="button" onclick="exportModalTableToExcel()" class="toolbar-btn bg-emerald-600 hover:bg-emerald-700">Excel</button>
+                    <button type="button" onclick="closeTicketModal()" class="rounded-full w-10 h-10 flex items-center justify-center bg-white border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200">✕</button>
+                </div>
+            </div>
+            <div class="p-5 overflow-auto bg-slate-50">
+                <div id="ticketModalMeta" class="mb-4 text-sm font-bold text-slate-600"></div>
+                <div id="ticketModalTableWrap" class="overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <table id="ticketModalTable" class="w-full text-[11px] whitespace-nowrap text-left">
+                        <thead class="sticky top-0 z-10 bg-slate-100 text-slate-700 font-extrabold uppercase">
+                            <tr>
+                                <th class="px-4 py-3 border-b border-slate-200">No Tiket</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Status</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Kategori</th>
+                                <th class="px-4 py-3 border-b border-slate-200">No Internet</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Service Area</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Sektor</th>
+                                <th class="px-4 py-3 border-b border-slate-200">STO</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Teknisi 1</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Teknisi 2</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketModalTbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Fungsi Jam Berdetak secara Live
         function startLiveClock() {
@@ -4575,6 +4675,234 @@ load(); setInterval(load, 60000);
         // Fetch data langsung dari GDocs dengan parameter isFirstLoad agar tidak berkedip saat auto-refresh
         let isLoadingTeknik = false;
         let lastTeknikLoad = 0;
+        let allTeknikRows = [];
+        let visibleTeknikRows = [];
+        let ticketModalRows = [];
+        let ticketModalSource = null;
+        const DEFAULT_FILTER = { sa: 'ALL', sektor: 'ALL', sto: 'ALL' };
+
+        function uniqSorted(values) {
+            return [...new Set(values.filter(Boolean).map(v => v.toString().trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        }
+
+        function fillSelectOptions(selectId, values, placeholder) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const current = select.value || 'ALL';
+            select.innerHTML = `<option value="ALL">${placeholder}</option>` + values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+            select.value = values.includes(current) ? current : 'ALL';
+        }
+
+        function escapeHtml(value) {
+            return (value ?? '').toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getTicketLabel(row) {
+            return row.ticketNo || row.noTiket || row.noTicket || row.no_tiket || '-';
+        }
+
+        function setFilterOptions(dataRows) {
+            const areas = uniqSorted(dataRows.map(r => r.area));
+            const sectors = uniqSorted(dataRows.map(r => r.sektor));
+            const stos = uniqSorted(dataRows.map(r => r.sto));
+            fillSelectOptions('saFilter', areas, 'Semua Service Area');
+            fillSelectOptions('sektorFilter', sectors, 'Semua Sektor');
+            fillSelectOptions('stoFilter', stos, 'Semua STO');
+        }
+
+        function getCurrentTeknikFilter() {
+            return {
+                sa: document.getElementById('saFilter')?.value || 'ALL',
+                sektor: document.getElementById('sektorFilter')?.value || 'ALL',
+                sto: document.getElementById('stoFilter')?.value || 'ALL'
+            };
+        }
+
+        function applyTeknikFilter() {
+            const { sa, sektor, sto } = getCurrentTeknikFilter();
+            const filtered = allTeknikRows.filter(row => {
+                const okSa = sa === 'ALL' || row.area === sa;
+                const okSektor = sektor === 'ALL' || row.sektor === sektor;
+                const okSto = sto === 'ALL' || row.sto === sto;
+                return okSa && okSektor && okSto;
+            });
+            visibleTeknikRows = filtered;
+            renderTable(filtered);
+            updateGrandTotal(filtered);
+        }
+
+        async function copyCanvasToDownload(canvas, fileName) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob((blob) => {
+                    if (!blob) return reject(new Error('Canvas kosong'));
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    resolve();
+                }, 'image/png');
+            });
+        }
+
+        async function downloadTeknikTablePNG() {
+            const el = document.getElementById('prodCard');
+            if (!el || typeof html2canvas === 'undefined') return;
+
+            const clone = el.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.left = '-10000px';
+            clone.style.top = '0';
+            clone.style.height = 'auto';
+            clone.style.maxHeight = 'none';
+            clone.style.overflow = 'visible';
+            clone.style.width = el.scrollWidth + 'px';
+            document.body.appendChild(clone);
+
+            const canvas = await html2canvas(clone, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: clone.scrollWidth,
+                windowHeight: clone.scrollHeight
+            });
+            clone.remove();
+            await copyCanvasToDownload(canvas, `Produktifitas_Teknisi_UltraHD_${new Date().toISOString().slice(0,10)}.png`);
+        }
+
+        function exportTeknikToExcel() {
+            const rows = (visibleTeknikRows.length ? visibleTeknikRows : allTeknikRows).map(row => ({
+                'SERVICE AREA': row.area,
+                'SEKTOR': row.sektor,
+                'STO': row.sto,
+                'TEKNISI 1': row.teknisi1,
+                'TEKNISI 2': row.teknisi2,
+                'JLH TEK': row.jlh,
+                'DIAMOND TO': row.categories[0]?.to || 0,
+                'DIAMOND TC': row.categories[0]?.tc || 0,
+                'PLATINUM TO': row.categories[1]?.to || 0,
+                'PLATINUM TC': row.categories[1]?.tc || 0,
+                'MANJA TO': row.categories[2]?.to || 0,
+                'MANJA TC': row.categories[2]?.tc || 0,
+                'NON HVC TO': row.categories[3]?.to || 0,
+                'NON HVC TC': row.categories[3]?.tc || 0,
+                'SQM TO': row.categories[4]?.to || 0,
+                'SQM TC': row.categories[4]?.tc || 0,
+                'UNDERSPEC TO': row.categories[5]?.to || 0,
+                'UNDERSPEC TC': row.categories[5]?.tc || 0,
+                'Z_PERMINTAAN TO': row.categories[6]?.to || 0,
+                'Z_PERMINTAAN TC': row.categories[6]?.tc || 0,
+                'TOTAL OPEN': row.totalOpen,
+                'TOTAL CLOSE': row.totalClose,
+                'TGT PROD': row.tgtProd,
+                'PROD TEKNISI': row.prodTeknisi,
+                'ACH PROD': row.achProd
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Produktifitas');
+            XLSX.writeFile(wb, `Produktifitas_Teknisi_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function openTicketModal(rowIndex) {
+            const row = visibleTeknikRows[rowIndex];
+            if (!row || !row.tickets || row.tickets.length === 0) return;
+            ticketModalRows = row.tickets;
+            ticketModalSource = row;
+            const modal = document.getElementById('ticketModal');
+            const title = document.getElementById('ticketModalTitle');
+            const sub = document.getElementById('ticketModalSub');
+            const meta = document.getElementById('ticketModalMeta');
+            title.innerText = `Detail Tiket — ${row.area} / ${row.sektor} / ${row.sto}`;
+            sub.innerText = `${row.teknisi1}${row.teknisi2 ? ' & ' + row.teknisi2 : ''}`;
+            meta.innerText = `Jumlah tiket: ${row.tickets.length} | JLH TEK: ${row.jlh} | OPEN: ${row.totalOpen} | CLOSE: ${row.totalClose}`;
+            renderTicketModalTable(row.tickets);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTicketModal() {
+            const modal = document.getElementById('ticketModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderTicketModalTable(rows) {
+            const tbody = document.getElementById('ticketModalTbody');
+            if (!tbody) return;
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-6 text-center font-bold text-slate-500">Tidak ada tiket untuk baris ini.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = rows.map(t => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 font-bold text-slate-800">${escapeHtml(getTicketLabel(t))}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.status)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.category)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.noInternet)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.serviceArea)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.sektor)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.sto)}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.teknisi1 || '-')}</td>
+                    <td class="px-4 py-3">${escapeHtml(t.teknisi2 || '-')}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportModalTableToExcel() {
+            const rows = (ticketModalRows || []).map(t => ({
+                'NO TIKET': getTicketLabel(t),
+                'STATUS': t.status,
+                'KATEGORI': t.category,
+                'NO INTERNET': t.noInternet,
+                'SERVICE AREA': t.serviceArea,
+                'SEKTOR': t.sektor,
+                'STO': t.sto,
+                'TEKNISI 1': t.teknisi1,
+                'TEKNISI 2': t.teknisi2
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Detail Tiket');
+            XLSX.writeFile(wb, `Detail_Tiket_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        async function downloadModalTablePNG() {
+            const el = document.getElementById('ticketModalTableWrap');
+            if (!el || typeof html2canvas === 'undefined') return;
+
+            const clone = el.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.left = '-10000px';
+            clone.style.top = '0';
+            clone.style.height = 'auto';
+            clone.style.maxHeight = 'none';
+            clone.style.overflow = 'visible';
+            clone.style.width = el.scrollWidth + 'px';
+            document.body.appendChild(clone);
+
+            const canvas = await html2canvas(clone, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: clone.scrollWidth,
+                windowHeight: clone.scrollHeight
+            });
+            clone.remove();
+            await copyCanvasToDownload(canvas, `Detail_Tiket_UltraHD_${new Date().toISOString().slice(0,10)}.png`);
+        }
+
 
         async function loadData(isFirstLoad = false) {
             if (window.parent && window.parent.__activeTab && window.parent.__activeTab !== 'app4') return;
@@ -4881,8 +5209,11 @@ load(); setInterval(load, 60000);
                 return a.teknisi1.localeCompare(b.teknisi1);
             });
 
-            renderTable(dataRows);
-            updateGrandTotal(dataRows);
+            allTeknikRows = dataRows;
+            if (!visibleTeknikRows.length) visibleTeknikRows = dataRows;
+
+            setFilterOptions(dataRows);
+            applyTeknikFilter();
         }
 
         // Render data ke dalam HTML
@@ -4890,9 +5221,11 @@ load(); setInterval(load, 60000);
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = ''; 
 
-            dataRows.forEach(row => {
+            dataRows.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-100";
+                tr.className = "ticket-row hover:bg-gray-100 cursor-pointer";
+                tr.title = "Klik untuk melihat daftar tiket";
+                tr.setAttribute("onclick", `openTicketModal(${index})`);
 
                 let htmlContent = `
                     <td class="text-left px-2 py-1">${row.area}</td>
@@ -4996,6 +5329,10 @@ load(); setInterval(load, 60000);
         // Panggil saat halaman pertama kali diload
         loadData(true);
         startLiveClock();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeTicketModal();
+        });
 
         // Interval untuk melakukan Auto Refresh setiap 30 detik (30000 milidetik)
         setInterval(() => {
