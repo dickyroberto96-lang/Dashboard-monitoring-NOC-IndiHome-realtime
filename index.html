@@ -1826,9 +1826,17 @@ function generateMonitoringHTML() {
         </tr>
     </thead><tbody class="bg-white">`;
 
+    let gtTim = 0;
+    let gtClose = 0;
+    let gtSess = Array(12).fill(0);
+
     Object.keys(gr).sort().forEach(s => {
         let totalCloseArea = 0;
         let sessTotals = Array(12).fill(0);
+        let countTim = Object.keys(gr[s]).length;
+        
+        gtTim += countTim;
+
         Object.keys(gr[s]).forEach(tk => {
             totalCloseArea += gr[s][tk].cl.length;
             gr[s][tk].cl.forEach(t => {
@@ -1837,13 +1845,16 @@ function generateMonitoringHTML() {
             });
         });
         
+        gtClose += totalCloseArea;
+        for(let i=0; i<12; i++) gtSess[i] += sessTotals[i];
+        
         let sessHTML = sessTotals.map(tot => {
             return `<td class="p-2 text-center border border-slate-300 font-bold ${tot > 0 ? 'text-[#047857] bg-[#d1fae5]' : 'text-slate-300'}">${tot > 0 ? tot : '-'}</td>`;
         }).join('');
         
         html += `<tr class="bg-[#f1f5f9]">
             <td class="p-2 font-black text-left text-[#1d4ed8] border border-slate-300">${s}</td>
-            <td class="p-2 font-bold text-left border border-slate-300 text-slate-600">${Object.keys(gr[s]).length} Tim | ${totalCloseArea} Close</td>
+            <td class="p-2 font-bold text-left border border-slate-300 text-slate-600">${countTim} Tim | ${totalCloseArea} Close</td>
             ${sessHTML}
         </tr>`;
 
@@ -1880,6 +1891,16 @@ function generateMonitoringHTML() {
             </tr>`;
         });
     });
+
+    let gtSessHTML = gtSess.map(tot => {
+        return `<td class="p-2 text-center border border-slate-300 font-bold ${tot > 0 ? 'text-white bg-[#2563eb]' : 'text-slate-500 bg-[#e2e8f0]'}">${tot > 0 ? tot : '-'}</td>`;
+    }).join('');
+
+    html += `<tr class="bg-[#cbd5e1]">
+        <td class="p-2 font-black text-right text-slate-800 border border-slate-300">GRAND TOTAL</td>
+        <td class="p-2 font-bold text-left border border-slate-300 text-slate-800">${gtTim} Tim | ${gtClose} Close</td>
+        ${gtSessHTML}
+    </tr>`;
 
     html += `</tbody></table>`;
     return html;
@@ -3056,11 +3077,20 @@ function renderMonitoringView() {
     
     let h=''; 
     const sk = Object.keys(gr).sort(); 
+    
+    let grandTotalTim = 0;
+    let grandTotalClose = 0;
+    let grandTotalSess = Array(12).fill(0);
+
     sk.forEach(s => {
         const ex = expandedSektors.has(s); 
         
         let totalCloseArea = 0;
         let sessTotals = Array(12).fill(0);
+        let countTim = Object.keys(gr[s]).length;
+        
+        grandTotalTim += countTim;
+
         Object.keys(gr[s]).forEach(tk => {
             totalCloseArea += gr[s][tk].cl.length;
             gr[s][tk].cl.forEach(t => {
@@ -3068,6 +3098,9 @@ function renderMonitoringView() {
                 if (bIdx >= 0 && bIdx <= 11) sessTotals[bIdx]++;
             });
         });
+        
+        grandTotalClose += totalCloseArea;
+        for(let i=0; i<12; i++) grandTotalSess[i] += sessTotals[i];
         
         let sessHTML = sessTotals.map(tot => {
             return `<td class="px-2 py-3 text-center border-b border-slate-100 border-l font-bold text-[10px] ${tot > 0 ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-300'}">${tot > 0 ? tot : '-'}</td>`;
@@ -3077,7 +3110,7 @@ function renderMonitoringView() {
                 <td class="px-4 py-3 font-black text-blue-700 border-r border-b border-slate-100 whitespace-nowrap">${s} ${ex?'▲':'▼'}</td>
                 <td class="px-4 py-3 border-b border-slate-100">
                     <div class="flex items-center justify-between gap-2 text-xs">
-                        <span class="font-bold text-slate-500">${Object.keys(gr[s]).length} Tim</span>
+                        <span class="font-bold text-slate-500">${countTim} Tim</span>
                         <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md font-black shadow-sm flex items-center gap-1 border border-emerald-200">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                             ${totalCloseArea}
@@ -3100,6 +3133,27 @@ function renderMonitoringView() {
             });
         }
     }); 
+
+    let gtSessHTML = grandTotalSess.map(tot => {
+        return `<td class="px-2 py-3 text-center border-b border-slate-300 border-l font-black text-[11px] ${tot > 0 ? 'text-white bg-blue-500' : 'text-slate-500 bg-slate-200'}">${tot > 0 ? tot : '-'}</td>`;
+    }).join('');
+
+    h += `
+    <tr class="bg-slate-200 border-t-2 border-slate-400 hover:bg-slate-300 transition-colors">
+        <td class="px-4 py-3 font-black text-slate-800 border-r border-b border-slate-300 whitespace-nowrap text-right">GRAND TOTAL</td>
+        <td class="px-4 py-3 border-b border-slate-300 bg-slate-100">
+            <div class="flex items-center justify-between gap-2 text-xs">
+                <span class="font-black text-slate-800">${grandTotalTim} Tim</span>
+                <span class="bg-blue-600 text-white px-2 py-0.5 rounded-md font-black shadow-sm flex items-center gap-1 border border-blue-700">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    ${grandTotalClose}
+                </span>
+            </div>
+        </td>
+        ${gtSessHTML}
+    </tr>
+    `;
+
     document.getElementById('monitoringTableBody').innerHTML = h;
 }
 
