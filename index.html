@@ -4812,19 +4812,53 @@ load(); setInterval(load, 60000);
             XLSX.writeFile(wb, `Produktifitas_Teknisi_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        function openTicketModal(rowIndex) {
+        function openTicketModalCategory(rowIndex, catIndex, status) {
             const row = visibleTeknikRows[rowIndex];
             if (!row || !row.tickets || row.tickets.length === 0) return;
-            ticketModalRows = row.tickets;
+            
+            const catNames = ['DIAMOND', 'PLATINUM', 'MANJA', 'NON HVC', 'SQM', 'UNDERSPEC', 'Z PERMINTAAN'];
+            const targetCat = catIndex !== null ? catNames[catIndex] : null;
+            
+            let filteredTickets = row.tickets;
+            
+            // Filter berdasarkan Kategori (Jika diklik dari kolom kategori spesifik)
+            if (targetCat) {
+                filteredTickets = filteredTickets.filter(t => t.category === targetCat);
+            }
+            
+            // Filter berdasarkan Status OPEN / CLOSE
+            if (status) {
+                filteredTickets = filteredTickets.filter(t => t.status === status);
+            }
+            
+            // Jangan buka modal jika sel yang diklik nilainya 0
+            if (filteredTickets.length === 0) {
+                alert("Tidak ada tiket pada kategori ini.");
+                return; 
+            }
+            
+            ticketModalRows = filteredTickets;
             ticketModalSource = row;
+            
             const modal = document.getElementById('ticketModal');
             const title = document.getElementById('ticketModalTitle');
             const sub = document.getElementById('ticketModalSub');
             const meta = document.getElementById('ticketModalMeta');
-            title.innerText = `Detail Tiket — ${row.area} / ${row.sektor} / ${row.sto}`;
+            
+            let titleHTML = `Detail Tiket — ${row.area} / ${row.sektor} / ${row.sto}`;
+            if (targetCat && status) {
+                 titleHTML += ` <span class="text-blue-600">➔ ${targetCat} (${status})</span>`;
+            } else if (status) {
+                 titleHTML += ` <span class="text-blue-600">➔ TOTAL ${status}</span>`;
+            } else {
+                 titleHTML += ` <span class="text-blue-600">➔ SEMUA TIKET</span>`;
+            }
+            
+            title.innerHTML = titleHTML;
             sub.innerText = `${row.teknisi1}${row.teknisi2 ? ' & ' + row.teknisi2 : ''}`;
-            meta.innerText = `Jumlah tiket: ${row.tickets.length} | JLH TEK: ${row.jlh} | OPEN: ${row.totalOpen} | CLOSE: ${row.totalClose}`;
-            renderTicketModalTable(row.tickets);
+            meta.innerText = `Menampilkan: ${filteredTickets.length} Tiket (Dari Total ${row.tickets.length} Tiket Teknisi Ini)`;
+            
+            renderTicketModalTable(filteredTickets);
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
@@ -4926,7 +4960,10 @@ load(); setInterval(load, 60000);
                     const res = await fetch(url);
                     if (res.ok) {
                         const csv = await res.text();
-                        return parseCSV(csv).slice(1).map(row => ({ row, source: sourceLabel }));
+                        const parsed = parseCSV(csv);
+                        if (parsed.length === 0) return [];
+                        const headers = parsed[0].map(h => h.trim().toUpperCase());
+                        return parsed.slice(1).map(row => ({ row, source: sourceLabel, headers }));
                     }
                 } catch (e) {
                     console.warn(`Gagal memuat sheet: ${sheetName}`);
@@ -4973,59 +5010,80 @@ load(); setInterval(load, 60000);
                 const item = combinedData[i];
                 const row = item.row;
                 const source = item.source;
+                const headers = item.headers;
 
-                let sektor, sto, noInternet, teknisi1Raw, teknisi2Raw, jamClose, isClose;
+                // Fungsi bantu mencari indeks kolom secara dinamis berdasarkan header agar kebal dari pergeseran
+                const getColIdx = (keywords) => {
+                    if (!headers) return -1;
+                    for (let kw of keywords) {
+                        const cleanKw = kw.replace(/\s+/g, '');
+                        const idx = headers.findIndex(h => h.replace(/\s+/g, '').includes(cleanKw));
+                        if (idx !== -1) return idx;
+                    }
+                    return -1;
+                };
+
+                let sektor, sto, noInternet, teknisi1Raw, teknisi2Raw, jamClose, isClose, noTiketStr;
+                let serviceAreaRaw = ""; // Variabel khusus untuk Kolom C Service Area
                 let catIndex = 3; // Default NON HVC
 
                 if (source === 'UNDERSPEC') {
                     // Struktur kolom khusus untuk sheet UNDERSPEC
-                    sektor = (row[24] || '').trim();       // Kolom Y
-                    sto = (row[6] || '').trim();           // Kolom G
-                    noInternet = (row[10] || '').trim();   // Kolom K (ND)
-                    teknisi1Raw = (row[25] || '').trim();  // Kolom Z
-                    teknisi2Raw = (row[26] || '').trim();  // Kolom AA
-                    jamClose = (row[28] || '').trim();     // Kolom AC (Berdasarkan instruksi UNDERSPEC sebelumnya)
+                    noTiketStr = (row[14] || '').trim();    // Kolom O (NO TIKET)
+                    serviceAreaRaw = (row[2] || '').trim(); // Kolom C (SERVICE AREA)
+                    sektor = (row[3] || '').trim();         // Kolom D (SEKTOR)
+                    sto = (row[4] || '').trim();            // Kolom E (STO)
+                    noInternet = (row[7] || '').trim();    // Kolom H (ND / NO INTERNET)
+                    teknisi1Raw = (row[12] || '').trim();  // Kolom M (TEKNISI 1)
+                    teknisi2Raw = (row[13] || '').trim();  // Kolom N (TEKNISI 2)
+                    jamClose = (row[16] || '').trim();     // Kolom Q (JAM CLOSE)
                     
                     catIndex = 5; // Masuk ke kolom UNDERSPEC
-                } else if (source === 'Z_PERMINTAAN') {
-                    // Struktur kolom untuk sheet Z_PERMINTAAN (Asumsi standar seperti ALL TIKET)
-                    sektor = (row[1] || '').trim();        // Kolom B
-                    sto = (row[2] || '').trim();           // Kolom C
-                    noInternet = (row[10] || '').trim();   // Kolom K
-                    teknisi1Raw = (row[15] || '').trim();  // Kolom P
-                    teknisi2Raw = (row[16] || '').trim();  // Kolom Q
-                    jamClose = (row[23] || '').trim();     // Kolom X (TECH CLOSED)
-                    
-                    catIndex = 6; // Masuk ke kolom Z_PERMINTAAN
                 } else {
-                    // Struktur kolom standar untuk sheet ALL TIKET
-                    sektor = (row[1] || '').trim();        // Kolom B
-                    sto = (row[2] || '').trim();           // Kolom C
-                    noInternet = (row[10] || '').trim();   // Kolom K (No Internet)
-                    teknisi1Raw = (row[15] || '').trim();  // Kolom P
-                    teknisi2Raw = (row[16] || '').trim();  // Kolom Q
-                    jamClose = (row[23] || '').trim();     // Kolom X (TECH CLOSED)
+                    // UNTUK ALL TIKET & Z_PERMINTAAN (DIAMOND, PLATINUM, MANJA, NON HVC, SQM, Z_PERMINTAAN)
+                    // Sesuai instruksi terbaru:
+                    noTiketStr = (row[8] || '').trim();  // Kolom I (Index 8) = NO TIKET
+                    noInternet = (row[11] || '').trim(); // Kolom L (Index 11) = NO INTERNET
+                    jamClose = (row[23] || '').trim();   // Kolom X (Index 23) = STATUS/JAM CLOSE
 
-                    // Mengambil parameter klasifikasi
-                    const manja = (row[4] || '').toUpperCase().trim();      // Kolom E (Ket Manja)
-                    const custAssign = (row[6] || '').toUpperCase().trim(); // Kolom G (Cust Assign)
-                    const flagHvc = (row[7] || '').toUpperCase().trim();    // Kolom H (Flag HVC)
-                    const summary = (row[9] || '').toUpperCase().trim();    // Kolom J (Summary)
+                    // Sisa data dicari otomatis lewat header agar kebal pergeseran, 
+                    // atau fallback ke index bawaan jika header tidak ketemu
+                    const idxSektor = getColIdx(['SEKTOR', 'SECTOR']);
+                    const idxSto = getColIdx(['STO', 'LOKASI']);
+                    const idxTek1 = getColIdx(['TEKNISI1', 'TEKNISIUTAMA', 'TEKNISI']);
+                    const idxTek2 = getColIdx(['TEKNISI2', 'PENDAMPING']);
+                    const idxManja = getColIdx(['KETMANJA', 'MANJA']);
+                    const idxCustAssign = getColIdx(['CUSTASSIGN', 'ASSIGN']);
+                    const idxFlagHvc = getColIdx(['FLAGHVC', 'PRIORITAS', 'HVC']);
+                    const idxSummary = getColIdx(['SUMMARY', 'DETAIL', 'KETERANGAN']);
 
-                    // --- LOGIKA KATEGORI PRIORITAS BERDASARKAN CUST ASSIGN & FLAG HVC ---
-                    if (custAssign.includes('Z_PERMINTAAN') || custAssign.includes('Z PERMINTAAN') || summary.includes('Z_PERMINTAAN')) {
-                        catIndex = 6; // Z_PERMINTAAN (Prioritas Utama, mengabaikan Flag HVC)
-                    } else if (custAssign.includes('SQM')) {
-                        catIndex = 4; // SQM (Prioritas Kedua, mengabaikan Flag HVC)
-                    } else if (custAssign.includes('TTR 3 JM') || custAssign.includes('TTR 3JM') || (manja.includes('MANJA') && !manja.includes('BUKAN'))) {
-                        catIndex = 2; // MANJA (Prioritas Ketiga, mengabaikan Flag HVC)
-                    } else if (custAssign.includes('TTR 3 JD') || flagHvc.includes('DIAMOND')) {
-                        catIndex = 0; // DIAMOND
-                    } else if (custAssign.includes('TTR 6 JP') || flagHvc.includes('PLATINUM')) {
-                        catIndex = 1; // PLATINUM
+                    sektor = idxSektor !== -1 ? (row[idxSektor] || '').trim() : (row[1] || '').trim();
+                    sto = idxSto !== -1 ? (row[idxSto] || '').trim() : (row[2] || '').trim();
+                    teknisi1Raw = idxTek1 !== -1 ? (row[idxTek1] || '').trim() : (row[15] || '').trim();
+                    teknisi2Raw = idxTek2 !== -1 ? (row[idxTek2] || '').trim() : (row[16] || '').trim();
+
+                    const manja = idxManja !== -1 ? (row[idxManja] || '').toUpperCase().trim() : (row[4] || '').toUpperCase().trim();
+                    const custAssign = idxCustAssign !== -1 ? (row[idxCustAssign] || '').toUpperCase().trim() : (row[6] || '').toUpperCase().trim();
+                    const flagHvc = idxFlagHvc !== -1 ? (row[idxFlagHvc] || '').toUpperCase().trim() : (row[7] || '').toUpperCase().trim();
+                    const summary = idxSummary !== -1 ? (row[idxSummary] || '').toUpperCase().trim() : (row[9] || '').toUpperCase().trim();
+
+                    if (source === 'Z_PERMINTAAN') {
+                        catIndex = 6;
                     } else {
-                        // TTR 12 JG (HVC GOLD), TTR 36 J (REGULER), dll
-                        catIndex = 3; // NON HVC
+                        // --- LOGIKA KATEGORI PRIORITAS BERDASARKAN CUST ASSIGN & FLAG HVC ---
+                        if (custAssign.includes('Z_PERMINTAAN') || custAssign.includes('Z PERMINTAAN') || summary.includes('Z_PERMINTAAN')) {
+                            catIndex = 6; // Z_PERMINTAAN (Prioritas Utama)
+                        } else if (custAssign.includes('SQM') || summary.includes('SQM')) {
+                            catIndex = 4; // SQM
+                        } else if (custAssign.includes('TTR 3 JM') || custAssign.includes('TTR 3JM') || (manja.includes('MANJA') && !manja.includes('BUKAN'))) {
+                            catIndex = 2; // MANJA
+                        } else if (custAssign.includes('TTR 3 JD') || flagHvc.includes('DIAMOND')) {
+                            catIndex = 0; // DIAMOND
+                        } else if (custAssign.includes('TTR 6 JP') || flagHvc.includes('PLATINUM')) {
+                            catIndex = 1; // PLATINUM
+                        } else {
+                            catIndex = 3; // NON HVC
+                        }
                     }
                 }
                 
@@ -5043,7 +5101,7 @@ load(); setInterval(load, 60000);
                 }
 
                 // --- 4. PEMETAAN SEKTOR & STO (BACA PINTAR / SMART NORMALIZE) ---
-                let serviceArea = sektor.toUpperCase();
+                let serviceArea = serviceAreaRaw ? serviceAreaRaw.toUpperCase() : sektor.toUpperCase();
                 let finalSektor = sektor.toUpperCase();
                 let finalSto = sto.toUpperCase();
                 
@@ -5157,7 +5215,8 @@ load(); setInterval(load, 60000);
                         teknisi1: teknisi1, // Simpan urutan tampilan asli saat pertama ketemu
                         teknisi2: teknisi2,
                         jlh: jlhTek, 
-                        categories: Array(7).fill(null).map(() => ({to: 0, tc: 0}))
+                        categories: Array(7).fill(null).map(() => ({to: 0, tc: 0})),
+                        tickets: [] // Tambahkan array penampung detail tiket
                     };
                 } else {
                     // BACA PINTAR STO AUTO-MERGE:
@@ -5176,6 +5235,20 @@ load(); setInterval(load, 60000);
                 } else {
                     groups[key].categories[catIndex].to++;
                 }
+
+                // Susun objek tiket untuk ditampilkan di Pop-Up Modal Detail
+                const catNames = ['DIAMOND', 'PLATINUM', 'MANJA', 'NON HVC', 'SQM', 'UNDERSPEC', 'Z PERMINTAAN'];
+                groups[key].tickets.push({
+                    noTiket: noTiketStr || '-', // Sudah dikunci ke Kolom A (row[0])
+                    status: isClose ? 'CLOSE' : 'OPEN',
+                    category: catNames[catIndex] || 'NON HVC',
+                    noInternet: noInternet,
+                    serviceArea: serviceArea,
+                    sektor: finalSektor,
+                    sto: finalSto,
+                    teknisi1: teknisi1Raw || '-',
+                    teknisi2: teknisi2Raw || '-'
+                });
             }
 
             // Ubah objek Grup menjadi Array, dan hitung formula produktifitas
@@ -5224,8 +5297,8 @@ load(); setInterval(load, 60000);
             dataRows.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.className = "ticket-row hover:bg-gray-100 cursor-pointer";
-                tr.title = "Klik untuk melihat daftar tiket";
-                tr.setAttribute("onclick", `openTicketModal(${index})`);
+                tr.title = "Klik untuk melihat daftar keseluruhan tiket teknisi ini";
+                tr.setAttribute("onclick", `openTicketModalCategory(${index}, null, null)`);
 
                 let htmlContent = `
                     <td class="text-left px-2 py-1">${row.area}</td>
@@ -5236,12 +5309,12 @@ load(); setInterval(load, 60000);
                     <td class="bg-[#d9e1f2] font-semibold">${row.jlh}</td>
                 `;
 
-                row.categories.forEach(cat => {
-                    const toBg = cat.to > 0 ? 'bg-yellow-50' : ''; 
-                    const tcBg = cat.tc > 0 ? 'bg-red-50' : '';
+                row.categories.forEach((cat, catIndex) => {
+                    const toBg = cat.to > 0 ? 'bg-yellow-50 text-black cursor-pointer hover:bg-yellow-200' : 'text-slate-400 cursor-pointer hover:bg-gray-200'; 
+                    const tcBg = cat.tc > 0 ? 'bg-red-50 text-black cursor-pointer hover:bg-red-200' : 'text-slate-400 cursor-pointer hover:bg-gray-200';
                     htmlContent += `
-                        <td class="${toBg}">${cat.to}</td>
-                        <td class="${tcBg}">${cat.tc}</td>
+                        <td class="${toBg}" onclick="event.stopPropagation(); openTicketModalCategory(${index}, ${catIndex}, 'OPEN')" title="Lihat ${cat.to} Tiket OPEN">${cat.to}</td>
+                        <td class="${tcBg}" onclick="event.stopPropagation(); openTicketModalCategory(${index}, ${catIndex}, 'CLOSE')" title="Lihat ${cat.tc} Tiket CLOSE">${cat.tc}</td>
                     `;
                 });
 
@@ -5263,8 +5336,8 @@ load(); setInterval(load, 60000);
                 }
 
                 htmlContent += `
-                    <td class="bg-gray-100 font-semibold">${row.totalOpen}</td>
-                    <td class="bg-gray-100 font-semibold">${row.totalClose}</td>
+                    <td class="bg-gray-100 font-bold cursor-pointer hover:bg-blue-100" onclick="event.stopPropagation(); openTicketModalCategory(${index}, null, 'OPEN')" title="Lihat Total ${row.totalOpen} Tiket OPEN">${row.totalOpen}</td>
+                    <td class="bg-gray-100 font-bold cursor-pointer hover:bg-blue-100" onclick="event.stopPropagation(); openTicketModalCategory(${index}, null, 'CLOSE')" title="Lihat Total ${row.totalClose} Tiket CLOSE">${row.totalClose}</td>
                     <td>${row.tgtProd}</td>
                     <td>${row.prodTeknisi}</td>
                     <td class="${achBgColor}">${row.achProd}</td>
