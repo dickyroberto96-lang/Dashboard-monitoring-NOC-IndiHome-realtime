@@ -81,6 +81,29 @@
   </style>
 </head>
 <body>
+
+  <!-- ==================== LOGIN OVERLAY ==================== -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500" style="display: none;">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-transform scale-100 mx-4">
+      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-blue-200">
+        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      </div>
+      <h2 class="text-3xl font-black text-slate-800 mb-2">Login Dashboard</h2>
+      <p class="text-slate-500 text-sm mb-8">Silakan masukkan password untuk mengakses dashboard kawal assurance.</p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <input type="password" id="loginPassword" placeholder="Masukkan Password..." class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-center text-xl tracking-[0.25em]" required>
+        </div>
+        <p id="loginError" class="text-rose-500 text-sm font-bold hidden animate-pulse bg-rose-50 py-2 rounded-lg border border-rose-200">Password Salah!</p>
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-3.5 rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5">
+          MASUK
+        </button>
+      </form>
+    </div>
+  </div>
+  <!-- ======================================================= -->
+
   <div class="topbar px-3 sm:px-4 md:px-6 min-h-[72px] py-2 flex items-center justify-end gap-4">
     <div class="flex items-center gap-2 overflow-x-auto flex-wrap justify-end">
       <button id="btnApp1" class="tab-btn active" onclick="switchTab('app1')">
@@ -5471,8 +5494,41 @@ load(); setInterval(load, 60000);
     }
 
 
-    // Load first app by default setelah browser sempat menggambar UI.
-    setTimeout(() => switchTab('app1'), 50);
+    // --- LOGIKA LOGIN SEDERHANA ---
+    const CORRECT_PASSWORD = "opsridar2026"; // <-- SILAKAN GANTI PASSWORD DI SINI
+
+    function checkLoginStatus() {
+      if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        document.getElementById('loginOverlay').style.display = 'none';
+        switchTab('app1');
+      } else {
+        document.getElementById('loginOverlay').style.display = 'flex';
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('loginPassword').value;
+      if (pwd === CORRECT_PASSWORD) {
+        // Password Benar
+        sessionStorage.setItem('isLoggedIn', 'true');
+        const overlay = document.getElementById('loginOverlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          switchTab('app1');
+        }, 500);
+      } else {
+        // Password Salah
+        const err = document.getElementById('loginError');
+        err.classList.remove('hidden');
+        document.getElementById('loginPassword').value = '';
+        setTimeout(() => err.classList.add('hidden'), 3000);
+      }
+    }
+
+    // Load first app by default setelah mengecek status login.
+    setTimeout(() => checkLoginStatus(), 50);
   </script>
 </body>
 </html>
