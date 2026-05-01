@@ -4236,7 +4236,15 @@ load(); setInterval(load, 60000);
 
 <script>
     // Konfigurasi Google Sheets
-    const sheetId = '1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go';
+    const SHEET_ID_B64 = 'MW0tdWJIbDllN2FBeTJjeFlwN25idXhNZTlOODNlTnIydDQxMGpGOTA0Z28=';
+    const decodeB64 = (value) => {
+        try {
+            return atob(value);
+        } catch (e) {
+            return '';
+        }
+    };
+    const sheetId = decodeB64(SHEET_ID_B64);
     const sheetName = 'ALL TIKET';
     const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
 
@@ -4991,7 +4999,34 @@ load(); setInterval(load, 60000);
                 tbody.innerHTML = '<tr><td colspan="25" class="py-6 text-center font-bold text-gray-500">Membaca data secara langsung dari Google Sheets...</td></tr>';
             }
 
-            const sheetId = '1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go';
+            const SHEET_ID_B64 = 'MW0tdWJIbDllN2FBeTJjeFlwN25idXhNZTlOODNlTnIydDQxMGpGOTA0Z28=';
+
+
+            const decodeB64 = (value) => {
+
+
+                try {
+
+
+                    return atob(value);
+
+
+                } catch (e) {
+
+
+                    return '';
+
+
+                }
+
+
+            };
+
+
+            const sheetId = decodeB64(SHEET_ID_B64);
+
+
+            
             
             // Fungsi pembantu agar jika satu sheet tidak ada, sheet lain tetap termuat dengan aman
             const fetchSheet = async (sheetName, sourceLabel) => {
@@ -5511,11 +5546,20 @@ load(); setInterval(load, 60000);
     }
 
 
-    // --- LOGIKA LOGIN SEDERHANA ---
-    const CORRECT_PASSWORD = "opsridar2026"; // <-- SILAKAN GANTI PASSWORD DI SINI
+    // --- LOGIKA LOGIN DENGAN OBFUSCATION SEDERHANA ---
+    const PASSWORD_CODES = [111, 112, 115, 114, 105, 100, 97, 114, 50, 48, 50, 54];
+    const CORRECT_PASSWORD = String.fromCharCode(...PASSWORD_CODES);
+    const LOGIN_TOKEN_KEY = 'dashboard_login_token';
+    const LOGIN_TOKEN_PREFIX = 'ok_';
+
+    function makeLoginToken() {
+      const raw = `${Date.now()}|${Math.random().toString(36).slice(2)}|${performance.now().toFixed(3)}`;
+      return LOGIN_TOKEN_PREFIX + btoa(raw);
+    }
 
     function checkLoginStatus() {
-      if (sessionStorage.getItem('isLoggedIn') === 'true') {
+      const token = sessionStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      if (token.startsWith(LOGIN_TOKEN_PREFIX)) {
         document.getElementById('loginOverlay').style.display = 'none';
         switchTab('app1');
       } else {
@@ -5528,7 +5572,7 @@ load(); setInterval(load, 60000);
       const pwd = document.getElementById('loginPassword').value;
       if (pwd === CORRECT_PASSWORD) {
         // Password Benar
-        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem(LOGIN_TOKEN_KEY, makeLoginToken());
         const overlay = document.getElementById('loginOverlay');
         overlay.style.opacity = '0';
         setTimeout(() => {
