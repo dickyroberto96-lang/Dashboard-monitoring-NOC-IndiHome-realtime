@@ -309,6 +309,12 @@
                         EXPORT FULL REKAPAN (ALL MENU)
                     </button>
 
+                    <!-- NEW AI INSIGHT BUTTON -->
+                    <button onclick="generateAIInsight()" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-5 py-2.5 rounded-xl shadow-[0_4px_15px_rgba(245,158,11,0.4)] hover:scale-105 hover:shadow-[0_6px_20px_rgba(245,158,11,0.6)] transition-all border border-white/20 whitespace-nowrap text-xs">
+                        <span class="text-base leading-none">✨</span>
+                        AI EXECUTIVE INSIGHT
+                    </button>
+
                     <div class="w-full sm:w-auto flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-inner">
                         <label for="areaFilter" class="font-extrabold text-slate-500 text-[10px] uppercase tracking-widest px-2">Filter Area:</label>
                         <div class="relative w-full sm:w-56">
@@ -641,10 +647,52 @@
     </div>
 </div>
 
+<!-- AI INSIGHT MODAL -->
+<div id="aiInsightModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white w-full max-w-3xl rounded-2xl md:rounded-3xl shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden border border-slate-200">
+        <div class="flex justify-between items-center p-6 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50 sticky top-0 z-20 shadow-sm">
+            <h3 class="font-black text-xl md:text-2xl text-amber-800 flex items-center gap-3">
+                <span class="text-3xl">✨</span> AI Executive Insight
+            </h3>
+            <button onclick="closeAIModal()" class="text-slate-400 bg-white hover:text-rose-500 p-2.5 rounded-full transition-all border border-slate-200 shadow-sm">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"></path></svg>
+            </button>
+        </div>
+        <div class="overflow-y-auto p-6 md:p-8 flex-grow bg-white relative">
+            <div id="aiInsightContent" class="text-slate-700 text-sm leading-relaxed space-y-4"></div>
+        </div>
+    </div>
+</div>
+
 <script>
+// ==============================================================================
+// 0. API & BACKEND COMMUNICATION
+// ==============================================================================
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
+const LOGIN_TOKEN_KEY = 'dashboard_login_token';
+
+async function apiRequest(payload) {
+    const res = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    });
+    return await res.json();
+}
+
+async function backendGetSheet(sheetName) {
+    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+    return await apiRequest({ action: 'getData', token, sheet: sheetName });
+}
+
+async function backendGetCsv(sheetName) {
+    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+    return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+}
 // ==============================================================================
 // 1. GLOBAL VARIABLES & CONFIGURATION
 // ==============================================================================
+const GEMINI_API_KEY = "";
 const STO_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK","PNP"];
 const PEKANBARU_LIST = ["ARK","PBR","BKR","SAK","SEA","SLJ","RBI","PKR","PWG","SOK","MIS","AMK","KLE","PMB","RGT","TBH","PNP"];
 const DUMAI_LIST = ["BKN","UBT","PPN","SGP","DUM","BAG","BAS","DRI","BGU","TAK"];
@@ -733,6 +781,61 @@ function showToast(msg) {
 window.showToast = showToast;
 
 // ===== 2. DATA PROCESSING HELPERS =====
+// Fungsi Parsing CSV Mandiri untuk bypass limit dan fetch langsung
+function parseCSV(text) {
+    let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+    for (let l of text) {
+        if ('"' === l) {
+            if (s && l === p) row[i] += l;
+            s = !s;
+        } else if (',' === l && s) l = row[++i] = '';
+        else if ('\n' === l && s) {
+            if ('\r' === p) row[i] = row[i].slice(0, -1);
+            row = ret[++r] = [l = '']; i = 0;
+        } else row[i] += l;
+        p = l;
+    }
+    return ret;
+}
+
+// Mengambil Data CSV langsung dari Google Sheets ke JSON Array
+async function fetchSheetAsJSON(sheetName) {
+    try {
+        const response = await backendGetCsv(sheetName);
+        if (!response || !response.success || !response.csv) return [];
+        
+        const rows = parseCSV(response.csv);
+        if(rows.length < 1) return [];
+
+        // AUTO-DETECT HEADER ROW (Bypass jika ada judul/baris kosong di atas tabel G-Sheets)
+        let headerRowIndex = 0;
+        for(let i = 0; i < Math.min(10, rows.length); i++) {
+            const rowStr = rows[i].join('').toUpperCase();
+            // Indikator kuat bahwa ini adalah baris header tabel
+            if(rowStr.includes('NAMA') || rowStr.includes('STO') || rowStr.includes('TEKNISI') || rowStr.includes('NIK') || rowStr.includes('TIKET') || rowStr.includes('INCIDENT')) {
+                headerRowIndex = i;
+                break;
+            }
+        }
+
+        const headers = rows[headerRowIndex];
+        const data = [];
+        for(let i = headerRowIndex + 1; i < rows.length; i++) {
+            if (!rows[i].some(cell => cell && cell.trim() !== '')) continue; // Skip baris kosong
+            let obj = {};
+            for(let j = 0; j < headers.length; j++) {
+                let headerName = headers[j] ? headers[j].trim() : `COL_${j}`;
+                if (headerName) obj[headerName] = rows[i][j] || "";
+            }
+            data.push(obj);
+        }
+        return data;
+    } catch(e) {
+        console.error("Error fetchSheetAsJSON", e);
+        return [];
+    }
+}
+
 function getLooseVal(row, keywords) {
     if (!row || typeof row !== 'object') return "";
     let keys = Object.keys(row);
@@ -751,18 +854,24 @@ function getLooseVal(row, keywords) {
 }
 
 function getVal(row, possibleKeys) {
-    if (!row) return "";
+    if (!row || typeof row !== 'object') return "";
     let keys = Object.keys(row);
     
-    // Prioritas 1: Exact Match (Kecocokan Persis)
-    for (let k of keys) {
-        if (possibleKeys.includes(k.trim().toUpperCase())) return row[k];
-    }
-    
-    // Prioritas 2: Pencarian Parsial Aman (Solusi untuk NAMA TEKNISI dll)
+    // Prioritas 1: Exact Match (Kecocokan Persis - Case Insensitive)
     for (let k of keys) {
         let ku = k.trim().toUpperCase();
-        if (possibleKeys.includes('NAMA') && ku.includes('NAMA')) return row[k];
+        if (possibleKeys.map(p => p.toUpperCase()).includes(ku)) return row[k];
+    }
+    
+    // Prioritas 2: Pencarian Parsial Aman yang Ditingkatkan
+    for (let k of keys) {
+        let ku = k.trim().toUpperCase();
+        for (let pk of possibleKeys) {
+            if (ku.includes(pk.toUpperCase())) return row[k];
+        }
+        
+        // Fallback spesifik untuk kolom yang sering divariasikan penamaannya
+        if (possibleKeys.includes('NAMA') && (ku.includes('NAMA') || ku.includes('TEKNISI') || ku.includes('LENGKAP'))) return row[k];
         if (possibleKeys.includes('NIK') && (ku.includes('NIK') || ku.includes('ID TEKNISI'))) return row[k];
         if (possibleKeys.includes('NO HP') && (ku.includes('HP') || ku.includes('TELEPON'))) return row[k];
         if (possibleKeys.includes('FLAGGING TEKNISI') && ku.includes('FLAGGING')) return row[k];
@@ -865,19 +974,19 @@ function isTicketOpen(r) {
 function getTicketBucket(r) {
     const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
     const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
-    if (kt.includes("MANJA") || c.includes("TTR 3 JM")) return "MANJA";
+    if (kt.includes("MANJA") || c.includes("TTR 3 JM") || c.includes("TTR 3JM")) return "MANJA";
     
     const tipe = (r["TIPE TIKET"] || r["TIPE"] || "").toString().toUpperCase().trim();
     const detail = (r["DETAIL TIKET"] || r["KETERANGAN"] || "").toString().toUpperCase().trim();
 
-    if (c.includes("SQM") || kt.includes("SQM")) return "SQM";
-    if (c.includes("Z_PERMINTAAN") || kt.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
+    if (c.includes("SQM") || kt.includes("SQM") || detail.includes("SQM")) return "SQM";
+    if (c.includes("Z_PERMINTAAN") || c.includes("Z PERMINTAAN") || kt.includes("Z_PERMINTAAN") || detail.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
     if (c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC")) return "UNDERSPEC";
     
     const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
-    if(v.includes("PLATINUM") || c.includes("TTR 6 JP")) return "HVC PLATINUM";
-    if(v.includes("DIAMOND") || c.includes("TTR 3 JD")) return "HVC DIAMOND";
-    if(v.includes("GOLD") || c.includes("TTR 12 JG")) return "NON_HVC_GOLD";
+    if(v.includes("PLATINUM") || c.includes("TTR 6 JP") || c.includes("TTR 6JP") || detail.includes("PLATINUM")) return "HVC PLATINUM";
+    if(v.includes("DIAMOND") || c.includes("TTR 3 JD") || c.includes("TTR 3JD") || detail.includes("DIAMOND")) return "HVC DIAMOND";
+    if(v.includes("GOLD") || c.includes("TTR 12 JG") || c.includes("TTR 12JG") || detail.includes("GOLD")) return "NON_HVC_GOLD";
     
     return "NON_HVC_REGULER"; 
 }
@@ -1001,7 +1110,7 @@ function getActiveData() {
 function getActiveKehadiranData() {
     if (!rawKehadiranData || rawKehadiranData.length === 0) return [];
     return rawKehadiranData.filter(r => {
-        let nama = getVal(r, ["NAMA"]);
+        let nama = getVal(r, ['NAMA', 'NAMA TEKNISI', 'NAMA LENGKAP']);
         if (!nama || nama.trim() === '') return false; 
         if (mode === 'STO' || mode === 'SEKTOR' || mode === 'SA') return true;
         
@@ -1131,6 +1240,93 @@ function renderTable(data) {
 window.renderTable = renderTable;
 
 // ===== 4. ACTION HANDLERS =====
+
+async function fetchGeminiWithRetry(prompt, retries = 5) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: "Anda adalah Asisten AI Profesional untuk Supervisor Network Operation Center (NOC). Tugas Anda menganalisis performa harian tiket gangguan dan memberikan insight eksekutif yang tajam. Gunakan tag HTML dasar untuk format (seperti <h3>, <p>, <ul>, <li>, <strong>) agar terlihat rapi di dashboard web. Hindari simbol markdown murni seperti ** atau *." }] }
+    };
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI tidak dapat menghasilkan insight saat ini.";
+        } catch (error) {
+            const delay = Math.pow(2, i) * 1000;
+            await new Promise(res => setTimeout(res, delay));
+            if (i === retries - 1) throw error;
+        }
+    }
+}
+
+async function generateAIInsight() {
+    const modal = document.getElementById('aiInsightModal');
+    const content = document.getElementById('aiInsightContent');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    content.innerHTML = '<div class="flex flex-col items-center justify-center py-16"><span class="animate-spin text-5xl mb-6 inline-block">⏳</span><p class="text-amber-600 font-extrabold animate-pulse text-lg text-center">AI sedang menganalisis data NOC Anda...</p><p class="text-slate-400 text-sm mt-2 text-center">Menyiapkan laporan dan rekomendasi eksekutif</p></div>';
+
+    try {
+        // Kumpulkan data Real-Time untuk diberikan ke AI
+        const d = getActiveData();
+        const open = d.filter(r => isTicketOpen(r)).length;
+        const close = d.filter(r => !isTicketOpen(r)).length;
+        
+        let stoCounts = {};
+        let catCounts = {};
+        
+        d.filter(r => isTicketOpen(r)).forEach(r => {
+            let sto = mapSTO(r.STO || r.LOKASI || "UNKNOWN");
+            stoCounts[sto] = (stoCounts[sto] || 0) + 1;
+            
+            let cat = getTicketBucket(r);
+            catCounts[cat] = (catCounts[cat] || 0) + 1;
+        });
+        
+        const topStos = Object.entries(stoCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x => `${x[0]} (${x[1]} tiket)`).join(", ");
+        const topCats = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x => `${x[0].replace('_', ' ')} (${x[1]} tiket)`).join(", ");
+
+        const prompt = `
+        Berikut adalah ringkasan data operasional tiket gangguan jaringan secara real-time:
+        - Total Saldo Tiket Terbuka: ${open}
+        - Total Tiket Terselesaikan: ${close}
+        - 5 Area STO dengan antrian tiket terbuka terbanyak: ${topStos || 'N/A'}
+        - 3 Kategori Prioritas dengan antrian terbanyak: ${topCats || 'N/A'}
+        
+        Tolong berikan respons dalam struktur berikut:
+        <h3 style="color:#b45309; font-weight:900; font-size:18px; margin-bottom:8px;">Status Eksekutif Jaringan</h3>
+        <p style="margin-bottom:16px;">(1 paragraf rangkuman mengenai performa hari ini)</p>
+        
+        <h3 style="color:#b45309; font-weight:900; font-size:18px; margin-bottom:8px;">Analisis Potensi Bottleneck</h3>
+        <p style="margin-bottom:16px;">(Analisis STO dan kategori yang butuh perhatian khusus)</p>
+        
+        <h3 style="color:#b45309; font-weight:900; font-size:18px; margin-bottom:8px;">Rekomendasi Tindakan</h3>
+        <ul style="list-style-type:disc; padding-left:20px; margin-bottom:16px; display:flex; flex-direction:column; gap:8px;">
+        <li>(Rekomendasi 1)</li>
+        <li>(Rekomendasi 2)</li>
+        <li>(Rekomendasi 3)</li>
+        </ul>
+        `;
+
+        const result = await fetchGeminiWithRetry(prompt);
+        content.innerHTML = result;
+    } catch (e) {
+        content.innerHTML = `<div class="text-rose-500 font-bold text-center py-16 flex flex-col items-center"><svg class="w-16 h-16 mb-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Gagal mengambil insight dari AI:<br><span class="text-sm font-medium text-slate-500 mt-2">${e.message}</span></div>`;
+    }
+}
+
+function closeAIModal() {
+    document.getElementById('aiInsightModal').classList.add('hidden');
+    document.getElementById('aiInsightModal').classList.remove('flex');
+}
+
 function setTicketType(id, label) {
     if (id === 'ANALISA_PENYEBAB_GANGGUAN' && parent && parent.switchTab) {
         parent.switchTab('app3');
@@ -1511,23 +1707,6 @@ function exportTableToExcel(tablesArray, fileNamePrefix) {
 window.exportTableToExcel = exportTableToExcel;
 
 // --- EXPORT SUPER FULL (ALL MENU) ---
-// Fungsi Parsing CSV Mandiri untuk bypass limit JSON
-function parseCSV(text) {
-    let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
-    for (let l of text) {
-        if ('"' === l) {
-            if (s && l === p) row[i] += l;
-            s = !s;
-        } else if (',' === l && s) l = row[++i] = '';
-        else if ('\n' === l && s) {
-            if ('\r' === p) row[i] = row[i].slice(0, -1);
-            row = ret[++r] = [l = '']; i = 0;
-        } else row[i] += l;
-        p = l;
-    }
-    return ret;
-}
-
 function generateAnalisaHTMLFromCSV(data) {
     const counts = {}; const stoTotals = {}; let grandTotal = 0;
     const stoOrder = ['ARK','UBT','BKN','PPN','BKR','SEA','SAK','SGP','DUM','BGU','DRI','BAG','BAS','UJT','SLJ','TAK','RGT','AMK','TBH','PMB','KLE','PNP','BLS','PKR','MIS','SOK','PWG','RBI','PBRC 1','PBRC 2','PBRC 3','PBRC 4'];
@@ -1613,10 +1792,9 @@ async function exportSuperAll(btnElement) {
         btnElement.innerHTML = `<span class="animate-spin">⏳</span> Menarik Data Analisa (Bypass)...`;
         let analisaHTML = "";
         try {
-            const res = await fetch('https://docs.google.com/spreadsheets/d/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/gviz/tq?tqx=out:csv&sheet=ALL%20TIKET');
-            if (res.ok) {
-                const csvText = await res.text();
-                const csvData = parseCSV(csvText);
+            const res = await backendGetCsv('ALL TIKET');
+            if (res && res.success && res.csv) {
+                const csvData = parseCSV(res.csv);
                 analisaHTML = generateAnalisaHTMLFromCSV(csvData);
             } else {
                 analisaHTML = generateAnalisaHTML();
@@ -1762,14 +1940,16 @@ function generateProdHTML() {
         let isClose = !isTicketOpen(r);
         let bkt = getTicketBucket(r);
 
-        if (!noInternet || noInternet === '0' || noInternet === '-' || noInternet.toUpperCase() === 'NO INTERNET' || noInternet.toUpperCase() === 'ND') return;
-        if (!sektorRaw || sektorRaw === 'SEKTOR' || sektorRaw === 'min') return;
+        if (!sektorRaw || sektorRaw === 'SEKTOR' || sektorRaw === 'min') sektorRaw = "UNKNOWN";
+        if (!stoRaw) stoRaw = "UNKNOWN";
         
         if (t1 === '0' || t1 === '-') t1 = '';
         if (t2 === '0' || t2 === '-') t2 = '';
         if (t1 === t2) t2 = '';
         if (!t1 && t2) { t1 = t2; t2 = ''; }
-        if (!t1 && !t2) return;
+        
+        let jlhTek = (t1 && t2) ? 2 : (!t1 && !t2 ? 0 : 1);
+        if (!t1 && !t2) t1 = "BELUM ASSIGN";
 
         const sUpper = sektorRaw.replace(/\s/g, '');
         if (sUpper.includes('PBRC1') || sUpper.includes('PBB1')) stoRaw = 'PBRC 1';
@@ -2602,35 +2782,84 @@ function renderReportTable() {
 window.renderReportTable = renderReportTable;
 
 // ===== 6. DASHBOARD MAIN ENGINE =====
+// Helper function for Data Normalization (Standarisasi Kolom G-Sheets)
+function normalizeRawData(data) {
+    if (!Array.isArray(data)) return [];
+    const normalized = data.map(row => {
+        const newRow = { ...row }; // Salin data asli
+        Object.keys(row).forEach(k => {
+            let val = row[k];
+            if (val === null || val === undefined || val === "") return;
+            
+            let cleanK = k.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+            
+            // PRIORITAS 1: Tangkap format Waktu/Jam lebih dulu agar tidak menimpa field utama
+            if(cleanK.includes('JAMCUSTASSIGN') || cleanK.includes('WAKTUASSIGN')) newRow["JAM CUST ASSIGN"] = val;
+            else if(cleanK.includes('JAMTECHCLOSE') || cleanK.includes('AMTECHCLOSE') || cleanK.includes('JAMCLOSE') || cleanK.includes('WAKTUCLOSE') || cleanK.includes('TGLCLOSE') || cleanK.includes('DATEKCLOSE')) newRow["JAM TECH CLOSED"] = val;
+            else if(cleanK.includes('DURASICLOSE') || cleanK.includes('DURASI')) newRow["DURASI CLOSE"] = val;
+            else if(cleanK.includes('DATEK') || cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR') || cleanK === 'TANGGAL') { newRow["REPORT DATE"] = val; newRow["DATEK"] = val; }
+            
+            // PRIORITAS 2: Mapping field utama
+            else if(cleanK.includes('NOTIKET') || cleanK.includes('INCIDENT') || cleanK === 'IN' || cleanK === 'TIKET') { newRow["NOTIKET"] = val; newRow["NO TIKET"] = val; }
+            else if(cleanK.includes('STATUSTIKET') || cleanK === 'STATUS') newRow["STATUS TIKET"] = val;
+            else if(cleanK.includes('KATEGORI')) newRow["KATEGORI TTR"] = val;
+            else if(cleanK.includes('CUSTASSIGN') || cleanK.includes('CUSTOMER') || cleanK === 'ASSIGN') newRow["CUST ASSIGN"] = val;
+            else if(cleanK.includes('TIPETIKET') || cleanK === 'TIPE') newRow["TIPE TIKET"] = val;
+            else if(cleanK.includes('DETAIL') || cleanK.includes('KETERANGAN') || cleanK.includes('SUMMARY')) { newRow["DETAIL TIKET"] = val; newRow["KETERANGAN"] = val; }
+            else if(cleanK.includes('FLAGHVC') || cleanK === 'HVC' || cleanK.includes('PRIORITAS')) newRow["FLAG HVC"] = val;
+            else if(cleanK === 'SLA') newRow["SLA"] = val;
+            else if(cleanK.includes('NOJASTEL') || cleanK.includes('NOMORINET') || cleanK === 'INET' || cleanK.includes('SPEEDY') || cleanK === 'POTS') newRow["NOMOR INET"] = val;
+            else if(cleanK === 'TEKNISI1' || cleanK.includes('TEKNISIUTAMA') || cleanK === 'TEKNISI') newRow["TEKNISI 1"] = val;
+            else if(cleanK === 'TEKNISI2' || cleanK.includes('PENDAMPING')) newRow["TEKNISI 2"] = val;
+            else if(cleanK === 'STO' || cleanK.includes('LOKASI')) newRow["STO"] = val;
+            else if(cleanK === 'SEKTOR' || cleanK === 'SECTOR') newRow["SEKTOR"] = val;
+            else if(cleanK.includes('SERVICEAREA') || cleanK === 'SA') newRow["SERVICE AREA"] = val;
+            else if(cleanK.includes('STATUSKENDALA') || cleanK === 'KENDALA') newRow["STATUS KENDALA"] = val;
+            else if(cleanK.includes('ANALISA') || cleanK.includes('PENYEBAB')) newRow["ANALISA PENYEBAB GANGGUAN"] = val;
+        });
+        return newRow;
+    });
+
+    // FILTER PENTING: Hapus baris kosong/formula hantu (Penyebab Saldo 48.000+)
+    return normalized.filter(r => {
+        const noTiket = r["NO TIKET"] || r["NOTIKET"] || "";
+        const noInet = r["NOMOR INET"] || r["INET"] || "";
+        // Baris dianggap valid jika minimal punya No Tiket atau No Internet
+        return noTiket.toString().trim() !== "" || noInet.toString().trim() !== "";
+    });
+}
+
 async function load() {
     const sUI = document.getElementById('syncStatus');
+    if(sUI) {
+        sUI.innerHTML = `<span class="animate-spin text-sm">⏳</span> Memuat Data...`;
+        sUI.className = "flex items-center justify-center gap-2 text-slate-700 font-bold bg-slate-50 px-4 py-2.5 rounded-full shadow-sm border border-slate-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
+    }
+    
     try {
-        const [resDB, resTeknisi] = await Promise.all([
-            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DATADB").catch(() => null),
-            fetch("https://opensheet.elk.sh/1m-ubHl9e7aAy2cxYp7nbuxMe9N83eNr2t410jF904go/DB%20TEKNISI").catch(() => null)
+        // Menggunakan CSV Parser buatan kita agar lebih tangguh dan bypass layanan perantara yang lelet
+        const [jsonDB, jsonTeknisi] = await Promise.all([
+            fetchSheetAsJSON('DATADB'), 
+            fetchSheetAsJSON('DB TEKNISI')
         ]);
         
-        if (resDB) {
-            const jsonDB = await resDB.json().catch(() => []);
-            rawData = Array.isArray(jsonDB) ? jsonDB : [];
-        }
-        if (resTeknisi) {
-            const jsonTeknisi = await resTeknisi.json().catch(() => []);
-            rawKehadiranData = Array.isArray(jsonTeknisi) ? jsonTeknisi : [];
-            // Jalankan Smart Mapper Tanggal
-            buildDateMap(rawKehadiranData); 
-        }
+        rawData = normalizeRawData(jsonDB || []);
+        rawKehadiranData = jsonTeknisi || [];
         
-        // Hapus fetch Google Script yang membuat lambat, data dikosongkan secara default
+        buildDateMap(rawKehadiranData); 
+        
         rawBelumOrderData = [];
 
-        renderSidebar(); updateDashboard();
+        renderSidebar(); 
+        updateDashboard();
+        
         if(sUI) {
             const timeStr = new Date().toLocaleTimeString('id-ID', { hour12: false });
             sUI.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span> Updated: ${timeStr}`;
             sUI.className = "flex items-center justify-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-4 py-2.5 rounded-full shadow-sm border border-emerald-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
         }
-    } catch { 
+    } catch (e) { 
+        console.error("Load Data Error:", e);
         if(sUI) {
             sUI.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_#f43f5e]"></span> Offline Mode`;
             sUI.className = "flex items-center justify-center gap-2 text-rose-700 font-bold bg-rose-50 px-4 py-2.5 rounded-full shadow-sm border border-rose-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
@@ -4235,18 +4464,23 @@ load(); setInterval(load, 60000);
 </div>
 
 <script>
-    // Konfigurasi Google Sheets
-    const SHEET_ID_B64 = 'MW0tdWJIbDllN2FBeTJjeFlwN25idXhNZTlOODNlTnIydDQxMGpGOTA0Z28=';
-    const decodeB64 = (value) => {
-        try {
-            return atob(value);
-        } catch (e) {
-            return '';
-        }
-    };
-    const sheetId = decodeB64(SHEET_ID_B64);
-    const sheetName = 'ALL TIKET';
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    // Backend API
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
+    const LOGIN_TOKEN_KEY = 'dashboard_login_token';
+
+    async function apiRequest(payload) {
+        const res = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        return await res.json();
+    }
+
+    async function backendGetCsv(sheetName) {
+        const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+        return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+    }
 
     // Urutan STO untuk mapping
     const stoOrder = [
@@ -4322,14 +4556,9 @@ load(); setInterval(load, 60000);
         updateClock("Sinkronisasi Data...");
 
         try {
-            const response = await fetch(csvUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const csvText = await response.text();
-            
-            // Periksa jika dokumen HTML Login Google yang dikembalikan (artinya belum di-publish)
-            if(csvText.includes('<!DOCTYPE html>')) {
-                 throw new Error("Sheet belum di Publikasikan (Publish to the web)");
-            }
+            const response = await backendGetCsv('ALL TIKET');
+            if (!response || !response.success || !response.csv) throw new Error(response?.error || 'Network response was not ok');
+            const csvText = response.csv;
 
             const data = parseCSV(csvText);
             processData(data);
@@ -4341,7 +4570,7 @@ load(); setInterval(load, 60000);
 
         } catch (error) {
             console.error("Gagal mengambil data:", error);
-            document.getElementById('table-body').innerHTML = `<tr><td colspan="34" style="padding: 30px; color: red; background: #fee2e2;"><b>Gagal menghubungkan ke Google Sheets.</b><br>Pastikan Anda sudah melakukan: File > Bagikan > Publikasikan ke web > Pilih Sheet "ALL TIKET" > Pilih Format "CSV".</td></tr>`;
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="34" style="padding: 30px; color: red; background: #fee2e2;"><b>Gagal menghubungkan ke backend.</b><br>Pastikan login sudah benar dan backend Apps Script aktif.</td></tr>`;
         } finally {
             isLoadingData = false;
         }
@@ -4999,66 +5228,58 @@ load(); setInterval(load, 60000);
                 tbody.innerHTML = '<tr><td colspan="25" class="py-6 text-center font-bold text-gray-500">Membaca data secara langsung dari Google Sheets...</td></tr>';
             }
 
-            const SHEET_ID_B64 = 'MW0tdWJIbDllN2FBeTJjeFlwN25idXhNZTlOODNlTnIydDQxMGpGOTA0Z28=';
+            // PERBAIKAN 1: Menggunakan URL Backend yang baru dan seragam dengan menu utama
+            const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
+            const LOGIN_TOKEN_KEY = 'dashboard_login_token';
 
+            async function apiRequest(payload) {
+                const res = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            }
 
-            const decodeB64 = (value) => {
+            async function backendGetCsv(sheetName) {
+                const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+                return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+            }
 
-
-                try {
-
-
-                    return atob(value);
-
-
-                } catch (e) {
-
-
-                    return '';
-
-
-                }
-
-
-            };
-
-
-            const sheetId = decodeB64(SHEET_ID_B64);
-
-
-            
-            
             // Fungsi pembantu agar jika satu sheet tidak ada, sheet lain tetap termuat dengan aman
-            const fetchSheet = async (sheetName, sourceLabel) => {
-                const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+            async function fetchSheetAsJSON(sheetName) {
                 try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        const csv = await res.text();
-                        const parsed = parseCSV(csv);
+                    const res = await backendGetCsv(sheetName);
+                    if (res && res.success && res.csv) {
+                        const parsed = parseCSV(res.csv);
                         if (parsed.length === 0) return [];
-                        const headers = parsed[0].map(h => h.trim().toUpperCase());
-                        return parsed.slice(1).map(row => ({ row, source: sourceLabel, headers }));
+                        const headers = parsed[0];
+                        const data = [];
+                        for(let i = 1; i < parsed.length; i++) {
+                            if (!parsed[i].some(cell => cell && cell.trim() !== '')) continue;
+                            let obj = {};
+                            for(let j = 0; j < headers.length; j++) {
+                                if (headers[j]) obj[headers[j]] = parsed[i][j] || "";
+                            }
+                            data.push(obj);
+                        }
+                        return data;
                     }
                 } catch (e) {
                     console.warn(`Gagal memuat sheet: ${sheetName}`);
                 }
                 return [];
-            };
+            }
 
             try {
                 // Fetch seluruh sheet secara paralel tanpa saling menggagalkan
-                const [allData, underspecData, zperData] = await Promise.all([
-                    fetchSheet('ALL TIKET', 'ALL'),
-                    fetchSheet('UNDERSPEC', 'UNDERSPEC'),
-                    fetchSheet('Z_PERMINTAAN', 'Z_PERMINTAAN')
+                const [allData] = await Promise.all([
+                    fetchSheetAsJSON('DATADB')
                 ]);
 
-                let combinedData = [...allData, ...underspecData, ...zperData];
-                
-                if (combinedData.length === 0) throw new Error('Semua data kosong');
+                if (!allData || allData.length === 0) throw new Error('Semua data kosong');
 
-                processData(combinedData);
+                processData(allData);
 
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -5076,255 +5297,164 @@ load(); setInterval(load, 60000);
             }
         }
 
+        // ====== STANDARISASI: MENYAMAKAN PERATURAN DENGAN DASHBOARD UTAMA ======
+        function normalizeRawData(data) {
+            if (!Array.isArray(data)) return [];
+            const normalized = data.map(row => {
+                const newRow = { ...row }; 
+                Object.keys(row).forEach(k => {
+                    let val = row[k];
+                    if (val === null || val === undefined || val === "") return;
+                    let cleanK = k.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+                    if(cleanK.includes('JAMCUSTASSIGN') || cleanK.includes('WAKTUASSIGN')) newRow["JAM CUST ASSIGN"] = val;
+                    else if(cleanK.includes('JAMTECHCLOSE') || cleanK.includes('AMTECHCLOSE') || cleanK.includes('JAMCLOSE') || cleanK.includes('WAKTUCLOSE') || cleanK.includes('TGLCLOSE') || cleanK.includes('DATEKCLOSE')) newRow["JAM TECH CLOSED"] = val;
+                    else if(cleanK.includes('DURASICLOSE') || cleanK.includes('DURASI')) newRow["DURASI CLOSE"] = val;
+                    else if(cleanK.includes('DATEK') || cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR') || cleanK === 'TANGGAL') { newRow["REPORT DATE"] = val; newRow["DATEK"] = val; }
+                    else if(cleanK.includes('NOTIKET') || cleanK.includes('INCIDENT') || cleanK === 'IN' || cleanK === 'TIKET') { newRow["NOTIKET"] = val; newRow["NO TIKET"] = val; }
+                    else if(cleanK.includes('STATUSTIKET') || cleanK === 'STATUS') newRow["STATUS TIKET"] = val;
+                    else if(cleanK.includes('KATEGORI')) newRow["KATEGORI TTR"] = val;
+                    else if(cleanK.includes('CUSTASSIGN') || cleanK.includes('CUSTOMER') || cleanK === 'ASSIGN') newRow["CUST ASSIGN"] = val;
+                    else if(cleanK.includes('TIPETIKET') || cleanK === 'TIPE') newRow["TIPE TIKET"] = val;
+                    else if(cleanK.includes('DETAIL') || cleanK.includes('KETERANGAN') || cleanK.includes('SUMMARY')) { newRow["DETAIL TIKET"] = val; newRow["KETERANGAN"] = val; }
+                    else if(cleanK.includes('FLAGHVC') || cleanK === 'HVC' || cleanK.includes('PRIORITAS')) newRow["FLAG HVC"] = val;
+                    else if(cleanK === 'SLA') newRow["SLA"] = val;
+                    else if(cleanK.includes('NOJASTEL') || cleanK.includes('NOMORINET') || cleanK === 'INET' || cleanK.includes('SPEEDY') || cleanK === 'POTS') newRow["NOMOR INET"] = val;
+                    else if(cleanK === 'TEKNISI1' || cleanK.includes('TEKNISIUTAMA') || cleanK === 'TEKNISI') newRow["TEKNISI 1"] = val;
+                    else if(cleanK === 'TEKNISI2' || cleanK.includes('PENDAMPING')) newRow["TEKNISI 2"] = val;
+                    else if(cleanK === 'STO' || cleanK.includes('LOKASI')) newRow["STO"] = val;
+                    else if(cleanK === 'SEKTOR' || cleanK === 'SECTOR') newRow["SEKTOR"] = val;
+                    else if(cleanK.includes('SERVICEAREA') || cleanK === 'SA') newRow["SERVICE AREA"] = val;
+                    else if(cleanK.includes('STATUSKENDALA') || cleanK === 'KENDALA') newRow["STATUS KENDALA"] = val;
+                    else if(cleanK.includes('ANALISA') || cleanK.includes('PENYEBAB')) newRow["ANALISA PENYEBAB GANGGUAN"] = val;
+                });
+                return newRow;
+            });
+            return normalized.filter(r => {
+                const noTiket = r["NO TIKET"] || r["NOTIKET"] || "";
+                const noInet = r["NOMOR INET"] || r["INET"] || "";
+                return noTiket.toString().trim() !== "" || noInet.toString().trim() !== "";
+            });
+        }
+
+        function isTicketOpen(r) {
+            const s = (r["STATUS TIKET"] || "").toString().toUpperCase().trim();
+            return s !== "CLOSE" && s !== "CLOSED"; 
+        }
+
+        function getTicketBucket(r) {
+            const kt = (r["KATEGORI TTR"] || "").toString().toUpperCase().trim();
+            const c = (r["CUST ASSIGN"] || "").toString().toUpperCase().trim();
+            if (kt.includes("MANJA") || c.includes("TTR 3 JM") || c.includes("TTR 3JM")) return "MANJA";
+            const tipe = (r["TIPE TIKET"] || r["TIPE"] || "").toString().toUpperCase().trim();
+            const detail = (r["DETAIL TIKET"] || r["KETERANGAN"] || "").toString().toUpperCase().trim();
+            if (c.includes("SQM") || kt.includes("SQM") || detail.includes("SQM")) return "SQM";
+            if (c.includes("Z_PERMINTAAN") || c.includes("Z PERMINTAAN") || kt.includes("Z_PERMINTAAN") || detail.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
+            if (c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC")) return "UNDERSPEC";
+            const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
+            if(v.includes("PLATINUM") || c.includes("TTR 6 JP") || c.includes("TTR 6JP") || detail.includes("PLATINUM")) return "HVC PLATINUM";
+            if(v.includes("DIAMOND") || c.includes("TTR 3 JD") || c.includes("TTR 3JD") || detail.includes("DIAMOND")) return "HVC DIAMOND";
+            if(v.includes("GOLD") || c.includes("TTR 12 JG") || c.includes("TTR 12JG") || detail.includes("GOLD")) return "NON_HVC_GOLD";
+            return "NON_HVC_REGULER"; 
+        }
+
+        const SA_MAP = {
+            'ARK': 'ARENGKA', 'PBRC 1': 'PBR BARAT', 'PBRC 2': 'PBR BARAT', 'PBRC 3': 'PBR TIMUR', 'PBRC 4': 'PBR TIMUR',
+            'BKR': 'BUKIT RAYA', 'SAK': 'BUKIT RAYA', 'SEA': 'BUKIT RAYA', 'BKN': 'BUKIT RAYA', 'UBT': 'BUKIT RAYA', 'PPN': 'BUKIT RAYA', 'SGP': 'BUKIT RAYA',
+            'SLJ': 'DUMAI', 'DUM': 'DUMAI', 'BAG': 'DUMAI', 'BAS': 'DUMAI', 'DRI': 'DUMAI', 'BGU': 'DUMAI',
+            'RBI': 'PANGKALAN KERINCI', 'PKR': 'PANGKALAN KERINCI', 'PWG': 'PANGKALAN KERINCI', 'SOK': 'PANGKALAN KERINCI', 'MIS': 'PANGKALAN KERINCI',
+            'AMK': 'RENGAT', 'KLE': 'RENGAT', 'PMB': 'RENGAT', 'RGT': 'RENGAT', 'TBH': 'RENGAT', 'TAK': 'RENGAT', 'PNP': 'RENGAT'
+        };
+
+        function norm(v) { return (v || "").toString().toUpperCase().replace(/\s+/g, "").replace(/-/g, ""); }
+        function mapSTO(val) { 
+            let n = norm(val); 
+            if(n.includes("PBRC") || n === "PBB") return "PBR"; 
+            let res = (val || "").toString().toUpperCase();
+            if(res === "KDS" || n === "KDS") return "MIS";
+            if(res === "PBB") return "PBR";
+            return res; 
+        }
+
+        function getSA(r) {
+            let st = mapSTO(r.STO || r.LOKASI);
+            let sek = (r.SEKTOR || "").toUpperCase().replace(/\s/g, '');
+            if (sek.includes("PBRC1") || sek.includes("PBB1") || sek.includes("PBRC2") || sek.includes("PBB2")) return "PBR BARAT";
+            if (sek.includes("PBRC3") || sek.includes("PBB3") || sek.includes("PBRC4") || sek.includes("PBB4")) return "PBR TIMUR";
+            if (st === 'PBR') return "PBR BARAT";
+            if (st === 'ARK' || sek.includes("ARK")) return "ARENGKA";
+            return SA_MAP[st] || "OTHER";
+        }
+
         // Memproses baris mentah CSV ke dalam objek kelompok Data (Berdasarkan Teknisi)
         function processData(combinedData) {
+            const normalizedData = normalizeRawData(combinedData);
             const groups = {};
             
-            // Loop melewati gabungan data.
-            for (let i = 0; i < combinedData.length; i++) {
-                const item = combinedData[i];
-                const row = item.row;
-                const source = item.source;
-                const headers = item.headers;
+            normalizedData.forEach(r => {
+                let stoRaw = r.STO ? r.STO.trim().toUpperCase() : "UNKNOWN";
+                let sektorRaw = r.SEKTOR ? r.SEKTOR.trim().toUpperCase() : "UNKNOWN";
+                let noInternet = r["NOMOR INET"] || r.INET || "-";
+                let t1 = (r["TEKNISI 1"] || "").trim();
+                let t2 = (r["TEKNISI 2"] || "").trim();
+                let isClose = !isTicketOpen(r);
+                let bkt = getTicketBucket(r);
 
-                // Fungsi bantu mencari indeks kolom secara dinamis berdasarkan header agar kebal dari pergeseran
-                const getColIdx = (keywords) => {
-                    if (!headers) return -1;
-                    for (let kw of keywords) {
-                        const cleanKw = kw.replace(/\s+/g, '');
-                        const idx = headers.findIndex(h => h.replace(/\s+/g, '').includes(cleanKw));
-                        if (idx !== -1) return idx;
-                    }
-                    return -1;
-                };
-
-                let sektor, sto, noInternet, teknisi1Raw, teknisi2Raw, jamClose, isClose, noTiketStr;
-                let serviceAreaRaw = ""; // Variabel khusus untuk Kolom C Service Area
-                let catIndex = 3; // Default REGULER
-
-                if (source === 'UNDERSPEC') {
-                    // Struktur kolom khusus untuk sheet UNDERSPEC
-                    noTiketStr = (row[14] || '').trim();    // Kolom O (NO TIKET)
-                    serviceAreaRaw = (row[2] || '').trim(); // Kolom C (SERVICE AREA)
-                    sektor = (row[3] || '').trim();         // Kolom D (SEKTOR)
-                    sto = (row[4] || '').trim();            // Kolom E (STO)
-                    noInternet = (row[7] || '').trim();    // Kolom H (ND / NO INTERNET)
-                    teknisi1Raw = (row[12] || '').trim();  // Kolom M (TEKNISI 1)
-                    teknisi2Raw = (row[13] || '').trim();  // Kolom N (TEKNISI 2)
-                    jamClose = (row[16] || '').trim();     // Kolom Q (JAM CLOSE)
-                    
-                    catIndex = 5; // Masuk ke kolom UNDERSPEC
-                } else {
-                    // UNTUK ALL TIKET & Z_PERMINTAAN (DIAMOND, PLATINUM, MANJA, REGULER, SQM, Z_PERMINTAAN)
-                    // Sesuai instruksi terbaru:
-                    noTiketStr = (row[8] || '').trim();  // Kolom I (Index 8) = NO TIKET
-                    noInternet = (row[11] || '').trim(); // Kolom L (Index 11) = NO INTERNET
-                    jamClose = (row[23] || '').trim();   // Kolom X (Index 23) = STATUS/JAM CLOSE
-
-                    // Sisa data dicari otomatis lewat header agar kebal pergeseran, 
-                    // atau fallback ke index bawaan jika header tidak ketemu
-                    const idxSektor = getColIdx(['SEKTOR', 'SECTOR']);
-                    const idxSto = getColIdx(['STO', 'LOKASI']);
-                    const idxTek1 = getColIdx(['TEKNISI1', 'TEKNISIUTAMA', 'TEKNISI']);
-                    const idxTek2 = getColIdx(['TEKNISI2', 'PENDAMPING']);
-                    const idxManja = getColIdx(['KETMANJA', 'MANJA']);
-                    const idxCustAssign = getColIdx(['CUSTASSIGN', 'ASSIGN']);
-                    const idxFlagHvc = getColIdx(['FLAGHVC', 'PRIORITAS', 'HVC']);
-                    const idxSummary = getColIdx(['SUMMARY', 'DETAIL', 'KETERANGAN']);
-
-                    sektor = idxSektor !== -1 ? (row[idxSektor] || '').trim() : (row[1] || '').trim();
-                    sto = idxSto !== -1 ? (row[idxSto] || '').trim() : (row[2] || '').trim();
-                    teknisi1Raw = idxTek1 !== -1 ? (row[idxTek1] || '').trim() : (row[15] || '').trim();
-                    teknisi2Raw = idxTek2 !== -1 ? (row[idxTek2] || '').trim() : (row[16] || '').trim();
-
-                    const manja = idxManja !== -1 ? (row[idxManja] || '').toUpperCase().trim() : (row[4] || '').toUpperCase().trim();
-                    const custAssign = idxCustAssign !== -1 ? (row[idxCustAssign] || '').toUpperCase().trim() : (row[6] || '').toUpperCase().trim();
-                    const flagHvc = idxFlagHvc !== -1 ? (row[idxFlagHvc] || '').toUpperCase().trim() : (row[7] || '').toUpperCase().trim();
-                    const summary = idxSummary !== -1 ? (row[idxSummary] || '').toUpperCase().trim() : (row[9] || '').toUpperCase().trim();
-
-                    if (source === 'Z_PERMINTAAN') {
-                        catIndex = 6;
-                    } else {
-                        // --- LOGIKA KATEGORI PRIORITAS BERDASARKAN CUST ASSIGN & FLAG HVC ---
-                        if (custAssign.includes('Z_PERMINTAAN') || custAssign.includes('Z PERMINTAAN') || summary.includes('Z_PERMINTAAN')) {
-                            catIndex = 6; // Z_PERMINTAAN (Prioritas Utama)
-                        } else if (custAssign.includes('SQM') || summary.includes('SQM')) {
-                            catIndex = 4; // SQM
-                        } else if (custAssign.includes('TTR 3 JM') || custAssign.includes('TTR 3JM') || (manja.includes('MANJA') && !manja.includes('BUKAN'))) {
-                            catIndex = 2; // MANJA
-                        } else if (custAssign.includes('TTR 3 JD') || flagHvc.includes('DIAMOND')) {
-                            catIndex = 0; // DIAMOND
-                        } else if (custAssign.includes('TTR 6 JP') || flagHvc.includes('PLATINUM')) {
-                            catIndex = 1; // PLATINUM
-                        } else {
-                            catIndex = 3; // REGULER
-                        }
-                    }
-                }
+                if (!sektorRaw || sektorRaw === 'SEKTOR' || sektorRaw === 'MIN') sektorRaw = "UNKNOWN";
+                if (!stoRaw) stoRaw = "UNKNOWN";
                 
-                // 1. LOGIKA CLOSE: Jika Kolom X (atau AC untuk underspec) berisi karakter valid = CLOSE (TC). Jika kosong = OPEN (TO).
-                isClose = (jamClose !== '' && jamClose !== '0' && jamClose !== '-');
-
-                // 2. LOGIKA SALDO: Wajib ada Nomor Internet (Kolom K) agar tiket dihitung.
-                if (!noInternet || noInternet.toUpperCase() === 'NO INTERNET' || noInternet.toUpperCase() === 'ND' || noInternet === '0' || noInternet === '-') {
-                    continue; // Skip baris ini jika Nomor Internet kosong/tidak valid
-                }
-
-                // 3. Wajib ada Sektor agar bisa di-mapping
-                if (!sektor || sektor.toUpperCase() === 'SEKTOR' || sektor === 'min') {
-                    continue; 
-                }
-
-                // --- 4. PEMETAAN SEKTOR & STO (BACA PINTAR / SMART NORMALIZE) ---
-                let serviceArea = serviceAreaRaw ? serviceAreaRaw.toUpperCase() : sektor.toUpperCase();
-                let finalSektor = sektor.toUpperCase();
-                let finalSto = sto.toUpperCase();
+                if (t1 === '0' || t1 === '-') t1 = '';
+                if (t2 === '0' || t2 === '-') t2 = '';
+                if (t1 === t2) t2 = '';
+                if (!t1 && t2) { t1 = t2; t2 = ''; }
                 
-                const sUpper = sektor.toUpperCase();
-                const stoUpper = sto.toUpperCase();
-                const cleanSek = sUpper.replace(/\s/g, '');
+                let jlhTek = (t1 && t2) ? 2 : (!t1 && !t2 ? 0 : 1);
+                if (!t1 && !t2) t1 = "BELUM ASSIGN";
 
-                // 1. ARENGKA
-                if (sUpper.includes('ARK') || stoUpper.includes('ARK')) {
-                    serviceArea = 'ARENGKA';
-                    finalSektor = 'ARENGKA';
-                    finalSto = 'ARK'; // Memaksa semua ARK-1, ARK-2, atau STO aneh (seperti -1, 10003) menjadi ARK
-                }
-                // 2. BUKIT RAYA - BUKIT RAYA
-                else if (stoUpper === 'BKR' || sUpper.includes('BUKIT RAYA')) {
-                    serviceArea = 'BUKIT RAYA';
-                    finalSektor = 'BUKIT RAYA';
-                    finalSto = 'BKR';
-                }
-                // 3. BUKIT RAYA - OUTER 2
-                else if (['BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'SRN', 'UBT'].includes(stoUpper) || sUpper.includes('OUTER 2')) {
-                    serviceArea = 'BUKIT RAYA';
-                    finalSektor = 'OUTER 2';
-                    if (!['BKN', 'PPN', 'SAK', 'SEA', 'SGP', 'SRN', 'UBT'].includes(stoUpper)) finalSto = '-'; 
-                }
-                // 4. DUMAI - DUMAI
-                else if (['BAG', 'BAS', 'DUM', 'SLJ'].includes(stoUpper) || (sUpper.includes('DUMAI') && !sUpper.includes('DURI'))) {
-                    serviceArea = 'DUMAI';
-                    finalSektor = 'DUMAI';
-                    if (!['BAG', 'BAS', 'DUM', 'SLJ'].includes(stoUpper)) finalSto = '-';
-                }
-                // 5. DUMAI - DURI
-                else if (['BGU', 'DRI'].includes(stoUpper) || sUpper.includes('DURI')) {
-                    serviceArea = 'DUMAI';
-                    finalSektor = 'DURI';
-                    if (!['BGU', 'DRI'].includes(stoUpper)) finalSto = '-';
-                }
-                // 6. PANGKALAN KERINCI - OUTER 1
-                else if (['KDS', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK'].includes(stoUpper) || sUpper.includes('OUTER 1')) {
-                    serviceArea = 'PANGKALAN KERINCI';
-                    finalSektor = 'OUTER 1';
-                    if (!['KDS', 'MIS', 'PKR', 'PWG', 'RBI', 'SOK'].includes(stoUpper)) finalSto = '-';
-                }
-                // 7. PEKANBARU BARAT (PBRC 1 & PBRC 2)
-                else if (cleanSek.includes('PBRC1') || cleanSek.includes('PBB1')) {
-                    serviceArea = 'PEKANBARU BARAT';
-                    finalSektor = 'PBRC 1';
-                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
-                }
-                else if (cleanSek.includes('PBRC2') || cleanSek.includes('PBB2')) {
-                    serviceArea = 'PEKANBARU BARAT';
-                    finalSektor = 'PBRC 2';
-                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
-                }
-                // 8. PEKANBARU TIMUR (PBRC 3 & PBRC 4)
-                else if (cleanSek.includes('PBRC3') || cleanSek.includes('PBB3')) {
-                    serviceArea = 'PEKANBARU TIMUR';
-                    finalSektor = 'PBRC 3';
-                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
-                }
-                else if (cleanSek.includes('PBRC4') || cleanSek.includes('PBB4')) {
-                    serviceArea = 'PEKANBARU TIMUR';
-                    finalSektor = 'PBRC 4';
-                    if (!['PBB', 'PBR'].includes(stoUpper)) finalSto = '-';
-                }
-                // Fallback jika STO-nya PBB/PBR tapi Sektornya aneh
-                else if (['PBB', 'PBR'].includes(stoUpper)) {
-                    serviceArea = 'PEKANBARU BARAT'; 
-                    finalSektor = 'PBRC 1'; // Default
-                }
-                // 9. RENGAT
-                else if (['AMK', 'KLE', 'PMB', 'PNP', 'RGT', 'TAK', 'TBH'].includes(stoUpper) || sUpper.includes('RENGAT')) {
-                    serviceArea = 'RENGAT';
-                    finalSektor = 'RENGAT';
-                    if (!['AMK', 'KLE', 'PMB', 'PNP', 'RGT', 'TAK', 'TBH'].includes(stoUpper)) finalSto = '-';
-                }
-
-                // --- 5. VALIDASI TEKNISI (BACA PINTAR DOBEL & STO KOSONG) ---
-                let teknisi1 = (teknisi1Raw === '0' || teknisi1Raw === '-') ? '' : teknisi1Raw;
-                let teknisi2 = (teknisi2Raw === '0' || teknisi2Raw === '-') ? '' : teknisi2Raw;
+                const sUpper = sektorRaw.replace(/\s/g, '');
+                if (sUpper.includes('PBRC1') || sUpper.includes('PBB1')) stoRaw = 'PBRC 1';
+                else if (sUpper.includes('PBRC2') || sUpper.includes('PBB2')) stoRaw = 'PBRC 2';
+                else if (sUpper.includes('PBRC3') || sUpper.includes('PBB3')) stoRaw = 'PBRC 3';
+                else if (sUpper.includes('PBRC4') || sUpper.includes('PBB4')) stoRaw = 'PBRC 4';
+                else if (stoRaw === 'PBR') stoRaw = 'PBRC 1';
                 
-                // BACA PINTAR 1: Jika nama teknisi 1 dan 2 sama persis (input dobel), jadikan 1 orang saja
-                if (teknisi1 === teknisi2) {
-                    teknisi2 = '';
-                }
-
-                // BACA PINTAR 2: Jika Teknisi 1 kosong (misal diisi '-') tapi Teknisi 2 ada, geser Teknisi 2 ke kolom Teknisi 1
-                if (!teknisi1 && teknisi2) {
-                    teknisi1 = teknisi2;
-                    teknisi2 = '';
-                }
-
-                // JIKA TEKNISI KOSONG (BELUM ASSIGN), SKIP TIKET INI (TIDAK DITAMPILKAN)
-                if (!teknisi1 && !teknisi2) {
-                    continue; 
-                }
-
-                let jlhTek = (teknisi1 && teknisi2) ? 2 : 1;
+                let sa = getSA(r);
+                let key = (t1 === "BELUM ASSIGN") ? "BELUM ASSIGN" : [t1, t2].filter(x => x).sort().join('|');
                 
-                // BACA PINTAR: Urutkan teknisi! 
-                // Jika Tek 1 & Tek 2 posisinya tertukar, mereka akan digabung paksa jadi 1 tim. TIDAK ADA LAGI DOBEL!
-                let arrTech = [teknisi1, teknisi2].filter(t => t !== '').sort();
-                let key = arrTech.join('|');
-
-                if (!groups[key]) {
-                    // Buat wadah baru untuk tim ini
+                if(!groups[key]) {
                     groups[key] = {
-                        area: serviceArea, 
-                        sektor: finalSektor,
-                        sto: finalSto,
-                        teknisi1: teknisi1, // Simpan urutan tampilan asli saat pertama ketemu
-                        teknisi2: teknisi2,
-                        jlh: jlhTek, 
+                        area: sa, sektor: sektorRaw, sto: stoRaw, teknisi1: t1, teknisi2: t2, jlh: jlhTek, 
                         categories: Array(7).fill(null).map(() => ({to: 0, tc: 0})),
-                        tickets: [] // Tambahkan array penampung detail tiket
+                        tickets: []
                     };
-                } else {
-                    // BACA PINTAR STO AUTO-MERGE:
-                    // Jika tim ini sebelumnya numpang di STO '-' (kosong), tapi tiket barusan punya STO valid, 
-                    // timpa lokasi mereka agar masuk secara otomatis ke STO yang benar (seperti ditarik magnet).
-                    if (groups[key].sto === '-' && finalSto !== '-') {
-                        groups[key].area = serviceArea;
-                        groups[key].sektor = finalSektor;
-                        groups[key].sto = finalSto;
-                    }
                 }
                 
-                // Tambahkan perhitungan tiketnya
+                let catIndex = 3; // REGULER + GOLD
+                if (bkt === 'HVC DIAMOND') catIndex = 0;
+                else if (bkt === 'HVC PLATINUM') catIndex = 1;
+                else if (bkt === 'MANJA') catIndex = 2;
+                else if (bkt === 'SQM') catIndex = 4;
+                else if (bkt === 'UNDERSPEC') catIndex = 5;
+                else if (bkt === 'Z_PERMINTAAN') catIndex = 6;
+
                 if (isClose) {
                     groups[key].categories[catIndex].tc++;
                 } else {
                     groups[key].categories[catIndex].to++;
                 }
 
-                // Susun objek tiket untuk ditampilkan di Pop-Up Modal Detail
                 const catNames = ['DIAMOND', 'PLATINUM', 'MANJA', 'REGULER', 'SQM', 'UNDERSPEC', 'Z PERMINTAAN'];
                 groups[key].tickets.push({
-                    noTiket: noTiketStr || '-', // Sudah dikunci ke Kolom A (row[0])
+                    noTiket: r["NO TIKET"] || r.NOTIKET || '-',
                     status: isClose ? 'CLOSE' : 'OPEN',
                     category: catNames[catIndex] || 'REGULER',
                     noInternet: noInternet,
-                    serviceArea: serviceArea,
-                    sektor: finalSektor,
-                    sto: finalSto,
-                    teknisi1: teknisi1Raw || '-',
-                    teknisi2: teknisi2Raw || '-'
+                    serviceArea: sa,
+                    sektor: sektorRaw,
+                    sto: stoRaw,
+                    teknisi1: t1,
+                    teknisi2: t2
                 });
-            }
+            });
 
             // Ubah objek Grup menjadi Array, dan hitung formula produktifitas
             const dataRows = Object.values(groups).map(group => {
@@ -5547,48 +5677,78 @@ load(); setInterval(load, 60000);
 
 
     // --- LOGIKA LOGIN DENGAN OBFUSCATION SEDERHANA ---
-    const PASSWORD_CODES = [111, 112, 115, 114, 105, 100, 97, 114, 50, 48, 50, 54];
-    const CORRECT_PASSWORD = String.fromCharCode(...PASSWORD_CODES);
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
     const LOGIN_TOKEN_KEY = 'dashboard_login_token';
-    const LOGIN_TOKEN_PREFIX = 'ok_';
 
-    function makeLoginToken() {
-      const raw = `${Date.now()}|${Math.random().toString(36).slice(2)}|${performance.now().toFixed(3)}`;
-      return LOGIN_TOKEN_PREFIX + btoa(raw);
+    async function apiRequest(payload) {
+      const res = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
     }
 
-    function checkLoginStatus() {
-      const token = sessionStorage.getItem(LOGIN_TOKEN_KEY) || '';
-      if (token.startsWith(LOGIN_TOKEN_PREFIX)) {
+    async function verifyBackendToken(token) {
+      if (!token) return false;
+      try {
+        const data = await apiRequest({ action: 'verifyToken', token });
+        return !!(data && data.success);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function checkLoginStatus() {
+      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      if (!token) {
+        document.getElementById('loginOverlay').style.display = 'flex';
+        return;
+      }
+
+      const ok = await verifyBackendToken(token);
+      if (ok) {
         document.getElementById('loginOverlay').style.display = 'none';
         switchTab('app1');
       } else {
+        localStorage.removeItem(LOGIN_TOKEN_KEY);
         document.getElementById('loginOverlay').style.display = 'flex';
       }
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
-      const pwd = document.getElementById('loginPassword').value;
-      if (pwd === CORRECT_PASSWORD) {
-        // Password Benar
-        sessionStorage.setItem(LOGIN_TOKEN_KEY, makeLoginToken());
-        const overlay = document.getElementById('loginOverlay');
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-          overlay.style.display = 'none';
-          switchTab('app1');
-        }, 500);
-      } else {
-        // Password Salah
-        const err = document.getElementById('loginError');
+      const pwd = document.getElementById('loginPassword').value.trim();
+      const err = document.getElementById('loginError');
+      err.classList.add('hidden');
+
+      try {
+        const data = await apiRequest({ action: 'login', password: pwd });
+        if (!data.success) {
+          err.classList.remove('hidden');
+          document.getElementById('loginPassword').value = '';
+          return;
+        }
+
+        localStorage.setItem(LOGIN_TOKEN_KEY, data.token);
+        document.getElementById('loginOverlay').style.display = 'none';
+        switchTab('app1');
+      } catch (e) {
+        console.error(e);
         err.classList.remove('hidden');
-        document.getElementById('loginPassword').value = '';
-        setTimeout(() => err.classList.add('hidden'), 3000);
       }
     }
 
-    // Load first app by default setelah mengecek status login.
+    async function backendGetSheet(sheetName) {
+      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      return await apiRequest({ action: 'getData', token, sheet: sheetName });
+    }
+
+    async function backendGetCsv(sheetName) {
+      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+    }
+
     setTimeout(() => checkLoginStatus(), 50);
   </script>
 </body>
