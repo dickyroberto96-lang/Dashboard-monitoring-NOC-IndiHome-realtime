@@ -343,8 +343,8 @@
                             </div>
                         </div>
                     </div>
-                    <!-- NOTIFIKASI SYNC -->
-                    <div id="syncStatus" class="flex items-center justify-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-4 py-2.5 rounded-full shadow-sm border border-emerald-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors">
+                    <!-- NOTIFIKASI SYNC — Klik untuk Force Refresh (Anti-Lelet: clear cache & reload) -->
+                    <div id="syncStatus" title="Klik untuk force refresh data" onclick="(function(){ _lastLoadTs=0; if(window.parent&&window.parent.__antiLeletInvalidate){window.parent.__antiLeletInvalidate('DATADB');window.parent.__antiLeletInvalidate('DB TEKNISI');} Object.keys(_LOCAL_CSV_CACHE).forEach(k=>delete _LOCAL_CSV_CACHE[k]); load(); })()" class="cursor-pointer flex items-center justify-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-4 py-2.5 rounded-full shadow-sm border border-emerald-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors">
                         <span class="flex h-2.5 w-2.5 relative">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -685,10 +685,41 @@ async function backendGetSheet(sheetName) {
     return await apiRequest({ action: 'getData', token, sheet: sheetName });
 }
 
+// ——— Anti-Lelet: Gunakan cache terpusat di parent frame jika tersedia ———
 async function backendGetCsv(sheetName) {
-    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-    return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+    // Coba pakai centralized cache dari outer shell (cross-tab shared cache)
+    if (window.parent && typeof window.parent.__antiLeletFetch === 'function') {
+        try {
+            return await window.parent.__antiLeletFetch({ action: 'getCsv', sheet: sheetName });
+        } catch(e) {
+            // Fallback ke local jika parent tidak responsif
+        }
+    }
+    // Fallback: local in-page cache dengan deduplication
+    return await _localCachedCsv(sheetName);
 }
+
+// Local fallback cache (jika berjalan standalone / parent tidak support Anti-Lelet)
+const _LOCAL_CSV_CACHE = {};
+const _LOCAL_CSV_INFLIGHT = {};
+const _LOCAL_CSV_TTL = 90 * 1000;
+
+async function _localCachedCsv(sheetName) {
+    const now = Date.now();
+    if (_LOCAL_CSV_CACHE[sheetName] && (now - _LOCAL_CSV_CACHE[sheetName].ts) < _LOCAL_CSV_TTL) {
+        return _LOCAL_CSV_CACHE[sheetName].data;
+    }
+    if (_LOCAL_CSV_INFLIGHT[sheetName]) return _LOCAL_CSV_INFLIGHT[sheetName];
+    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+    const p = apiRequest({ action: 'getCsv', token, sheet: sheetName }).then(data => {
+        _LOCAL_CSV_CACHE[sheetName] = { data, ts: Date.now() };
+        delete _LOCAL_CSV_INFLIGHT[sheetName];
+        return data;
+    }).catch(e => { delete _LOCAL_CSV_INFLIGHT[sheetName]; throw e; });
+    _LOCAL_CSV_INFLIGHT[sheetName] = p;
+    return p;
+}
+// ——————————————————————————————————————————————————————————
 // ==============================================================================
 // 1. GLOBAL VARIABLES & CONFIGURATION
 // ==============================================================================
@@ -2829,8 +2860,36 @@ function normalizeRawData(data) {
     });
 }
 
+// ——— Anti-Lelet: Tracking waktu load terakhir ———
+let _lastLoadTs = 0;
+const _LOAD_MIN_INTERVAL = 55 * 1000; // Jangan reload jika < 55 detik sejak terakhir
+
 async function load() {
     const sUI = document.getElementById('syncStatus');
+
+    // ── FASE 0: Tampilkan data dari localStorage SECARA INSTAN ──
+    // (Sebelum fetch, render dulu data lama agar UI tidak kosong)
+    if (rawData.length === 0) {
+        try {
+            const lsDB = localStorage.getItem('__al_boot_DATADB');
+            const lsTek = localStorage.getItem('__al_boot_DBTEKNI');
+            if (lsDB) {
+                const parsed = JSON.parse(lsDB);
+                if (parsed && parsed.length > 0) {
+                    rawData = normalizeRawData(parsed);
+                    rawKehadiranData = JSON.parse(lsTek || '[]') || [];
+                    buildDateMap(rawKehadiranData);
+                    renderSidebar();
+                    updateDashboard();
+                    if(sUI) {
+                        sUI.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]"></span> Cache Lama...`;
+                        sUI.className = "flex items-center justify-center gap-2 text-amber-700 font-bold bg-amber-50 px-4 py-2.5 rounded-full shadow-sm border border-amber-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
     if(sUI) {
         sUI.innerHTML = `<span class="animate-spin text-sm">⏳</span> Memuat Data...`;
         sUI.className = "flex items-center justify-center gap-2 text-slate-700 font-bold bg-slate-50 px-4 py-2.5 rounded-full shadow-sm border border-slate-200 text-xs w-full sm:w-auto whitespace-nowrap transition-colors";
@@ -2852,6 +2911,14 @@ async function load() {
 
         renderSidebar(); 
         updateDashboard();
+
+        _lastLoadTs = Date.now();
+
+        // ── Simpan ke localStorage untuk boot instan berikutnya ──
+        try {
+            if (jsonDB && jsonDB.length > 0) localStorage.setItem('__al_boot_DATADB', JSON.stringify(jsonDB));
+            if (jsonTeknisi && jsonTeknisi.length > 0) localStorage.setItem('__al_boot_DBTEKNI', JSON.stringify(jsonTeknisi));
+        } catch(e) {}
         
         if(sUI) {
             const timeStr = new Date().toLocaleTimeString('id-ID', { hour12: false });
@@ -3721,7 +3788,17 @@ async function submitAssign(rowIndex, noTiket) {
 window.submitAssign = submitAssign;
 
 // Initialize system
-load(); setInterval(load, 60000);
+load();
+
+// ——— Anti-Lelet: Smart Interval — hanya refresh jika data sudah stale ———
+setInterval(() => {
+    const now = Date.now();
+    // Lewati jika data belum stale (< 55 detik)
+    if (_lastLoadTs > 0 && (now - _lastLoadTs) < _LOAD_MIN_INTERVAL) return;
+    // Lewati jika tab ini sedang tidak aktif di parent frame
+    if (document.hidden) return;
+    load();
+}, 60000);
 </script>
 </body>
 </html>
@@ -5748,6 +5825,122 @@ load(); setInterval(load, 60000);
       const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
       return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
     }
+
+    // ============================================================
+    // 🚀 ANTI-LELET SYSTEM — Centralized Cache & Request Manager
+    // ============================================================
+    // Dipanggil oleh semua iframe (tpl1, tpl2, dst.) lewat window.parent.__antiLeletFetch()
+    // Implements: Memory Cache + localStorage Persistence + Request Deduplication + SWR
+
+    const __AL = {
+      mem: {},                        // { key: { data, ts } }
+      inflight: {},                   // { key: Promise }   — dedup in-flight
+      MEM_TTL:  90 * 1000,            // 90 detik — data "segar" di memori
+      LS_TTL:   8 * 60 * 1000,        // 8 menit — data "segar" di localStorage
+      LS_PREFIX: '__al2_',
+
+      _lsKey(payload) {
+        // buat key aman tanpa token (token berubah tiap sesi)
+        const { action, sheet } = payload;
+        return this.LS_PREFIX + btoa(unescape(encodeURIComponent(action + '|' + (sheet||'')))).replace(/=/g,'');
+      },
+
+      _memKey(payload) {
+        return (payload.action||'') + '|' + (payload.sheet||'');
+      },
+
+      // Baca dari localStorage — return null jika expired/tidak ada
+      lsRead(payload) {
+        try {
+          const raw = localStorage.getItem(this._lsKey(payload));
+          if (!raw) return null;
+          const { data, ts } = JSON.parse(raw);
+          if (Date.now() - ts > this.LS_TTL) return null;
+          return { data, ts };
+        } catch(e) { return null; }
+      },
+
+      // Tulis ke localStorage (fire-and-forget, jangan crash jika penuh)
+      lsWrite(payload, data) {
+        try {
+          localStorage.setItem(this._lsKey(payload), JSON.stringify({ data, ts: Date.now() }));
+        } catch(e) {}
+      },
+
+      // Hapus cache spesifik (manual invalidate)
+      invalidate(sheetName) {
+        const key = 'getCsv|' + (sheetName || '');
+        delete this.mem[key];
+        delete this.inflight[key];
+        try { localStorage.removeItem(this._lsKey({ action: 'getCsv', sheet: sheetName })); } catch(e) {}
+      },
+
+      // ——— CORE: Cached Fetch ———
+      async fetch(payload) {
+        const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+        const fullPayload = { ...payload, token };
+        const key = this._memKey(payload);
+        const now = Date.now();
+
+        // 1. Memori masih segar → langsung return
+        if (this.mem[key] && (now - this.mem[key].ts) < this.MEM_TTL) {
+          return this.mem[key].data;
+        }
+
+        // 2. Deduplicate in-flight requests
+        if (this.inflight[key]) {
+          return this.inflight[key];
+        }
+
+        // 3. Ada data stale di memori → langsung return stale, fetch di background
+        if (this.mem[key]) {
+          this._bgRefresh(fullPayload, key);
+          return this.mem[key].data;
+        }
+
+        // 4. Cek localStorage → serve instantly, lalu background refresh
+        const cached = this.lsRead(payload);
+        if (cached) {
+          this.mem[key] = cached; // pre-populate memori
+          this._bgRefresh(fullPayload, key);
+          return cached.data;
+        }
+
+        // 5. Full fetch (tidak ada cache sama sekali)
+        return this._doFetch(fullPayload, key);
+      },
+
+      // Background refresh — update cache tanpa blocking caller
+      _bgRefresh(fullPayload, key) {
+        if (this.inflight[key]) return;
+        this._doFetch(fullPayload, key).catch(() => {});
+      },
+
+      // Actual HTTP fetch + populate cache
+      async _doFetch(fullPayload, key) {
+        const p = (async () => {
+          const res = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(fullPayload)
+          });
+          const data = await res.json();
+          // Update mem + localStorage
+          this.mem[key] = { data, ts: Date.now() };
+          this.lsWrite(fullPayload, data);
+          return data;
+        })().finally(() => {
+          delete this.inflight[key];
+        });
+        this.inflight[key] = p;
+        return p;
+      }
+    };
+
+    // Expose ke iframe children
+    window.__antiLeletFetch = (payload) => __AL.fetch(payload);
+    window.__antiLeletInvalidate = (sheet) => __AL.invalidate(sheet);
+    // ============================================================
 
     setTimeout(() => checkLoginStatus(), 50);
   </script>
