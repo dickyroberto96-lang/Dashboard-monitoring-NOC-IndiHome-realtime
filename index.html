@@ -5337,43 +5337,57 @@ setInterval(() => {
             const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
             const LOGIN_TOKEN_KEY = 'dashboard_login_token';
 
-            async function apiRequest(payload) {
+            async function backendGetCsv(sheetName) {
+                // Menggunakan cache terpusat (Anti-Lelet) dari Dashboard Utama jika tersedia
+                if (window.parent && typeof window.parent.__antiLeletFetch === 'function') {
+                    try {
+                        return await window.parent.__antiLeletFetch({ action: 'getCsv', sheet: sheetName });
+                    } catch(e) {}
+                }
+                // Fallback fetch langsung
+                const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
                 const res = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ action: 'getCsv', token, sheet: sheetName })
                 });
                 return await res.json();
-            }
-
-            async function backendGetCsv(sheetName) {
-                const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-                return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
             }
 
             // Fungsi pembantu agar jika satu sheet tidak ada, sheet lain tetap termuat dengan aman
             async function fetchSheetAsJSON(sheetName) {
                 try {
-                    const res = await backendGetCsv(sheetName);
-                    if (res && res.success && res.csv) {
-                        const parsed = parseCSV(res.csv);
-                        if (parsed.length === 0) return [];
-                        const headers = parsed[0];
-                        const data = [];
-                        for(let i = 1; i < parsed.length; i++) {
-                            if (!parsed[i].some(cell => cell && cell.trim() !== '')) continue;
-                            let obj = {};
-                            for(let j = 0; j < headers.length; j++) {
-                                if (headers[j]) obj[headers[j]] = parsed[i][j] || "";
-                            }
-                            data.push(obj);
+                    const response = await backendGetCsv(sheetName);
+                    if (!response || !response.success || !response.csv) return [];
+                    const rows = parseCSV(response.csv);
+                    if(rows.length < 1) return [];
+
+                    // AUTO-DETECT HEADER: Bypass baris judul kosong di atas tabel G-Sheets
+                    let headerRowIndex = 0;
+                    for(let i = 0; i < Math.min(10, rows.length); i++) {
+                        const rowStr = rows[i].join('').toUpperCase();
+                        if(rowStr.includes('NAMA') || rowStr.includes('STO') || rowStr.includes('TEKNISI') || rowStr.includes('NIK') || rowStr.includes('TIKET') || rowStr.includes('INCIDENT')) {
+                            headerRowIndex = i;
+                            break;
                         }
-                        return data;
                     }
+
+                    const headers = rows[headerRowIndex];
+                    const data = [];
+                    for(let i = headerRowIndex + 1; i < rows.length; i++) {
+                        if (!rows[i].some(cell => cell && cell.trim() !== '')) continue; // Skip baris kosong
+                        let obj = {};
+                        for(let j = 0; j < headers.length; j++) {
+                            let headerName = headers[j] ? headers[j].trim() : `COL_${j}`;
+                            if (headerName) obj[headerName] = rows[i][j] || "";
+                        }
+                        data.push(obj);
+                    }
+                    return data;
                 } catch (e) {
-                    console.warn(`Gagal memuat sheet: ${sheetName}`);
+                    console.warn(`Gagal memuat sheet: ${sheetName}`, e);
+                    return [];
                 }
-                return [];
             }
 
             try {
@@ -5385,6 +5399,7 @@ setInterval(() => {
                 if (!allData || allData.length === 0) throw new Error('Semua data kosong');
 
                 processData(allData);
+                lastTeknikLoad = Date.now();
 
             } catch (error) {
                 console.error('Error fetching data:', error);
