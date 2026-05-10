@@ -637,7 +637,7 @@
                 <div class="overflow-x-auto">
                     <table id="modalTableExport" class="w-full text-sm text-left">
                         <thead class="text-[11px] text-slate-500 font-extrabold uppercase bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm text-center">
-                            <tr><th class="px-6 py-4">No Tiket</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">SLA</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 font-mono">Inet</th><th class="px-6 py-4">Datek</th><th class="px-6 py-4 text-center">Tek1</th><th class="px-6 py-4 text-center">Tek2</th><th class="px-6 py-4 text-center">Durasi</th><th class="px-6 py-4">Ket</th></tr>
+                            <tr><th class="px-6 py-4 text-center whitespace-nowrap">No Tiket</th><th class="px-6 py-4 text-center whitespace-nowrap">Status</th><th class="px-6 py-4 text-center whitespace-nowrap">SLA</th><th class="px-6 py-4 text-center whitespace-nowrap">Kategori</th><th class="px-6 py-4 text-center font-mono whitespace-nowrap">Inet</th><th class="px-6 py-4 text-center whitespace-nowrap">Datek</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek1</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek2</th><th class="px-6 py-4 text-center whitespace-nowrap">Durasi</th><th class="px-6 py-4 text-left min-w-[200px]">Ket</th></tr>
                         </thead>
                         <tbody id="table" class="divide-y divide-slate-100 bg-white"></tbody>
                     </table>
@@ -1237,9 +1237,9 @@ function renderTable(data) {
     
     const isManjaView = activeModal && (activeModal.catId === 'MANJA' || activeModal.bucketCat === 'MANJA' || activeModal.cat === 'MANJA');
     if (isManjaView) {
-        theadTr.innerHTML = `<th class="px-6 py-4">No Tiket</th><th class="px-6 py-4 whitespace-nowrap text-blue-600">Jam Cust Assign</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">SLA</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 font-mono">Inet</th><th class="px-6 py-4">Datek</th><th class="px-6 py-4 text-center">Tek1</th><th class="px-6 py-4 text-center">Tek2</th><th class="px-6 py-4 text-center">Durasi</th><th class="px-6 py-4">Ket</th>`;
+        theadTr.innerHTML = `<th class="px-6 py-4 text-center whitespace-nowrap">No Tiket</th><th class="px-6 py-4 text-center whitespace-nowrap text-blue-600">Jam Cust Assign</th><th class="px-6 py-4 text-center whitespace-nowrap">Status</th><th class="px-6 py-4 text-center whitespace-nowrap">SLA</th><th class="px-6 py-4 text-center whitespace-nowrap">Kategori</th><th class="px-6 py-4 text-center font-mono whitespace-nowrap">Inet</th><th class="px-6 py-4 text-center whitespace-nowrap">Datek</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek1</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek2</th><th class="px-6 py-4 text-center whitespace-nowrap">Durasi</th><th class="px-6 py-4 text-left min-w-[200px]">Ket</th>`;
     } else {
-        theadTr.innerHTML = `<th class="px-6 py-4">No Tiket</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">SLA</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 font-mono">Inet</th><th class="px-6 py-4">Datek</th><th class="px-6 py-4 text-center">Tek1</th><th class="px-6 py-4 text-center">Tek2</th><th class="px-6 py-4 text-center">Durasi</th><th class="px-6 py-4">Ket</th>`;
+        theadTr.innerHTML = `<th class="px-6 py-4 text-center whitespace-nowrap">No Tiket</th><th class="px-6 py-4 text-center whitespace-nowrap">Status</th><th class="px-6 py-4 text-center whitespace-nowrap">SLA</th><th class="px-6 py-4 text-center whitespace-nowrap">Kategori</th><th class="px-6 py-4 text-center font-mono whitespace-nowrap">Inet</th><th class="px-6 py-4 text-center whitespace-nowrap">Datek</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek1</th><th class="px-6 py-4 text-center whitespace-nowrap">Tek2</th><th class="px-6 py-4 text-center whitespace-nowrap">Durasi</th><th class="px-6 py-4 text-left min-w-[200px]">Ket</th>`;
     }
 
     if(data.length === 0) { 
@@ -1265,7 +1265,7 @@ function renderTable(data) {
             extraCol = `<td class="px-6 py-4 text-center text-xs font-bold text-blue-700 bg-blue-50/30 whitespace-nowrap">${r["JAM CUST ASSIGN"] || '-'}</td>`;
         }
         
-        return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-bold text-center">${r.NOTIKET || '-'}</td>${extraCol}<td class="px-6 py-4 text-center"><span class="${isOpen ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'} px-2 py-1 rounded text-xs font-bold">${r["STATUS TIKET"] || '-'}</span></td><td class="px-6 py-4 text-center"><span class="${isNot?'text-rose-600 font-black':''}">${slaVal || '-'}</span></td><td class="px-6 py-4 text-center text-[10px] font-bold">${bkt.replace('_', ' ')}</td><td class="px-6 py-4 font-mono text-center">${r["NOMOR INET"] || "-"}</td><td class="px-6 py-4 text-xs text-center">${r["DATEK"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 1"] || "-"}</td><td class="px-6 py-4 text-center">${r["TEKNISI 2"] || "-"}</td><td class="px-6 py-4 font-mono text-sm text-center durasi-cell" data-start="${bkt === 'MANJA' ? (r["JAM CUST ASSIGN"] || '') : (r["REPORT DATE"] || r["DATEK"] || '')}" data-status="${r["STATUS TIKET"] || ''}" data-bucket="${bkt}"><span class="durasi-text">${getDurasi(r)}</span></td><td class="px-6 py-4 text-xs">${r["KETERANGAN"] || "-"}</td></tr>`
+        return `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-bold text-center whitespace-nowrap">${r.NOTIKET || '-'}</td>${extraCol}<td class="px-6 py-4 text-center whitespace-nowrap"><span class="${isOpen ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'} px-2 py-1 rounded text-xs font-bold">${r["STATUS TIKET"] || '-'}</span></td><td class="px-6 py-4 text-center whitespace-nowrap"><span class="${isNot?'text-rose-600 font-black':''}">${slaVal || '-'}</span></td><td class="px-6 py-4 text-center text-[10px] font-bold whitespace-nowrap">${bkt.replace('_', ' ')}</td><td class="px-6 py-4 font-mono text-center whitespace-nowrap">${r["NOMOR INET"] || "-"}</td><td class="px-6 py-4 text-xs text-center whitespace-nowrap">${r["DATEK"] || "-"}</td><td class="px-6 py-4 text-center whitespace-nowrap">${r["TEKNISI 1"] || "-"}</td><td class="px-6 py-4 text-center whitespace-nowrap">${r["TEKNISI 2"] || "-"}</td><td class="px-6 py-4 font-mono text-sm text-center durasi-cell whitespace-nowrap" data-start="${bkt === 'MANJA' ? (r["JAM CUST ASSIGN"] || '') : (r["REPORT DATE"] || r["DATEK"] || '')}" data-status="${r["STATUS TIKET"] || ''}" data-bucket="${bkt}"><span class="durasi-text">${getDurasi(r)}</span></td><td class="px-6 py-4 text-xs min-w-[200px]">${r["KETERANGAN"] || "-"}</td></tr>`
     }).join("");
 }
 window.renderTable = renderTable;
@@ -2828,7 +2828,8 @@ function normalizeRawData(data) {
             if(cleanK.includes('JAMCUSTASSIGN') || cleanK.includes('WAKTUASSIGN')) newRow["JAM CUST ASSIGN"] = val;
             else if(cleanK.includes('JAMTECHCLOSE') || cleanK.includes('AMTECHCLOSE') || cleanK.includes('JAMCLOSE') || cleanK.includes('WAKTUCLOSE') || cleanK.includes('TGLCLOSE') || cleanK.includes('DATEKCLOSE')) newRow["JAM TECH CLOSED"] = val;
             else if(cleanK.includes('DURASICLOSE') || cleanK.includes('DURASI')) newRow["DURASI CLOSE"] = val;
-            else if(cleanK.includes('DATEK') || cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR') || cleanK === 'TANGGAL') { newRow["REPORT DATE"] = val; newRow["DATEK"] = val; }
+            else if(cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR')) newRow["REPORT DATE"] = val;
+            else if(cleanK.includes('DATEK') || cleanK === 'TANGGAL') newRow["DATEK"] = val;
             
             // PRIORITAS 2: Mapping field utama
             else if(cleanK.includes('NOTIKET') || cleanK.includes('INCIDENT') || cleanK === 'IN' || cleanK === 'TIKET') { newRow["NOTIKET"] = val; newRow["NO TIKET"] = val; }
@@ -4888,39 +4889,11 @@ setInterval(() => {
                 </div>
             </div>
         </div>
-
-
-            <div class="mt-3 mb-3 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2" id="grandTotalStrip">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Grand Total JLH</div>
-                    <div id="sum-jlh" class="text-lg font-black text-slate-800">0</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Open</div>
-                    <div id="sum-open" class="text-lg font-black text-slate-800">0</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Total Close</div>
-                    <div id="sum-close" class="text-lg font-black text-emerald-700">0</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">TGT Prod</div>
-                    <div id="sum-tgt" class="text-lg font-black text-indigo-700">0</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Prod Teknisi</div>
-                    <div id="sum-prod" class="text-lg font-black text-orange-700">0</div>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
-                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">ACH Prod</div>
-                    <div id="sum-ach" class="text-lg font-black text-emerald-700">0%</div>
-                </div>
-            </div>
         <table class="w-full text-xxs whitespace-nowrap text-center border-collapse">
             <thead>
                 <!-- Main Header -->
                 <tr>
-                    <th colspan="25" class="bg-[#2f5597] text-white py-2 text-lg font-bold tracking-wide">
+                    <th colspan="27" class="bg-[#2f5597] text-white py-2 text-lg font-bold tracking-wide">
                         PRODUKTIFITAS TEKNISI ASSURANCE RIDAR<br>
                         <span id="current-time" class="text-xs font-normal text-gray-200">Memuat waktu...</span>
                     </th>
@@ -4939,10 +4912,11 @@ setInterval(() => {
                     <th colspan="2" class="bg-[#5b9bd5] px-2 py-1">DIAMOND</th>
                     <th colspan="2" class="bg-[#7030a0] px-2 py-1">PLATINUM</th>
                     <th colspan="2" class="bg-[#ed7d31] px-2 py-1">MANJA</th>
-                    <th colspan="2" class="bg-[#70ad47] px-2 py-1">NON HVC</th>
+                    <th colspan="2" class="bg-[#f4b400] px-2 py-1 text-black">HVC_GOLD</th>
+                    <th colspan="2" class="bg-[#70ad47] px-2 py-1">REGULER</th>
                     <th colspan="2" class="bg-[#9bc2e6] px-2 py-1 text-black">SQM</th>
+                    <th colspan="2" class="bg-[#c00000] px-2 py-1 text-white">MANUAL</th>
                     <th colspan="2" class="bg-[#a6a6a6] px-2 py-1">UNDERSPEC</th>
-                    <th colspan="2" class="bg-[#f8cbad] px-2 py-1 text-black">Z_PERMINTAAN</th>
 
                     <!-- Right Totals -->
                     <th rowspan="2" class="bg-[#2f5597] px-2 py-1">TOTAL<br>OPEN</th>
@@ -4957,10 +4931,11 @@ setInterval(() => {
                     <th class="bg-[#5b9bd5] text-white px-1">TO</th><th class="bg-[#5b9bd5] text-white px-1">TC</th>
                     <th class="bg-[#7030a0] text-white px-1">TO</th><th class="bg-[#7030a0] text-white px-1">TC</th>
                     <th class="bg-[#ed7d31] text-white px-1">TO</th><th class="bg-[#ed7d31] text-white px-1">TC</th>
+                    <th class="bg-[#f4b400] px-1">TO</th><th class="bg-[#f4b400] px-1">TC</th>
                     <th class="bg-[#70ad47] text-white px-1">TO</th><th class="bg-[#70ad47] text-white px-1">TC</th>
                     <th class="bg-[#9bc2e6] px-1">TO</th><th class="bg-[#9bc2e6] px-1">TC</th>
+                    <th class="bg-[#c00000] text-white px-1">TO</th><th class="bg-[#c00000] text-white px-1">TC</th>
                     <th class="bg-[#a6a6a6] px-1">TO</th><th class="bg-[#a6a6a6] px-1">TC</th>
-                    <th class="bg-[#f8cbad] px-1">TO</th><th class="bg-[#f8cbad] px-1">TC</th>
                 </tr>
 
                 <!-- Grand Total Row -->
@@ -4970,11 +4945,12 @@ setInterval(() => {
 
                     <td id="gt-dia-to" class="bg-white text-black">0</td><td id="gt-dia-tc" class="bg-white text-black">0</td>
                     <td id="gt-pla-to" class="bg-white text-black">0</td><td id="gt-pla-tc" class="bg-white text-black">0</td>
-                    <td id="gt-man-to" class="bg-white text-black">0</td><td id="gt-man-tc" class="bg-white text-black">0</td>
-                    <td id="gt-non-to" class="bg-white text-black">0</td><td id="gt-non-tc" class="bg-white text-black">0</td>
+                    <td id="gt-manja-to" class="bg-white text-black">0</td><td id="gt-manja-tc" class="bg-white text-black">0</td>
+                    <td id="gt-gol-to" class="bg-white text-black">0</td><td id="gt-gol-tc" class="bg-white text-black">0</td>
+                    <td id="gt-reg-to" class="bg-white text-black">0</td><td id="gt-reg-tc" class="bg-white text-black">0</td>
                     <td id="gt-sqm-to" class="bg-white text-black">0</td><td id="gt-sqm-tc" class="bg-white text-black">0</td>
+                    <td id="gt-manual-to" class="bg-white text-black">0</td><td id="gt-manual-tc" class="bg-white text-black">0</td>
                     <td id="gt-und-to" class="bg-white text-black">0</td><td id="gt-und-tc" class="bg-white text-black">0</td>
-                    <td id="gt-zpe-to" class="bg-white text-black">0</td><td id="gt-zpe-tc" class="bg-white text-black">0</td>
 
                     <td id="gt-open" class="bg-white text-black">0</td>
                     <td id="gt-close" class="bg-white text-black">0</td>
@@ -5168,20 +5144,22 @@ setInterval(() => {
                 'TEKNISI 1': row.teknisi1,
                 'TEKNISI 2': row.teknisi2,
                 'JLH TEK': row.jlh,
-                'DIAMOND TO': row.categories[0]?.to || 0,
-                'DIAMOND TC': row.categories[0]?.tc || 0,
-                'PLATINUM TO': row.categories[1]?.to || 0,
-                'PLATINUM TC': row.categories[1]?.tc || 0,
+                'HVC DIAMOND TO': row.categories[0]?.to || 0,
+                'HVC DIAMOND TC': row.categories[0]?.tc || 0,
+                'HVC PLATINUM TO': row.categories[1]?.to || 0,
+                'HVC PLATINUM TC': row.categories[1]?.tc || 0,
                 'MANJA TO': row.categories[2]?.to || 0,
                 'MANJA TC': row.categories[2]?.tc || 0,
-                'NON HVC TO': row.categories[3]?.to || 0,
-                'NON HVC TC': row.categories[3]?.tc || 0,
-                'SQM TO': row.categories[4]?.to || 0,
-                'SQM TC': row.categories[4]?.tc || 0,
-                'UNDERSPEC TO': row.categories[5]?.to || 0,
-                'UNDERSPEC TC': row.categories[5]?.tc || 0,
-                'Z PERMINTAAN TO': row.categories[6]?.to || 0,
-                'Z PERMINTAAN TC': row.categories[6]?.tc || 0,
+                'HVC GOLD TO': row.categories[3]?.to || 0,
+                'HVC GOLD TC': row.categories[3]?.tc || 0,
+                'REGULER TO': row.categories[4]?.to || 0,
+                'REGULER TC': row.categories[4]?.tc || 0,
+                'SQM TO': row.categories[5]?.to || 0,
+                'SQM TC': row.categories[5]?.tc || 0,
+                'MANUAL TO': row.categories[6]?.to || 0,
+                'MANUAL TC': row.categories[6]?.tc || 0,
+                'UNDERSPEC TO': row.categories[7]?.to || 0,
+                'UNDERSPEC TC': row.categories[7]?.tc || 0,
                 'TOTAL OPEN': row.totalOpen,
                 'TOTAL CLOSE': row.totalClose,
                 'TGT PROD': row.tgtProd,
@@ -5198,7 +5176,7 @@ setInterval(() => {
             const row = visibleTeknikRows[rowIndex];
             if (!row || !row.tickets || row.tickets.length === 0) return;
             
-            const catNames = ['DIAMOND', 'PLATINUM', 'MANJA', 'NON HVC', 'SQM', 'UNDERSPEC', 'Z_PERMINTAAN'];
+            const catNames = ['HVC_DIAMOND', 'HVC_PLATINUM', 'MANJA', 'HVC_GOLD', 'REGULER', 'SQM', 'MANUAL', 'UNDERSPEC'];
             const targetCat = catIndex !== null ? catNames[catIndex] : null;
             
             let filteredTickets = row.tickets;
@@ -5337,57 +5315,61 @@ setInterval(() => {
             const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
             const LOGIN_TOKEN_KEY = 'dashboard_login_token';
 
+            async function apiRequest(payload) {
+                const res = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            }
+
             async function backendGetCsv(sheetName) {
-                // Menggunakan cache terpusat (Anti-Lelet) dari Dashboard Utama jika tersedia
+                // Gunakan cache super cepat (Anti-Lelet) dari Dashboard Utama jika tersedia
                 if (window.parent && typeof window.parent.__antiLeletFetch === 'function') {
                     try {
                         return await window.parent.__antiLeletFetch({ action: 'getCsv', sheet: sheetName });
                     } catch(e) {}
                 }
-                // Fallback fetch langsung
                 const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-                const res = await fetch(BACKEND_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'getCsv', token, sheet: sheetName })
-                });
-                return await res.json();
+                return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
             }
 
             // Fungsi pembantu agar jika satu sheet tidak ada, sheet lain tetap termuat dengan aman
             async function fetchSheetAsJSON(sheetName) {
                 try {
-                    const response = await backendGetCsv(sheetName);
-                    if (!response || !response.success || !response.csv) return [];
-                    const rows = parseCSV(response.csv);
-                    if(rows.length < 1) return [];
-
-                    // AUTO-DETECT HEADER: Bypass baris judul kosong di atas tabel G-Sheets
-                    let headerRowIndex = 0;
-                    for(let i = 0; i < Math.min(10, rows.length); i++) {
-                        const rowStr = rows[i].join('').toUpperCase();
-                        if(rowStr.includes('NAMA') || rowStr.includes('STO') || rowStr.includes('TEKNISI') || rowStr.includes('NIK') || rowStr.includes('TIKET') || rowStr.includes('INCIDENT')) {
-                            headerRowIndex = i;
-                            break;
+                    const res = await backendGetCsv(sheetName);
+                    if (res && res.success && res.csv) {
+                        const parsed = parseCSV(res.csv);
+                        if (parsed.length === 0) return [];
+                        
+                        // AUTO-DETECT HEADER ROW (Bypass judul/baris kosong di atas tabel G-Sheets)
+                        let headerRowIndex = 0;
+                        for(let i = 0; i < Math.min(10, parsed.length); i++) {
+                            const rowStr = parsed[i].join('').toUpperCase();
+                            if(rowStr.includes('NAMA') || rowStr.includes('STO') || rowStr.includes('TEKNISI') || rowStr.includes('NIK') || rowStr.includes('TIKET') || rowStr.includes('INCIDENT')) {
+                                headerRowIndex = i;
+                                break;
+                            }
                         }
-                    }
 
-                    const headers = rows[headerRowIndex];
-                    const data = [];
-                    for(let i = headerRowIndex + 1; i < rows.length; i++) {
-                        if (!rows[i].some(cell => cell && cell.trim() !== '')) continue; // Skip baris kosong
-                        let obj = {};
-                        for(let j = 0; j < headers.length; j++) {
-                            let headerName = headers[j] ? headers[j].trim() : `COL_${j}`;
-                            if (headerName) obj[headerName] = rows[i][j] || "";
+                        const headers = parsed[headerRowIndex];
+                        const data = [];
+                        for(let i = headerRowIndex + 1; i < parsed.length; i++) {
+                            if (!parsed[i].some(cell => cell && cell.trim() !== '')) continue;
+                            let obj = {};
+                            for(let j = 0; j < headers.length; j++) {
+                                let headerName = headers[j] ? headers[j].trim() : `COL_${j}`;
+                                if (headerName) obj[headerName] = parsed[i][j] || "";
+                            }
+                            data.push(obj);
                         }
-                        data.push(obj);
+                        return data;
                     }
-                    return data;
                 } catch (e) {
-                    console.warn(`Gagal memuat sheet: ${sheetName}`, e);
-                    return [];
+                    console.warn(`Gagal memuat sheet: ${sheetName}`);
                 }
+                return [];
             }
 
             try {
@@ -5399,7 +5381,6 @@ setInterval(() => {
                 if (!allData || allData.length === 0) throw new Error('Semua data kosong');
 
                 processData(allData);
-                lastTeknikLoad = Date.now();
 
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -5429,7 +5410,8 @@ setInterval(() => {
                     if(cleanK.includes('JAMCUSTASSIGN') || cleanK.includes('WAKTUASSIGN')) newRow["JAM CUST ASSIGN"] = val;
                     else if(cleanK.includes('JAMTECHCLOSE') || cleanK.includes('AMTECHCLOSE') || cleanK.includes('JAMCLOSE') || cleanK.includes('WAKTUCLOSE') || cleanK.includes('TGLCLOSE') || cleanK.includes('DATEKCLOSE')) newRow["JAM TECH CLOSED"] = val;
                     else if(cleanK.includes('DURASICLOSE') || cleanK.includes('DURASI')) newRow["DURASI CLOSE"] = val;
-                    else if(cleanK.includes('DATEK') || cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR') || cleanK === 'TANGGAL') { newRow["REPORT DATE"] = val; newRow["DATEK"] = val; }
+                    else if(cleanK.includes('REPORTDATE') || cleanK.includes('TGLLAPOR')) newRow["REPORT DATE"] = val;
+                    else if(cleanK.includes('DATEK') || cleanK === 'TANGGAL') newRow["DATEK"] = val;
                     else if(cleanK.includes('NOTIKET') || cleanK.includes('INCIDENT') || cleanK === 'IN' || cleanK === 'TIKET') { newRow["NOTIKET"] = val; newRow["NO TIKET"] = val; }
                     else if(cleanK.includes('STATUSTIKET') || cleanK === 'STATUS') newRow["STATUS TIKET"] = val;
                     else if(cleanK.includes('KATEGORI')) newRow["KATEGORI TTR"] = val;
@@ -5468,14 +5450,20 @@ setInterval(() => {
             const detail = (r["DETAIL TIKET"] || r["KETERANGAN"] || "").toString().toUpperCase().trim();
             const v = (r["FLAG HVC"] || r["FLAG_HVC"] || "").toString().toUpperCase();
 
-            if (c.includes("Z_PERMINTAAN") || c.includes("Z PERMINTAAN") || kt.includes("Z_PERMINTAAN") || detail.includes("Z_PERMINTAAN")) return "Z_PERMINTAAN";
+            // PRIORITAS UTAMA: Tiket Khusus (Mencegah tumpang tindih dengan HVC)
             if (c.includes("SQM") || kt.includes("SQM") || detail.includes("SQM")) return "SQM";
+            if (c.includes("Z_PERMINTAAN") || c.includes("Z PERMINTAAN") || kt.includes("Z_PERMINTAAN") || detail.includes("Z_PERMINTAAN") || detail.includes("Z PERMINTAAN")) return "Z_PERMINTAAN";
+            if (c.includes("MANUAL") || kt.includes("MANUAL") || detail.includes("MANUAL")) return "MANUAL";
             if (c.includes("UNDERSPEC") || kt.includes("UNDERSPEC") || tipe.includes("UNDERSPEC") || detail.includes("UNDERSPEC") || c.includes("USPEC")) return "UNDERSPEC";
+
+            // PRIORITAS KEDUA: Berdasarkan TTR / Flag HVC
             if (kt.includes("MANJA") || c.includes("TTR 3 JM") || c.includes("TTR 3JM")) return "MANJA";
-            if (v.includes("DIAMOND") || c.includes("TTR 3 JD") || c.includes("TTR 3JD") || detail.includes("DIAMOND")) return "DIAMOND";
-            if (v.includes("PLATINUM") || c.includes("TTR 6 JP") || c.includes("TTR 6JP") || detail.includes("PLATINUM")) return "PLATINUM";
+            if (v.includes("DIAMOND") || c.includes("TTR 3 JD") || c.includes("TTR 3JD") || detail.includes("DIAMOND")) return "HVC_DIAMOND";
+            if (v.includes("PLATINUM") || c.includes("TTR 6 JP") || c.includes("TTR 6JP") || detail.includes("PLATINUM")) return "HVC_PLATINUM";
+            if (v.includes("GOLD") || c.includes("TTR 12 JG") || c.includes("TTR 12JG") || detail.includes("GOLD")) return "HVC_GOLD";
+            if (c.includes("TTR 24 J") || c.includes("TTR 24J") || c.includes("REGULER") || kt.includes("REGULER") || detail.includes("REGULER")) return "REGULER";
             
-            return "NON HVC";
+            return "REGULER";
         }
 
         const SA_MAP = {
@@ -5543,26 +5531,28 @@ setInterval(() => {
                 
                 if(!groups[key]) {
                     groups[key] = {
-                        area: sa, sektor: finalSektor, sto: finalSto, teknisi1: t1, teknisi2: t2, jlh: jlhTek, 
-                        categories: Array(7).fill(null).map(() => ({to: 0, tc: 0})),
+                        area: sa, sektor: sektorRaw, sto: stoRaw, teknisi1: t1, teknisi2: t2, jlh: jlhTek, 
+                        categories: Array(8).fill(null).map(() => ({to: 0, tc: 0})),
                         tickets: []
                     };
                 } else {
-                    if (groups[key].sto === '-' && finalSto !== '-') {
-                        groups[key].area = serviceArea;
-                        groups[key].sektor = finalSektor;
-                        groups[key].sto = finalSto;
+                    // Smart Merge: Jika STO sebelumnya UNKNOWN, timpa dengan STO valid
+                    if (groups[key].sto === 'UNKNOWN' && stoRaw !== 'UNKNOWN') {
+                        groups[key].area = sa;
+                        groups[key].sektor = sektorRaw;
+                        groups[key].sto = stoRaw;
                     }
                 }
                 
-                let catIndex = 3; // NON HVC default
-                if (bkt === 'DIAMOND') catIndex = 0;
-                else if (bkt === 'PLATINUM') catIndex = 1;
+                let catIndex = 4; // REGULER default
+                if (bkt === 'HVC_DIAMOND') catIndex = 0;
+                else if (bkt === 'HVC_PLATINUM') catIndex = 1;
                 else if (bkt === 'MANJA') catIndex = 2;
-                else if (bkt === 'NON HVC') catIndex = 3;
-                else if (bkt === 'SQM') catIndex = 4;
-                else if (bkt === 'UNDERSPEC') catIndex = 5;
-                else if (bkt === 'Z_PERMINTAAN') catIndex = 6;
+                else if (bkt === 'HVC_GOLD') catIndex = 3;
+                else if (bkt === 'REGULER') catIndex = 4;
+                else if (bkt === 'SQM') catIndex = 5;
+                else if (bkt === 'MANUAL') catIndex = 6;
+                else if (bkt === 'UNDERSPEC') catIndex = 7;
 
                 if (isClose) {
                     groups[key].categories[catIndex].tc++;
@@ -5570,7 +5560,7 @@ setInterval(() => {
                     groups[key].categories[catIndex].to++;
                 }
 
-                const catNames = ['DIAMOND', 'PLATINUM', 'MANJA', 'NON HVC', 'SQM', 'UNDERSPEC', 'Z_PERMINTAAN'];
+                const catNames = ['HVC_DIAMOND', 'HVC_PLATINUM', 'MANJA', 'HVC_GOLD', 'REGULER', 'SQM', 'MANUAL', 'UNDERSPEC'];
                 groups[key].tickets.push({
                     noTiket: r["NO TIKET"] || r.NOTIKET || '-',
                     status: isClose ? 'CLOSE' : 'OPEN',
@@ -5684,7 +5674,7 @@ setInterval(() => {
         // Update Grand Total secara Dinamis berdasarkan data fetch
         function updateGrandTotal(dataRows) {
             let gtJlh = 0, gtOpen = 0, gtClose = 0, gtTgt = 0;
-            let gtCat = Array(7).fill(null).map(() => ({to: 0, tc: 0}));
+            let gtCat = Array(8).fill(null).map(() => ({to: 0, tc: 0}));
 
             dataRows.forEach(row => {
                 gtJlh += row.jlh;
@@ -5702,7 +5692,7 @@ setInterval(() => {
 
             document.getElementById('gt-jlh').innerText = gtJlh;
             
-            const catIds = ['dia', 'pla', 'man', 'non', 'sqm', 'und', 'zpe'];
+            const catIds = ['dia', 'pla', 'manja', 'gol', 'reg', 'sqm', 'manual', 'und'];
             catIds.forEach((id, i) => {
                 document.getElementById(`gt-${id}-to`).innerText = gtCat[i].to;
                 document.getElementById(`gt-${id}-tc`).innerText = gtCat[i].tc;
@@ -5715,14 +5705,6 @@ setInterval(() => {
             
             const gtAchEl = document.getElementById('ach-grand-total');
             gtAchEl.innerText = gtAchProd.toLocaleString('id-ID', {maximumFractionDigits: 2}) + '%';
-
-            const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
-            setTxt('sum-jlh', gtJlh);
-            setTxt('sum-open', gtOpen);
-            setTxt('sum-close', gtClose);
-            setTxt('sum-tgt', gtTgt);
-            setTxt('sum-prod', gtProdTeknisi.toLocaleString('id-ID', {maximumFractionDigits: 2}));
-            setTxt('sum-ach', gtAchProd.toLocaleString('id-ID', {maximumFractionDigits: 2}) + '%');
 
             // Memberikan warna dinamis pada ACH PROD Grand Total
             let achBgColorGT = "font-semibold py-1 ";
