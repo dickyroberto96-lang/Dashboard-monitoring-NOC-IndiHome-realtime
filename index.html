@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Monitoring</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     html, body { min-height: 100%; }
     *, *::before, *::after { box-sizing: border-box; }
@@ -82,21 +83,28 @@
 </head>
 <body>
 
-  <!-- ==================== LOGIN OVERLAY ==================== -->
-  <div id="loginOverlay" class="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center transition-opacity duration-500" style="display: none;">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transform transition-transform scale-100 mx-4">
-      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-blue-200">
-        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    <!-- ==================== LOGIN SUPABASE ==================== -->
+  <div id="loginOverlay" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-200">
+      <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 shadow-inner border border-blue-200">
+        <svg class="h-10 w-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
       </div>
-      <h2 class="text-3xl font-black text-slate-800 mb-2">Login Dashboard</h2>
-      <p class="text-slate-500 text-sm mb-8">Silakan masukkan password untuk mengakses dashboard kawal assurance.</p>
+      <h2 class="text-3xl font-black text-slate-800 mb-2 text-center">Login Dashboard</h2>
+      <p class="text-slate-500 text-sm mb-8 text-center">Masukkan email dan password Supabase Anda.</p>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-        <div>
-          <input type="password" id="loginPassword" placeholder="Masukkan Password..." class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-center text-xl tracking-[0.25em]" required>
+      <form id="loginForm" onsubmit="prosesLogin(event)" class="space-y-4">
+        <div class="space-y-1">
+          <label class="block text-sm font-bold text-slate-700">Email</label>
+          <input type="email" id="emailInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20" placeholder="admin@noc.com" required>
         </div>
-        <p id="loginError" class="text-rose-500 text-sm font-bold hidden animate-pulse bg-rose-50 py-2 rounded-lg border border-rose-200">Password Salah!</p>
-        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black py-3.5 rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5">
+        <div class="space-y-1">
+          <label class="block text-sm font-bold text-slate-700">Password</label>
+          <input type="password" id="passwordInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20" placeholder="••••••••" required>
+        </div>
+        <p id="loginError" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600"></p>
+        <button id="btnLogin" type="submit" class="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-black text-white shadow-lg transition-all hover:-translate-y-0.5 hover:from-blue-700 hover:to-indigo-800">
           MASUK
         </button>
       </form>
@@ -681,9 +689,12 @@ async function apiRequest(payload) {
 }
 
 async function backendGetSheet(sheetName) {
-    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-    return await apiRequest({ action: 'getData', token, sheet: sheetName });
-}
+      if (typeof window.__supabaseGetSheet === 'function') {
+        try { return await window.__supabaseGetSheet(sheetName); } catch (e) {}
+      }
+      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      return await apiRequest({ action: 'getData', token, sheet: sheetName });
+    }
 
 // ——— Anti-Lelet: Gunakan cache terpusat di parent frame jika tersedia ———
 async function backendGetCsv(sheetName) {
@@ -695,7 +706,10 @@ async function backendGetCsv(sheetName) {
             // Fallback ke local jika parent tidak responsif
         }
     }
-    // Fallback: local in-page cache dengan deduplication
+    // Fallback: Supabase langsung jika parent tidak tersedia, lalu cache lokal
+    if (window.parent && typeof window.parent.__supabaseGetCsv === 'function') {
+        try { return await window.parent.__supabaseGetCsv(sheetName); } catch (e) {}
+    }
     return await _localCachedCsv(sheetName);
 }
 
@@ -710,12 +724,19 @@ async function _localCachedCsv(sheetName) {
         return _LOCAL_CSV_CACHE[sheetName].data;
     }
     if (_LOCAL_CSV_INFLIGHT[sheetName]) return _LOCAL_CSV_INFLIGHT[sheetName];
-    const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-    const p = apiRequest({ action: 'getCsv', token, sheet: sheetName }).then(data => {
+    const p = (async () => {
+        if (window.parent && typeof window.parent.__supabaseGetCsv === 'function') {
+            try {
+                const data = await window.parent.__supabaseGetCsv(sheetName);
+                _LOCAL_CSV_CACHE[sheetName] = { data, ts: Date.now() };
+                return data;
+            } catch (e) {}
+        }
+        const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+        const data = await apiRequest({ action: 'getCsv', token, sheet: sheetName });
         _LOCAL_CSV_CACHE[sheetName] = { data, ts: Date.now() };
-        delete _LOCAL_CSV_INFLIGHT[sheetName];
         return data;
-    }).catch(e => { delete _LOCAL_CSV_INFLIGHT[sheetName]; throw e; });
+    })().finally(() => { delete _LOCAL_CSV_INFLIGHT[sheetName]; });
     _LOCAL_CSV_INFLIGHT[sheetName] = p;
     return p;
 }
@@ -850,13 +871,21 @@ async function fetchSheetAsJSON(sheetName) {
         }
 
         const headers = rows[headerRowIndex];
+        const normalizeFieldName = (str) => String(str || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
         const data = [];
         for(let i = headerRowIndex + 1; i < rows.length; i++) {
             if (!rows[i].some(cell => cell && cell.trim() !== '')) continue; // Skip baris kosong
             let obj = {};
             for(let j = 0; j < headers.length; j++) {
                 let headerName = headers[j] ? headers[j].trim() : `COL_${j}`;
-                if (headerName) obj[headerName] = rows[i][j] || "";
+                const value = rows[i][j] || "";
+                if (headerName) {
+                    obj[headerName] = value;
+                    const normalized = normalizeFieldName(headerName);
+                    if (normalized && !(normalized in obj)) obj[normalized] = value;
+                    const upper = headerName.toUpperCase();
+                    if (upper && !(upper in obj)) obj[upper] = value;
+                }
             }
             data.push(obj);
         }
@@ -4556,8 +4585,11 @@ setInterval(() => {
     }
 
     async function backendGetCsv(sheetName) {
-        const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-        return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+      if (typeof window.__supabaseGetCsv === 'function') {
+        try { return await window.__supabaseGetCsv(sheetName); } catch (e) {}
+      }
+      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+      return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
     }
 
     // Urutan STO untuk mapping
@@ -5794,9 +5826,138 @@ setInterval(() => {
     }
 
 
-    // --- LOGIKA LOGIN DENGAN OBFUSCATION SEDERHANA ---
+    // --- LOGIN SUPABASE + BRIDGE TOKEN ---
     const BACKEND_URL = 'https://script.google.com/macros/s/AKfycby3xJxVLmEWmlEox69yCCVB44PiZbfCRg3GHOECC5D8DYg1-NLO6SXhLoqUoxsZ2KQ/exec';
     const LOGIN_TOKEN_KEY = 'dashboard_login_token';
+
+    // ============================================================
+    // Supabase auth + data bridge
+    // ============================================================
+    const SUPABASE_URL = 'https://dvatqpyjjcwtpevrnjha.supabase.co';
+    const SUPABASE_ANON_KEY = ['sb_publishable_otX1_kHfuLBXuvrGA8hJLw_BZW-','fKKv'].join('');
+    const supabaseAuthClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const SUPABASE_TABLE_MAP = {
+      'ALL TIKET': 'data_all_tiket_ggn',
+      'ALL_TIKET': 'data_all_tiket_ggn',
+      'all_tiket': 'data_all_tiket_ggn',
+      'DATA_ALL_TIKET_GGN': 'data_all_tiket_ggn',
+      'DATADB': 'data_db',
+      'DATA_DB': 'data_db',
+      'data_db': 'data_db',
+      'DB TEKNISI': 'db_teknisi',
+      'DB_TEKNISI': 'db_teknisi',
+      'db_teknisi': 'db_teknisi'
+    };
+
+    function _canonicalName(value = '') {
+      return String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+
+    function _resolveSupabaseTableName(sheetName = '') {
+      const raw = String(sheetName || '').trim();
+      const canon = _canonicalName(raw);
+      return SUPABASE_TABLE_MAP[raw] || SUPABASE_TABLE_MAP[raw.toUpperCase()] || SUPABASE_TABLE_MAP[canon] || canon;
+    }
+
+    function _csvEscape(value) {
+      const s = value == null ? '' : String(value);
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+
+    function _rowsToCsv(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) return '';
+      const headers = [];
+      const seen = new Set();
+      for (const row of rows) {
+        Object.keys(row || {}).forEach((key) => {
+          if (!seen.has(key)) {
+            seen.add(key);
+            headers.push(key);
+          }
+        });
+      }
+      const lines = [headers.map(_csvEscape).join(',')];
+      for (const row of rows) {
+        lines.push(headers.map((h) => _csvEscape(row?.[h] ?? '')).join(','));
+      }
+      return lines.join('\n');
+    }
+
+    function _decorateRowKeys(row) {
+      const out = {};
+      for (const [key, value] of Object.entries(row || {})) {
+        out[key] = value;
+      }
+      for (const [key, value] of Object.entries(row || {})) {
+        const canon = _canonicalName(key);
+        const upper = String(key).trim().toUpperCase();
+        const upperSpace = upper.replace(/_/g, ' ');
+        if (canon && !(canon in out)) out[canon] = value;
+        if (upper && !(upper in out)) out[upper] = value;
+        if (upperSpace && !(upperSpace in out)) out[upperSpace] = value;
+      }
+      return out;
+    }
+
+    async function __supabaseFetchRows(sheetName) {
+      const table = _resolveSupabaseTableName(sheetName);
+      const { data: sessionData } = await supabaseAuthClient.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || localStorage.getItem(LOGIN_TOKEN_KEY) || SUPABASE_ANON_KEY;
+
+      let allData = [];
+      let offset = 0;
+      const limit = 1000;
+      let keepFetching = true;
+
+      while (keepFetching) {
+        const url = `${SUPABASE_URL}/rest/v1/${encodeURIComponent(table)}?select=*&limit=${limit}&offset=${offset}`;
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+            Prefer: 'count=exact'
+          }
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(txt || `Supabase request failed (${res.status})`);
+        }
+
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          allData = allData.concat(data.map(_decorateRowKeys));
+          if (data.length < limit) {
+            keepFetching = false;
+          } else {
+            offset += limit;
+          }
+        } else {
+          keepFetching = false;
+        }
+      }
+      return allData;
+    }
+
+    async function __supabaseGetSheet(sheetName) {
+      const data = await __supabaseFetchRows(sheetName);
+      return { success: true, data, table: _resolveSupabaseTableName(sheetName) };
+    }
+
+    async function __supabaseGetCsv(sheetName) {
+      const data = await __supabaseFetchRows(sheetName);
+      return { success: true, csv: _rowsToCsv(data), data, table: _resolveSupabaseTableName(sheetName) };
+    }
+
+    window.__supabaseGetSheet = __supabaseGetSheet;
+    window.__supabaseGetCsv = __supabaseGetCsv;
 
     async function apiRequest(payload) {
       const res = await fetch(BACKEND_URL, {
@@ -5807,67 +5968,96 @@ setInterval(() => {
       return await res.json();
     }
 
-    async function verifyBackendToken(token) {
-      if (!token) return false;
-      try {
-        const data = await apiRequest({ action: 'verifyToken', token });
-        return !!(data && data.success);
-      } catch (e) {
-        return false;
-      }
-    }
+    async function cekSesiLogin() {
+      const { data: { session } } = await supabaseAuthClient.auth.getSession();
+      const loginOverlay = document.getElementById('loginOverlay');
 
-    async function checkLoginStatus() {
-      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-      if (!token) {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        return;
-      }
-
-      const ok = await verifyBackendToken(token);
-      if (ok) {
-        document.getElementById('loginOverlay').style.display = 'none';
+      if (session) {
+        localStorage.setItem(LOGIN_TOKEN_KEY, session.access_token || '');
+        if (loginOverlay) loginOverlay.classList.add('hidden');
         switchTab('app1');
       } else {
         localStorage.removeItem(LOGIN_TOKEN_KEY);
-        document.getElementById('loginOverlay').style.display = 'flex';
+        if (loginOverlay) loginOverlay.classList.remove('hidden');
+        if (loginOverlay) loginOverlay.classList.add('flex');
       }
     }
 
-    async function handleLogin(e) {
-      e.preventDefault();
-      const pwd = document.getElementById('loginPassword').value.trim();
+    async function prosesLogin(e) {
+      if (e) e.preventDefault();
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
       const err = document.getElementById('loginError');
-      err.classList.add('hidden');
+      const btn = document.getElementById('btnLogin');
+
+      if (err) {
+        err.classList.add('hidden');
+        err.textContent = '';
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Memeriksa...';
+      }
 
       try {
-        const data = await apiRequest({ action: 'login', password: pwd });
-        if (!data.success) {
-          err.classList.remove('hidden');
-          document.getElementById('loginPassword').value = '';
-          return;
-        }
+        const { data, error } = await supabaseAuthClient.auth.signInWithPassword({
+          email,
+          password
+        });
 
-        localStorage.setItem(LOGIN_TOKEN_KEY, data.token);
-        document.getElementById('loginOverlay').style.display = 'none';
-        switchTab('app1');
-      } catch (e) {
-        console.error(e);
-        err.classList.remove('hidden');
+        if (error) throw error;
+
+        const token = data?.session?.access_token || '';
+        if (token) localStorage.setItem(LOGIN_TOKEN_KEY, token);
+        cekSesiLogin();
+      } catch (error) {
+        if (err) {
+          err.textContent = 'Error: ' + (error?.message || 'Login gagal');
+          err.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'MASUK';
+        }
       }
+    }
+
+    async function prosesLogout() {
+      await supabaseAuthClient.auth.signOut();
+      localStorage.removeItem(LOGIN_TOKEN_KEY);
+      const emailInput = document.getElementById('emailInput');
+      const passwordInput = document.getElementById('passwordInput');
+      if (emailInput) emailInput.value = '';
+      if (passwordInput) passwordInput.value = '';
+      cekSesiLogin();
+    }
+
+    async function verifyBackendToken(token) {
+      return !!token;
+    }
+
+    async function checkLoginStatus() {
+      await cekSesiLogin();
     }
 
     async function backendGetSheet(sheetName) {
+      if (typeof window.__supabaseGetSheet === 'function') {
+        try { return await window.__supabaseGetSheet(sheetName); } catch (e) {}
+      }
       const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
       return await apiRequest({ action: 'getData', token, sheet: sheetName });
     }
 
     async function backendGetCsv(sheetName) {
+      if (typeof window.__supabaseGetCsv === 'function') {
+        try { return await window.__supabaseGetCsv(sheetName); } catch (e) {}
+      }
       const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
       return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
     }
 
-    // ============================================================
+// ============================================================
     // 🚀 ANTI-LELET SYSTEM — Centralized Cache & Request Manager
     // ============================================================
     // Dipanggil oleh semua iframe (tpl1, tpl2, dst.) lewat window.parent.__antiLeletFetch()
@@ -5878,7 +6068,7 @@ setInterval(() => {
       inflight: {},                   // { key: Promise }   — dedup in-flight
       MEM_TTL:  90 * 1000,            // 90 detik — data "segar" di memori
       LS_TTL:   8 * 60 * 1000,        // 8 menit — data "segar" di localStorage
-      LS_PREFIX: '__al2_',
+      LS_PREFIX: '__al3_',
 
       _lsKey(payload) {
         // buat key aman tanpa token (token berubah tiap sesi)
@@ -5960,6 +6150,18 @@ setInterval(() => {
       // Actual HTTP fetch + populate cache
       async _doFetch(fullPayload, key) {
         const p = (async () => {
+          try {
+            if ((fullPayload.action === 'getCsv' || fullPayload.action === 'getData') && typeof window.__supabaseGetCsv === 'function') {
+              const data = fullPayload.action === 'getCsv'
+                ? await window.__supabaseGetCsv(fullPayload.sheet)
+                : await window.__supabaseGetSheet(fullPayload.sheet);
+              this.mem[key] = { data, ts: Date.now() };
+              this.lsWrite(fullPayload, data);
+              return data;
+            }
+          } catch (supabaseErr) {
+            console.warn('Supabase fallback ke backend lama:', supabaseErr);
+          }
           const res = await fetch(BACKEND_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
