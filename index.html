@@ -79,33 +79,48 @@
         min-height: calc(100dvh - 64px);
       }
     }
+
+    /* CSS ANIMASI LOGIN */
+    @keyframes moveBackground {
+        0% { transform: scale(1) translate(0, 0); }
+        50% { transform: scale(1.1) translate(-2%, 2%); }
+        100% { transform: scale(1.05) translate(2%, -2%); }
+    }
+    .animate-login-bg {
+        animation: moveBackground 25s ease-in-out infinite alternate;
+    }
   </style>
 </head>
 <body>
 
-    <!-- ==================== LOGIN SUPABASE ==================== -->
-  <div id="loginOverlay" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-200">
-      <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 shadow-inner border border-blue-200">
-        <svg class="h-10 w-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-        </svg>
-      </div>
-      <h2 class="text-3xl font-black text-slate-800 mb-2 text-center">Login Dashboard</h2>
-      <p class="text-slate-500 text-sm mb-8 text-center">Masukkan email dan password.</p>
+  <!-- ==================== LOGIN SUPABASE ==================== -->
+  <div id="loginOverlay" class="fixed inset-0 z-[9999] hidden items-center justify-center overflow-hidden p-4">
+    <!-- Layer Background Animasi -->
+    <div class="absolute -inset-[10%] w-[120%] h-[120%] bg-[url('https://i.ibb.co.com/xt5qkBGX/Gemini-Generated-Image-vq6l4avq6l4avq6l.png')] bg-cover bg-center z-0 animate-login-bg"></div>
+    <!-- Layer Kaca / Overlay Gelap -->
+    <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm z-10 pointer-events-none"></div>
 
-      <form id="loginForm" onsubmit="prosesLogin(event)" class="space-y-4">
-        <div class="space-y-1">
-          <label class="block text-sm font-bold text-slate-700">Email</label>
-          <input type="email" id="emailInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20" placeholder="admin@noc.com" required>
+    <!-- Kotak Form Utama -->
+    <div class="relative z-20 w-full max-w-md rounded-[2rem] bg-white/95 backdrop-blur-xl p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] border border-white/20">
+      <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[1.5rem] bg-blue-50 shadow-inner border border-blue-100 overflow-hidden relative group">
+        <div class="absolute inset-0 bg-blue-400/20 blur-xl rounded-full"></div>
+        <img src="https://i.ibb.co.com/xt5qkBGX/Gemini-Generated-Image-vq6l4avq6l4avq6l.png" alt="Kawal Assurance" class="w-full h-full object-cover scale-[1.1] relative z-10 group-hover:scale-125 transition-transform duration-500">
+      </div>
+      <h2 class="text-3xl font-black text-slate-800 mb-1 text-center drop-shadow-sm">Login Dashboard</h2>
+      <p class="text-slate-500 text-sm mb-8 text-center font-medium">TRACKING • INTERVENTION • ASSURANCE • LEARNING.</p>
+
+      <form id="loginForm" onsubmit="prosesLogin(event)" class="space-y-5">
+        <div class="space-y-1.5">
+          <label class="block text-sm font-bold text-slate-700">Email Address</label>
+          <input type="email" id="emailInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 font-medium text-slate-700 placeholder:text-slate-400" placeholder="admin@noc.com" required>
         </div>
-        <div class="space-y-1">
+        <div class="space-y-1.5">
           <label class="block text-sm font-bold text-slate-700">Password</label>
-          <input type="password" id="passwordInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20" placeholder="••••••••" required>
+          <input type="password" id="passwordInput" class="w-full rounded-xl border-2 border-slate-200 px-4 py-3.5 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 font-medium text-slate-800 tracking-wider placeholder:tracking-normal placeholder:text-slate-400" placeholder="••••••••" required>
         </div>
-        <p id="loginError" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600"></p>
-        <button id="btnLogin" type="submit" class="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 font-black text-white shadow-lg transition-all hover:-translate-y-0.5 hover:from-blue-700 hover:to-indigo-800">
-          MASUK
+        <p id="loginError" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600 shadow-sm"></p>
+        <button id="btnLogin" type="submit" class="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-4 font-black text-white shadow-[0_8px_20px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(37,99,235,0.4)] hover:from-blue-700 hover:to-indigo-800 uppercase tracking-widest text-sm">
+          MASUK DASHBOARD
         </button>
       </form>
     </div>
