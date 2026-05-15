@@ -4680,11 +4680,18 @@ setInterval(() => {
     }
 
     async function backendGetCsv(sheetName) {
-      if (typeof window.__supabaseGetCsv === 'function') {
-        try { return await window.__supabaseGetCsv(sheetName); } catch (e) {}
-      }
-      const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
-      return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
+        // Gunakan cache super cepat (Anti-Lelet) dari Dashboard Utama jika tersedia
+        if (window.parent && typeof window.parent.__antiLeletFetch === 'function') {
+            try {
+                return await window.parent.__antiLeletFetch({ action: 'getCsv', sheet: sheetName });
+            } catch(e) {}
+        }
+        // Fallback: Supabase langsung jika parent tidak tersedia
+        if (window.parent && typeof window.parent.__supabaseGetCsv === 'function') {
+            try { return await window.parent.__supabaseGetCsv(sheetName); } catch (e) {}
+        }
+        const token = localStorage.getItem(LOGIN_TOKEN_KEY) || '';
+        return await apiRequest({ action: 'getCsv', token, sheet: sheetName });
     }
 
     // Urutan STO untuk mapping
@@ -4761,12 +4768,30 @@ setInterval(() => {
         updateClock("Sinkronisasi Data...");
 
         try {
-            const response = await backendGetCsv('ALL TIKET');
-            if (!response || !response.success || !response.csv) throw new Error(response?.error || 'Network response was not ok');
-            const csvText = response.csv;
+            // MENGARAHKAN SUMBER DATA ANALISA KE data_all_tiket_ggn
+            const response = await backendGetCsv('data_all_tiket_ggn');
+            if (!response || !response.success) throw new Error(response?.error || 'Network response was not ok');
+            
+            let dataObjects = [];
+            
+            // Jauh lebih aman memproses Data JSON (Supabase) daripada CSV ber-index tetap
+            if (response.data && Array.isArray(response.data)) {
+                dataObjects = response.data;
+            } else if (response.csv) {
+                const rows = parseCSV(response.csv);
+                if (rows.length > 0) {
+                    const headers = rows[0];
+                    for (let i = 1; i < rows.length; i++) {
+                        let obj = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            obj[headers[j]] = rows[i][j];
+                        }
+                        dataObjects.push(obj);
+                    }
+                }
+            }
 
-            const data = parseCSV(csvText);
-            processData(data);
+            processDataObj(dataObjects);
 
             // Menjalankan jam kembali setelah sukses
             lastSuccessLoad = Date.now();
@@ -4775,13 +4800,13 @@ setInterval(() => {
 
         } catch (error) {
             console.error("Gagal mengambil data:", error);
-            document.getElementById('table-body').innerHTML = `<tr><td colspan="34" style="padding: 30px; color: red; background: #fee2e2;"><b>Gagal menghubungkan ke backend.</b><br>Pastikan login sudah benar dan backend Apps Script aktif.</td></tr>`;
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="34" style="padding: 30px; color: red; background: #fee2e2;"><b>Gagal menghubungkan ke backend.</b><br>Pastikan login sudah benar dan tabel 'data_all_tiket_ggn' ada di Supabase.</td></tr>`;
         } finally {
             isLoadingData = false;
         }
     }
 
-    function processData(data) {
+    function processDataObj(data) {
         const counts = {}; // Menyimpan hitungan penyebab -> STO
         const stoTotals = {}; // Total per STO
         let grandTotal = 0;
@@ -4789,16 +4814,24 @@ setInterval(() => {
         // Inisialisasi STO
         stoOrder.forEach(sto => stoTotals[sto] = 0);
 
-        // Parsing baris per baris (mulai dari 1 untuk melewati header)
-        for(let i = 1; i < data.length; i++) {
-            const row = data[i];
-            
-            // Kolom B (index 1) = SEKTOR, Kolom C (index 2) = STO, Kolom AA (index 26) = ANALISA
-            if(!row || row.length < 27) continue; 
-            
-            let stoRaw = row[2] ? row[2].trim().toUpperCase() : "";
-            const sektorRaw = row[1] ? row[1].trim().toUpperCase() : "";
-            const penyebab = row[26] ? row[26].trim().toUpperCase() : "";
+        data.forEach(r => {
+            const getVal = (possibleKeys) => {
+                const keys = Object.keys(r);
+                for (let k of keys) {
+                    const ku = k.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    for (let pk of possibleKeys) {
+                        if (ku.includes(pk)) return r[k] || "";
+                    }
+                }
+                return "";
+            };
+
+            let stoRaw = getVal(['STO', 'LOKASI']).toString().trim().toUpperCase();
+            const sektorRaw = getVal(['SEKTOR', 'SECTOR']).toString().trim().toUpperCase();
+            const penyebab = getVal(['ANALISA', 'PENYEBAB']).toString().trim().toUpperCase();
+
+            // Abaikan jika tidak ada penyebab
+            if (!penyebab) return;
 
             // LOGIKA KHUSUS PEKANBARU (PBRC 1 - 4): Ambil dari Kolom SEKTOR
             const cleanSek = sektorRaw.replace(/\s/g, '');
@@ -4806,6 +4839,7 @@ setInterval(() => {
             else if (cleanSek.includes('PBRC2') || cleanSek.includes('PBB2')) stoRaw = 'PBRC 2';
             else if (cleanSek.includes('PBRC3') || cleanSek.includes('PBB3')) stoRaw = 'PBRC 3';
             else if (cleanSek.includes('PBRC4') || cleanSek.includes('PBB4')) stoRaw = 'PBRC 4';
+            else if (stoRaw === 'PBR' || stoRaw.replace(/\s/g, '').includes('PBB')) stoRaw = 'PBRC 1';
 
             if(stoRaw && penyebab) {
                 // Catat ke dalam matrix jika STO dikenali di kolom kita
@@ -4818,7 +4852,7 @@ setInterval(() => {
                     grandTotal++;
                 }
             }
-        }
+        });
 
         renderDashboard(counts, stoTotals, grandTotal);
     }
