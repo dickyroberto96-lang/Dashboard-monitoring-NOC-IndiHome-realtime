@@ -942,55 +942,78 @@ function getVal(row, possibleKeys) {
 
 // Fungsi Pemetaan Otomatis (Ultra-Robust) untuk Kalender
 function buildDateMap(data) {
-    dateKeyMap = {};
+    dateKeyMap = { B: {}, K: {} };
     if (!data || !Array.isArray(data) || data.length === 0) return;
     
-    const knownKeys = [
-        "NO", "NUM", "NOMOR", "NIK", "ID TEKNISI", "NAMA", "NAMA TEKNISI", "NAMA LENGKAP", 
-        "NO HP", "NOHP", "NO. HP", "TELEPON", "SERVICE AREA", "SA", "SEKTOR", "SECTOR", 
-        "STO", "LOKASI", "BRANCH", "CABANG", "POSISI", "POSITION", "FLAGGING TEKNISI", 
-        "FLAGGING", "MITRA", "VENDOR"
-    ];
-    
     let firstRowKeys = Object.keys(data[0]);
-    let unknownKeys = firstRowKeys.filter(k => {
-        let ku = k.trim().toUpperCase();
-        return !knownKeys.some(known => ku === known || ku.includes(known));
-    });
     
-    let mappedCount = 0;
-    unknownKeys.forEach(k => {
-        let cleanK = k.trim();
-        if (/^(0?[1-9]|[12]\d|3[01])$/.test(cleanK)) {
-            let day = parseInt(cleanK, 10);
-            dateKeyMap[day] = k;
-            mappedCount++;
-            return;
-        }
-        let d = new Date(cleanK);
-        if (!isNaN(d.getTime())) {
-            let day = d.getDate();
-            if (!dateKeyMap[day]) { 
-                dateKeyMap[day] = k;
-                mappedCount++;
+    for (let i = 1; i <= 31; i++) {
+        // Pemetaan Kolom K (Kehadiran)
+        let foundK = null;
+        let possibleK = [`${i}_K`, `${i} K`, `${i}K`, `${i}_k`, `${i} k`, `${i}k`, String(i)];
+
+        for (let pk of possibleK) {
+            if (firstRowKeys.includes(pk)) {
+                foundK = pk;
+                break;
             }
-            return;
         }
-    });
-    
-    if (mappedCount < 10 && unknownKeys.length >= 28) {
-        dateKeyMap = {};
-        unknownKeys.forEach((k, idx) => {
-            if (idx < 31) dateKeyMap[idx + 1] = k;
-        });
+
+        if (!foundK) {
+            for (let fk of firstRowKeys) {
+                let fku = fk.trim().toUpperCase();
+                if (possibleK.map(x => x.toUpperCase()).includes(fku)) {
+                    foundK = fk;
+                    break;
+                }
+            }
+        }
+
+        if (foundK) {
+            dateKeyMap.K[i] = foundK;
+        }
+
+        // Pemetaan Kolom B (Briefing)
+        let foundB = null;
+        let possibleB = [`${i}_B`, `${i} B`, `${i}B`, `${i}_b`, `${i} b`, `${i}b`];
+
+        for (let pb of possibleB) {
+            if (firstRowKeys.includes(pb)) {
+                foundB = pb;
+                break;
+            }
+        }
+
+        if (!foundB) {
+            for (let fk of firstRowKeys) {
+                let fku = fk.trim().toUpperCase();
+                if (possibleB.map(x => x.toUpperCase()).includes(fku)) {
+                    foundB = fk;
+                    break;
+                }
+            }
+        }
+
+        if (foundB) {
+            dateKeyMap.B[i] = foundB;
+        }
     }
 }
 
-function getKehadiranStatus(r, day) {
-    let mappedKey = dateKeyMap[day];
-    if (mappedKey && r[mappedKey] !== undefined) return r[mappedKey];
-    let dayStr = day.toString();
-    if (r[dayStr] !== undefined) return r[dayStr];
+function getKehadiranStatus(r, day, type) {
+    if (dateKeyMap[type] && dateKeyMap[type][day]) {
+        let mappedKey = dateKeyMap[type][day];
+        if (r[mappedKey] !== undefined) return r[mappedKey];
+    }
+    
+    let possibleKeys = type === 'K' 
+        ? [`${day}_K`, `${day} K`, `${day}K`, `${day}_k`, String(day)] 
+        : [`${day}_B`, `${day} B`, `${day}B`, `${day}_b`];
+
+    for (let pk of possibleKeys) {
+        if (r[pk] !== undefined) return r[pk];
+    }
+    
     return "";
 }
 
@@ -3612,6 +3635,14 @@ function renderMonitoringView() {
 
 function renderKehadiranView() {
     const data = getActiveKehadiranData();
+    
+    // --- TAMBAHAN: URUTKAN BERDASARKAN SEKTOR ---
+    data.sort((a, b) => {
+        let sekA = getVal(a, ['SEKTOR', 'SECTOR']).toString().toUpperCase().trim();
+        let sekB = getVal(b, ['SEKTOR', 'SECTOR']).toString().toUpperCase().trim();
+        return sekA.localeCompare(sekB);
+    });
+
     const todayStr = new Date().getDate().toString();
     
     const labelTgl = document.getElementById('kehadiranInfoTgl');
@@ -3619,7 +3650,7 @@ function renderKehadiranView() {
     
     let hadir = 0, off = 0, sakit = 0, lain = 0;
     data.forEach(r => {
-        let stat = getKehadiranStatus(r, todayStr).toString().toUpperCase().trim();
+        let stat = getKehadiranStatus(r, todayStr, 'K').toString().toUpperCase().trim();
         
         if (stat === 'HDR' || stat === 'HADIR' || stat === 'PM' || stat === 'KERJA MALAM' || stat === 'PS' || stat === 'PIKET SIANG') hadir++;
         else if (stat === 'OFF' || stat === 'OFF / LIBUR') off++;
@@ -3660,28 +3691,34 @@ function renderKehadiranView() {
         <table id="kehadiranTableExport" class="w-full text-sm text-left whitespace-nowrap border-collapse">
             <thead class="text-[10px] text-slate-500 font-extrabold uppercase bg-slate-50 border-b border-slate-300 sticky top-0 z-20 text-center">
                 <tr>
-                    <th class="px-3 py-3 border-r border-slate-200">NO</th>
-                    <th class="px-3 py-3 border-r border-slate-200">NIK</th>
-                    <th class="px-4 py-3 border-r border-slate-200 text-left min-w-[160px]">NAMA TEKNISI</th>
-                    <th class="px-3 py-3 border-r border-slate-200">NO HP</th>
-                    <th class="px-3 py-3 border-r border-slate-200">SERVICE AREA</th>
-                    <th class="px-3 py-3 border-r border-slate-200">SEKTOR</th>
-                    <th class="px-2 py-3 border-r border-slate-200 w-20">STO</th>
-                    <th class="px-3 py-3 border-r border-slate-200">BRANCH</th>
-                    <th class="px-3 py-3 border-r border-slate-200">POSISI</th>
-                    <th class="px-3 py-3 border-r border-slate-200">FLAGGING TEKNISI</th>
-                    <th class="px-3 py-3 border-r border-slate-200">MITRA</th>
-                    ${dayKeys.map(d => `<th class="px-1.5 py-3 min-w-[32px] border-r border-slate-200 ${d === todayStr ? 'bg-blue-100 text-blue-700 font-black ring-inset ring-2 ring-blue-400' : ''}">${d}</th>`).join('')}
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">NO</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">NIK</th>
+                    <th class="px-4 py-3 border-r border-slate-200 text-left min-w-[160px]" rowspan="2">NAMA TEKNISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">NO HP</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">SERVICE AREA</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">SEKTOR</th>
+                    <th class="px-2 py-3 border-r border-slate-200 w-20" rowspan="2">STO</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">BRANCH</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">POSISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">FLAGGING TEKNISI</th>
+                    <th class="px-3 py-3 border-r border-slate-200" rowspan="2">MITRA</th>
+                    ${dayKeys.map(d => `<th colspan="2" class="px-1.5 py-1.5 border-b border-r border-slate-200 ${d === todayStr ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'}">TGL ${d}</th>`).join('')}
+                </tr>
+                <tr>
+                    ${dayKeys.map(d => `
+                        <th class="px-1.5 py-1.5 min-w-[32px] border-r border-slate-200 ${d === todayStr ? 'bg-blue-50 text-blue-700' : 'bg-slate-100'}">B</th>
+                        <th class="px-1.5 py-1.5 min-w-[32px] border-r border-slate-200 ${d === todayStr ? 'bg-blue-50 text-blue-700' : 'bg-slate-100'}">K</th>
+                    `).join('')}
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white text-center">
     `;
     
     if (data.length === 0) {
-        tableHTML += `<tr><td colspan="${dayKeys.length + 11}" class="px-4 py-8 text-center text-slate-400 font-bold">Data Kehadiran Kosong / Belum Dimuat.</td></tr>`;
+        tableHTML += `<tr><td colspan="${(dayKeys.length * 2) + 11}" class="px-4 py-8 text-center text-slate-400 font-bold">Data Kehadiran Kosong / Belum Dimuat.</td></tr>`;
     } else {
         tableHTML += data.map((r, index) => {
-            let no = getVal(r, ['NO', 'NUM', 'NOMOR']);
+            let no = index + 1; // Diganti otomatis menjadi angka urut yang rapi
             let nik = getVal(r, ['NIK', 'ID TEKNISI']);
             let nm = getVal(r, ['NAMA', 'NAMA TEKNISI', 'NAMA LENGKAP']);
             let nohp = getVal(r, ['NO HP', 'NOHP', 'NO. HP', 'TELEPON']);
@@ -3706,19 +3743,41 @@ function renderKehadiranView() {
                 <td class="px-3 py-2 text-[9px] text-slate-500 border-r border-slate-100 truncate max-w-[120px]" title="${flag || '-'}">${flag || '-'}</td>
                 <td class="px-3 py-2 text-[9px] text-slate-500 border-r border-slate-100">${mitra || '-'}</td>
                 ${dayKeys.map(d => {
-                    let stat = getKehadiranStatus(r, d).toString().toUpperCase().trim();
-                    let badgeClass = 'text-slate-300 font-medium';
-                    let displayStat = stat || '-';
+                    let statK = getKehadiranStatus(r, d, 'K').toString().toUpperCase().trim();
+                    let statB = getKehadiranStatus(r, d, 'B').toString().toUpperCase().trim();
                     
-                    if(stat==='HDR' || stat==='HADIR') { badgeClass='bg-emerald-100 text-emerald-700 font-bold shadow-sm'; displayStat='HDR'; }
-                    else if(stat==='OFF' || stat==='OFF / LIBUR') { badgeClass='bg-slate-200 text-slate-600 font-bold shadow-sm'; displayStat='OFF'; }
-                    else if(stat==='SKT' || stat==='SAKIT') { badgeClass='bg-amber-100 text-amber-700 font-bold shadow-sm'; displayStat='SKT'; }
-                    else if(stat==='PM' || stat==='KERJA MALAM') { badgeClass='bg-blue-100 text-blue-700 font-bold shadow-sm'; displayStat='PM'; }
-                    else if(stat==='PS' || stat==='PIKET SIANG') { badgeClass='bg-indigo-100 text-indigo-700 font-bold shadow-sm'; displayStat='PS'; }
-                    else if(stat==='TKR' || stat==='CUTI') { badgeClass='bg-purple-100 text-purple-700 font-bold shadow-sm'; displayStat='TKR'; }
-                    else if(stat==='RSG' || stat==='RESIGN') { badgeClass='bg-rose-100 text-rose-700 font-bold shadow-sm'; displayStat='RSG'; }
+                    let badgeClassK = 'text-slate-300 font-medium';
+                    let displayStatK = statK || '-';
                     
-                    return `<td class="px-0.5 py-1.5 border-r border-slate-50 ${d === todayStr ? 'bg-blue-50/30' : ''}"><div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClass}" title="${stat}">${displayStat}</span></div></td>`;
+                    if(statK==='HDR' || statK==='HADIR') { badgeClassK='bg-emerald-100 text-emerald-700 font-bold shadow-sm'; displayStatK='HDR'; }
+                    else if(statK==='OFF' || statK==='OFF / LIBUR') { badgeClassK='bg-slate-200 text-slate-600 font-bold shadow-sm'; displayStatK='OFF'; }
+                    else if(statK==='SKT' || statK==='SAKIT') { badgeClassK='bg-amber-100 text-amber-700 font-bold shadow-sm'; displayStatK='SKT'; }
+                    else if(statK==='PM' || statK==='KERJA MALAM') { badgeClassK='bg-blue-100 text-blue-700 font-bold shadow-sm'; displayStatK='PM'; }
+                    else if(statK==='PS' || statK==='PIKET SIANG') { badgeClassK='bg-indigo-100 text-indigo-700 font-bold shadow-sm'; displayStatK='PS'; }
+                    else if(statK==='TKR' || statK==='CUTI') { badgeClassK='bg-purple-100 text-purple-700 font-bold shadow-sm'; displayStatK='TKR'; }
+                    else if(statK==='RSG' || statK==='RESIGN') { badgeClassK='bg-rose-100 text-rose-700 font-bold shadow-sm'; displayStatK='RSG'; }
+                    else if(statK) { badgeClassK='bg-slate-100 text-slate-600 font-bold shadow-sm'; displayStatK=statK; }
+
+                    let badgeClassB = 'text-slate-300 font-medium';
+                    let displayStatB = statB || '-';
+                    
+                    if(statB==='OK') { badgeClassB='bg-emerald-100 text-emerald-700 font-bold shadow-sm'; }
+                    else if(statB==='NOK') { badgeClassB='bg-rose-100 text-rose-700 font-bold shadow-sm'; }
+                    else if(statB==='I' || statB==='S') { badgeClassB='bg-amber-100 text-amber-700 font-bold shadow-sm'; }
+                    else if(statB==='L' || statB==='OFF') { badgeClassB='bg-slate-200 text-slate-600 font-bold shadow-sm'; }
+                    else if(statB==='PM') { badgeClassB='bg-blue-100 text-blue-700 font-bold shadow-sm'; }
+                    else if(statB) { badgeClassB='bg-slate-100 text-slate-600 font-bold shadow-sm'; displayStatB=statB; }
+
+                    let bgCell = d === todayStr ? 'bg-blue-50/30' : '';
+                    
+                    return `
+                        <td class="px-0.5 py-1.5 border-r border-slate-100 ${bgCell}">
+                            <div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClassB}" title="Briefing: ${statB}">${displayStatB}</span></div>
+                        </td>
+                        <td class="px-0.5 py-1.5 border-r border-slate-200 ${bgCell}">
+                            <div class="w-full flex justify-center"><span class="px-1 py-1 rounded w-8 inline-block text-[9px] leading-tight ${badgeClassK}" title="Kehadiran: ${statK}">${displayStatK}</span></div>
+                        </td>
+                    `;
                 }).join('')}
             </tr>`;
         }).join('');
@@ -3728,13 +3787,20 @@ function renderKehadiranView() {
     const wrap = document.getElementById('tableKehadiranWrapper');
     if(wrap) wrap.innerHTML = tableHTML;
     
-    const legendContainer = document.querySelector('.mt-5.flex.flex-wrap.gap-4');
+    const legendContainer = document.querySelector('.mt-5.flex.flex-wrap.justify-center.sm\\:justify-start.gap-4') || document.querySelector('.mt-5.flex.flex-wrap.gap-4');
     if (legendContainer) {
         legendContainer.innerHTML = `
+            <div class="flex items-center gap-1.5 font-black text-slate-800 mr-2">KEHADIRAN (K):</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> HDR (Hadir)</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-100 border border-blue-200"></span> PM (Kerja Malam)</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-100 border border-indigo-200"></span> PS (Piket Siang)</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200 shadow-sm"></span> RSG (Resign)</div>
+            <div class="w-px h-4 bg-slate-300 mx-2 hidden sm:block"></div>
+            <div class="flex items-center gap-1.5 font-black text-slate-800 mr-2">BRIEFING (B):</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> OK</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-100 border border-rose-200"></span> NOK</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> Izin/Sakit</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span> L/OFF</div>
         `;
     }
 }
