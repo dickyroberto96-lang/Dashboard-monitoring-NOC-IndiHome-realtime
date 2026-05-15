@@ -961,8 +961,10 @@ function buildDateMap(data) {
 
         if (!foundK) {
             for (let fk of firstRowKeys) {
-                let fku = fk.trim().toUpperCase();
-                if (possibleK.map(x => x.toUpperCase()).includes(fku)) {
+                // Hapus spasi dan underscore untuk pencocokan yang lebih tangguh
+                let fku = fk.trim().toUpperCase().replace(/[\s_]/g, '');
+                let possibleKClean = possibleK.map(x => x.toUpperCase().replace(/[\s_]/g, ''));
+                if (possibleKClean.includes(fku)) {
                     foundK = fk;
                     break;
                 }
@@ -986,8 +988,10 @@ function buildDateMap(data) {
 
         if (!foundB) {
             for (let fk of firstRowKeys) {
-                let fku = fk.trim().toUpperCase();
-                if (possibleB.map(x => x.toUpperCase()).includes(fku)) {
+                 // Hapus spasi dan underscore untuk pencocokan yang lebih tangguh
+                let fku = fk.trim().toUpperCase().replace(/[\s_]/g, '');
+                let possibleBClean = possibleB.map(x => x.toUpperCase().replace(/[\s_]/g, ''));
+                if (possibleBClean.includes(fku)) {
                     foundB = fk;
                     break;
                 }
@@ -1003,17 +1007,27 @@ function buildDateMap(data) {
 function getKehadiranStatus(r, day, type) {
     if (dateKeyMap[type] && dateKeyMap[type][day]) {
         let mappedKey = dateKeyMap[type][day];
-        if (r[mappedKey] !== undefined) return r[mappedKey];
+        if (r[mappedKey] !== undefined && r[mappedKey] !== null) return r[mappedKey];
     }
     
     let possibleKeys = type === 'K' 
-        ? [`${day}_K`, `${day} K`, `${day}K`, `${day}_k`, String(day)] 
-        : [`${day}_B`, `${day} B`, `${day}B`, `${day}_b`];
+        ? [`${day}_K`, `${day} K`, `${day}K`, `${day}_k`, `${day} k`, `${day}k`, String(day)] 
+        : [`${day}_B`, `${day} B`, `${day}B`, `${day}_b`, `${day} b`, `${day}b`];
 
+    // Coba pencocokan presisi dulu
     for (let pk of possibleKeys) {
-        if (r[pk] !== undefined) return r[pk];
+        if (r[pk] !== undefined && r[pk] !== null) return r[pk];
     }
     
+    // Coba pencocokan case-insensitive
+    const keys = Object.keys(r);
+    for (let pk of possibleKeys) {
+        const pkUpper = pk.toUpperCase();
+        for (let k of keys) {
+            if (k.toUpperCase() === pkUpper && r[k] !== undefined && r[k] !== null) return r[k];
+        }
+    }
+
     return "";
 }
 
@@ -3649,19 +3663,27 @@ function renderKehadiranView() {
     if(labelTgl) labelTgl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Hari Ini: Tanggal ${todayStr}`;
     
     let hadir = 0, off = 0, sakit = 0, lain = 0;
+    let briefingOk = 0, briefingNok = 0; // Tambahan counter untuk Briefing
+
     data.forEach(r => {
-        let stat = getKehadiranStatus(r, todayStr, 'K').toString().toUpperCase().trim();
+        let statK = getKehadiranStatus(r, todayStr, 'K').toString().toUpperCase().trim();
+        let statB = getKehadiranStatus(r, todayStr, 'B').toString().toUpperCase().trim();
         
-        if (stat === 'HDR' || stat === 'HADIR' || stat === 'PM' || stat === 'KERJA MALAM' || stat === 'PS' || stat === 'PIKET SIANG') hadir++;
-        else if (stat === 'OFF' || stat === 'OFF / LIBUR') off++;
-        else if (stat === 'SKT' || stat === 'SAKIT' || stat === 'TKR' || stat === 'CUTI') sakit++;
-        else if (stat !== '' && stat !== 'RSG' && stat !== 'RESIGN') lain++;
+        if (statK === 'HDR' || statK === 'HADIR' || statK === 'PM' || statK === 'KERJA MALAM' || statK === 'PS' || statK === 'PIKET SIANG') hadir++;
+        else if (statK === 'OFF' || statK === 'OFF / LIBUR') off++;
+        else if (statK === 'SKT' || statK === 'SAKIT' || statK === 'TKR' || statK === 'CUTI') sakit++;
+        else if (statK !== '' && statK !== 'RSG' && statK !== 'RESIGN') lain++;
+
+        if (statB === 'OK') briefingOk++;
+        else if (statB === 'NOK') briefingNok++;
     });
     
     let persentaseHadir = data.length > 0 ? ((hadir / data.length) * 100).toFixed(1) : 0;
     
     const kpiContainer = document.getElementById('kpiKehadiran');
     if (kpiContainer) {
+        // Ubah grid dinamis menjadi 5 kolom agar kartu briefing muat
+        kpiContainer.className = "grid grid-cols-2 md:grid-cols-5 gap-5";
         kpiContainer.innerHTML = `
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div class="text-xs text-slate-500 font-extrabold uppercase tracking-widest mb-2">Total Teknisi</div>
@@ -3672,6 +3694,13 @@ function renderKehadiranView() {
                 <div class="flex items-end gap-2">
                     <div class="text-4xl font-black text-emerald-700">${hadir}</div>
                     <div class="mb-1 text-xs font-black text-emerald-700 bg-emerald-200/60 px-2 py-0.5 rounded-md border border-emerald-300/50">${persentaseHadir}%</div>
+                </div>
+            </div>
+            <div class="bg-blue-50 p-5 rounded-2xl shadow-sm border border-blue-100 flex flex-col justify-between">
+                <div class="text-xs text-blue-600 font-extrabold uppercase tracking-widest mb-2">Briefing Pagi</div>
+                <div class="flex items-end gap-2">
+                    <div class="text-4xl font-black text-blue-700">${briefingOk} <span class="text-lg text-blue-500 font-bold ml-1">OK</span></div>
+                    ${briefingNok > 0 ? `<div class="mb-1 text-xs font-black text-rose-600 bg-rose-200/60 px-2 py-0.5 rounded-md border border-rose-300/50">${briefingNok} NOK</div>` : ''}
                 </div>
             </div>
             <div class="bg-slate-100 p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
