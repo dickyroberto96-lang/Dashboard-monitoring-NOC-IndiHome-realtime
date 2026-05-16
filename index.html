@@ -215,6 +215,21 @@
             animation: float-logo 3.5s ease-in-out infinite;
         }
 
+        /* ANIMASI BARU UNTUK PODIUM 3D */
+        @keyframes shimmer-sweep {
+            0% { transform: translateX(-150%) skewX(-15deg); }
+            50%, 100% { transform: translateX(150%) skewX(-15deg); }
+        }
+        .animate-shimmer {
+            animation: shimmer-sweep 3s infinite;
+        }
+        @keyframes float-1 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes float-2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes float-3 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .animate-float-1 { animation: float-1 3s ease-in-out infinite; }
+        .animate-float-2 { animation: float-2 3.5s ease-in-out infinite 0.5s; }
+        .animate-float-3 { animation: float-3 4s ease-in-out infinite 1s; }
+
         @media (max-width: 767px) {
             body {
                 overflow-x: hidden;
@@ -534,14 +549,14 @@
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                             <h3 class="font-black text-slate-800 mb-8 flex items-center gap-2">
                                 <span class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></span>
-                                Top Close Teknisi Utama
+                                🏆Top Close Teknisi Utama🏆
                             </h3>
                             <div id="insightTek1" class="flex-1 w-full flex items-center justify-center relative min-h-[160px]"></div>
                         </div>
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                             <h3 class="font-black text-slate-800 mb-8 flex items-center gap-2">
                                 <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></span>
-                                Top Close Teknisi Pendamping
+                                🏆Top Close Teknisi Pendamping🏆
                             </h3>
                             <div id="insightTek2" class="flex-1 w-full flex items-center justify-center relative min-h-[160px]"></div>
                         </div>
@@ -549,7 +564,7 @@
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                         <h3 class="font-black text-slate-800 mb-4 flex items-center gap-2">
                             <span class="p-1.5 bg-rose-50 text-rose-600 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg></span>
-                            Close Terendah
+                            ⚠️Close Terendah⚠️
                         </h3>
                         <div id="rank" class="space-y-3 text-sm flex-1 overflow-y-auto pr-2 max-h-[380px]"></div>
                     </div>
@@ -3516,23 +3531,81 @@ function getPodium(m) {
     const l = Object.entries(m).map(([n,v]) => ({ n, total:v.t })).sort((a,b)=>b.total-a.total);
     if(l.length===0) return "<div class='text-slate-400 font-medium italic p-4'>Data tidak cukup</div>";
     const top = l.slice(0, 3);
-    const modernMedals = [
-        `<div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-200 via-yellow-400 to-yellow-500 p-1 mb-3 shadow-[0_4px_15px_rgba(251,191,36,0.6)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-yellow-100 to-amber-200 rounded-full flex items-center justify-center border-2 border-yellow-300/50"><span class="text-amber-700 font-black text-xl">1</span></div></div>`,
-        `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-slate-200 via-slate-400 to-slate-500 p-1 mb-3 shadow-[0_4px_15px_rgba(148,163,184,0.4)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 rounded-full flex items-center justify-center border-2 border-slate-300/50"><span class="text-slate-600 font-black text-lg">2</span></div></div>`,
-        `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-200 via-orange-400 to-orange-500 p-1 mb-3 shadow-[0_4px_15_rgba(249,115,22,0.4)] relative flex-shrink-0 z-10 hover:scale-110 transition-transform"><div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-200 rounded-full flex items-center justify-center border-2 border-orange-300/50"><span class="text-orange-700 font-black text-lg">3</span></div></div>`
-    ];
+    
     let podiumOrder = [];
     if (top.length === 1) podiumOrder = [{...top[0], idx: 0}];
     else if (top.length === 2) podiumOrder = [{...top[1], idx: 1}, {...top[0], idx: 0}];
     else podiumOrder = [{...top[1], idx: 1}, {...top[0], idx: 0}, {...top[2], idx: 2}];
-    const st = ["from-amber-50 to-yellow-100 border-yellow-200","from-slate-50 to-slate-100 border-slate-200","from-orange-50 to-orange-100 border-orange-200"];
-    const heights = ["h-36", "h-32", "h-28"];
-    return `<div class="flex items-end justify-center gap-3 w-full h-full pt-4">` + podiumOrder.map(t => `
-        <div onclick="openTeknisi('${t.n.replace(/'/g, "\\'")}')" class="flex-1 cursor-pointer bg-gradient-to-b ${st[t.idx]} p-3 rounded-t-2xl rounded-b-lg border shadow-sm flex flex-col items-center justify-end text-center ${heights[t.idx]} hover:-translate-y-2 transition-transform relative">
-            <div class="absolute -top-8">${modernMedals[t.idx]}</div>
-            <span class="font-black text-[9px] sm:text-[10px] uppercase mb-2 line-clamp-2 w-full leading-tight text-slate-800" title="${extractName(t.n)}">${extractName(t.n)}</span>
-            <span class="bg-white px-2 py-1.5 rounded-lg text-[10px] font-black shadow-sm border border-slate-100 text-blue-700 w-full">${t.total} Close</span>
-        </div>`).join('') + `</div>`;
+
+    const getPodiumHtml = (t) => {
+        const name = extractName(t.n);
+        const total = t.total;
+        const onclickCode = `openTeknisi('${t.n.replace(/'/g, "\\'")}')`;
+        
+        if (t.idx === 0) { // GOLD (Juara 1)
+            return `
+            <div onclick="${onclickCode}" class="flex-1 flex flex-col items-center justify-end relative h-48 cursor-pointer group px-1 sm:px-2">
+                <div class="absolute -top-10 z-30 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 p-[3px] shadow-[0_10px_20px_rgba(202,138,4,0.5)] transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-yellow-100 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-[inset_0_-4px_6px_rgba(161,98,7,0.4),inset_0_4px_6px_rgba(254,240,138,0.8)] border border-yellow-300">
+                        <span class="text-3xl sm:text-5xl font-black text-yellow-800 drop-shadow-[0_2px_1px_rgba(254,240,138,0.8)]" style="-webkit-text-stroke: 1px rgba(254,240,138,0.5);">1</span>
+                    </div>
+                </div>
+                <div class="w-full relative z-20 flex flex-col items-center">
+                    <div class="w-[95%] h-16 sm:h-20 bg-gradient-to-b from-white/80 to-white/30 backdrop-blur-md border-t border-x border-white rounded-t-xl shadow-[inset_0_4px_10px_rgba(255,255,255,0.9)] flex items-center justify-center px-1 text-center relative z-10 pb-2">
+                        <span class="font-black text-[8px] sm:text-[10px] uppercase text-slate-900 tracking-wide line-clamp-2">${name}</span>
+                    </div>
+                    <div class="w-full h-12 sm:h-14 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 rounded-b-xl shadow-[0_8px_15px_rgba(0,0,0,0.15),inset_0_3px_5px_rgba(255,255,255,0.6),inset_0_-3px_5px_rgba(161,98,7,0.6)] flex items-center justify-center z-20 -mt-2 border-b-2 border-yellow-700">
+                        <div class="bg-gradient-to-b from-yellow-700 to-yellow-800 text-yellow-100 text-[9px] sm:text-[11px] font-bold px-3 py-1 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-yellow-600/50 flex items-center gap-1">
+                            <span>${total}</span> <span class="font-normal opacity-90">Close</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-[105%] h-3 bg-black/10 rounded-[100%] blur-sm mt-1"></div>
+            </div>`;
+        } else if (t.idx === 1) { // SILVER (Juara 2)
+            return `
+            <div onclick="${onclickCode}" class="flex-1 flex flex-col items-center justify-end relative h-40 cursor-pointer group px-1 sm:px-2">
+                <div class="absolute -top-8 z-30 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 p-[3px] shadow-[0_8px_15px_rgba(148,163,184,0.5)] transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-white via-slate-200 to-slate-400 flex items-center justify-center shadow-[inset_0_-3px_5px_rgba(100,116,139,0.4),inset_0_3px_5px_rgba(255,255,255,0.8)] border border-slate-200">
+                        <span class="text-2xl sm:text-4xl font-black text-slate-600 drop-shadow-[0_2px_1px_rgba(255,255,255,0.8)]" style="-webkit-text-stroke: 1px rgba(255,255,255,0.5);">2</span>
+                    </div>
+                </div>
+                <div class="w-full relative z-20 flex flex-col items-center">
+                    <div class="w-[95%] h-14 sm:h-16 bg-gradient-to-b from-white/80 to-white/30 backdrop-blur-md border-t border-x border-white rounded-t-xl shadow-[inset_0_4px_10px_rgba(255,255,255,0.9)] flex items-center justify-center px-1 text-center relative z-10 pb-2">
+                        <span class="font-black text-[8px] sm:text-[9px] uppercase text-slate-800 tracking-wide line-clamp-2">${name}</span>
+                    </div>
+                    <div class="w-full h-10 sm:h-12 bg-gradient-to-r from-slate-400 via-slate-300 to-slate-400 rounded-b-xl shadow-[0_8px_15px_rgba(0,0,0,0.1),inset_0_3px_5px_rgba(255,255,255,0.6),inset_0_-3px_5px_rgba(100,116,139,0.6)] flex items-center justify-center z-20 -mt-2 border-b-2 border-slate-500">
+                        <div class="bg-gradient-to-b from-slate-500 to-slate-600 text-slate-100 text-[8px] sm:text-[10px] font-bold px-3 py-1 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-slate-400/50 flex items-center gap-1">
+                            <span>${total}</span> <span class="font-normal opacity-90">Close</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-[105%] h-3 bg-black/10 rounded-[100%] blur-sm mt-1"></div>
+            </div>`;
+        } else { // BRONZE (Juara 3)
+            return `
+            <div onclick="${onclickCode}" class="flex-1 flex flex-col items-center justify-end relative h-36 cursor-pointer group px-1 sm:px-2">
+                <div class="absolute -top-6 z-30 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-orange-300 via-orange-400 to-orange-600 p-[3px] shadow-[0_6px_12px_rgba(234,88,12,0.4)] transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-orange-200 via-orange-400 to-orange-500 flex items-center justify-center shadow-[inset_0_-3px_5px_rgba(154,52,18,0.5),inset_0_3px_5px_rgba(254,215,170,0.8)] border border-orange-300">
+                        <span class="text-xl sm:text-3xl font-black text-orange-800 drop-shadow-[0_1px_1px_rgba(254,215,170,0.8)]" style="-webkit-text-stroke: 1px rgba(254,215,170,0.5);">3</span>
+                    </div>
+                </div>
+                <div class="w-full relative z-20 flex flex-col items-center">
+                    <div class="w-[95%] h-12 sm:h-14 bg-gradient-to-b from-white/80 to-white/30 backdrop-blur-md border-t border-x border-white rounded-t-xl shadow-[inset_0_4px_10px_rgba(255,255,255,0.9)] flex items-center justify-center px-1 text-center relative z-10 pb-2">
+                        <span class="font-black text-[7px] sm:text-[9px] uppercase text-slate-800 tracking-wide line-clamp-2">${name}</span>
+                    </div>
+                    <div class="w-full h-10 sm:h-10 bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500 rounded-b-xl shadow-[0_6px_12px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(154,52,18,0.6)] flex items-center justify-center z-20 -mt-2 border-b-2 border-orange-600">
+                        <div class="bg-gradient-to-b from-orange-600 to-orange-700 text-orange-100 text-[8px] sm:text-[9px] font-bold px-2 py-1 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-orange-500/50 flex items-center gap-1">
+                            <span>${total}</span> <span class="font-normal opacity-90">Close</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-[105%] h-2 bg-black/10 rounded-[100%] blur-sm mt-1"></div>
+            </div>`;
+        }
+    };
+
+    return `<div class="flex items-end justify-center gap-1 sm:gap-4 w-full h-full pt-12 pb-2">` + podiumOrder.map(t => getPodiumHtml(t)).join('') + `</div>`;
 }
 
 function renderMonitoringView() {
