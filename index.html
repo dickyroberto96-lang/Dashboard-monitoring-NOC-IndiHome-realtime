@@ -335,6 +335,128 @@
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
+
+/* =========================================================
+   ANIMASI KARTU BERGERAK OTOMATIS
+   Paste di dalam <style> pada template dashboard.
+   Tidak mengubah fungsi JS, onclick, filter, export, dan data.
+   ========================================================= */
+
+@keyframes dashboard-card-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+  }
+  50% {
+    transform: translateY(-7px) scale(1.015);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, .16);
+  }
+}
+
+@keyframes dashboard-card-shine {
+  0% {
+    left: -80%;
+    opacity: 0;
+  }
+  25% {
+    opacity: .65;
+  }
+  60%, 100% {
+    left: 130%;
+    opacity: 0;
+  }
+}
+
+/* Target kartu utama atas, kartu H-1/H-0, kartu kategori, dan kartu grid */
+#kpiMainView > div,
+#rincianHarianView .grid.grid-cols-3 > div,
+#distributionCards > div,
+#grid > div,
+#kpiKehadiran > div {
+  position: relative;
+  overflow: hidden;
+  animation: dashboard-card-float 3.8s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+/* Delay berbeda agar gerakannya tidak serentak dan terlihat hidup */
+#kpiMainView > div:nth-child(2),
+#rincianHarianView .grid.grid-cols-3 > div:nth-child(2),
+#distributionCards > div:nth-child(2),
+#grid > div:nth-child(2),
+#kpiKehadiran > div:nth-child(2) {
+  animation-delay: .25s;
+}
+
+#kpiMainView > div:nth-child(3),
+#rincianHarianView .grid.grid-cols-3 > div:nth-child(3),
+#distributionCards > div:nth-child(3),
+#grid > div:nth-child(3),
+#kpiKehadiran > div:nth-child(3) {
+  animation-delay: .5s;
+}
+
+#kpiMainView > div:nth-child(4),
+#distributionCards > div:nth-child(4),
+#grid > div:nth-child(4),
+#kpiKehadiran > div:nth-child(4) {
+  animation-delay: .75s;
+}
+
+#kpiMainView > div:nth-child(5),
+#grid > div:nth-child(5) {
+  animation-delay: 1s;
+}
+
+#kpiMainView > div:nth-child(6),
+#grid > div:nth-child(6) {
+  animation-delay: 1.25s;
+}
+
+/* Efek kilau lembut lewat di dalam kartu */
+#kpiMainView > div::after,
+#rincianHarianView .grid.grid-cols-3 > div::after,
+#distributionCards > div::after,
+#grid > div::after,
+#kpiKehadiran > div::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -80%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transform: skewX(-18deg);
+  animation: dashboard-card-shine 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Tetap pertahankan efek hover yang sudah ada, tapi animasi otomatis tetap jalan */
+#kpiMainView > div:hover,
+#rincianHarianView .grid.grid-cols-3 > div:hover,
+#distributionCards > div:hover,
+#grid > div:hover,
+#kpiKehadiran > div:hover {
+  animation-play-state: paused;
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* Supaya user yang mengaktifkan reduce motion tidak terganggu */
+@media (prefers-reduced-motion: reduce) {
+  #kpiMainView > div,
+  #rincianHarianView .grid.grid-cols-3 > div,
+  #distributionCards > div,
+  #grid > div,
+  #kpiKehadiran > div,
+  #kpiMainView > div::after,
+  #rincianHarianView .grid.grid-cols-3 > div::after,
+  #distributionCards > div::after,
+  #grid > div::after,
+  #kpiKehadiran > div::after {
+    animation: none !important;
+  }
+}
+
     </style>
 </head>
 
